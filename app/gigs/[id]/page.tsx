@@ -1,0 +1,1241 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  MapPin, Clock, Users, Star, Globe, ChevronLeft, ChevronRight,
+  Calendar, Shield, CheckCircle, XCircle, MessageSquare, X,
+  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle
+} from "lucide-react";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { formatCurrency, formatDate, getCountryFlag, getCategoryIcon, cn } from "@/lib/utils";
+import ReviewCard from "@/components/reviews/ReviewCard";
+import { initiatePayment } from "@/lib/crypto/payment";
+import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+
+export default function GigDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [gig, setGig] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentImage, setCurrentImage] = useState(0);
+  
+  // Booking sidebar details
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("09:00");
+  const [groupSize, setGroupSize] = useState(1);
+  const [isBooking, setIsBooking] = useState(false);
+  const [txHash, setTxHash] = useState("");
+  
+  // Modals visibility
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showMoonPayModal, setShowMoonPayModal] = useState(false);
+  const [showPayPalModal, setShowPayPalModal] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+
+  // MoonPay destination wallet
+  const [moonpayWallet, setMoonpayWallet] = useState("0x70997970C51812dc3A010C7d01b50e0d17dc79C8");
+  const [showMoonpayIframe, setShowMoonpayIframe] = useState(false);
+
+  // PayPal checkout variables
+  const [paypalEmail, setPaypalEmail] = useState("");
+  const [paypalPassword, setPaypalPassword] = useState("");
+  const [paypalStep, setPaypalStep] = useState<"login" | "review" | "processing">("login");
+  const [paypalStatus, setPaypalStatus] = useState("");
+
+  // Passenger / Group Details
+  const [showPassengerModal, setShowPassengerModal] = useState(false);
+  const [passengerDetails, setPassengerDetails] = useState<any[]>([]);
+  const [savedCompanions, setSavedCompanions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchGig();
+  }, [params.id]);
+
+  const fetchGig = async () => {
+    try {
+      const res = await fetch(`/api/gigs/${params.id}`);
+      const data = await res.json();
+      setGig(data);
+    } catch {
+      setGig(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenPassengerModal = async () => {
+    if (!session) {
+      toast.error("Please sign in to book a tour");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (!bookingDate) {
+      toast.error("Please select a date first");
+      return;
+    }
+
+    toast.loading("Loading passenger details...");
+    try {
+      const res = await fetch("/api/users/profile");
+      if (res.ok) {
+        const profile = await res.json();
+        setSavedCompanions(profile.savedMembers || []);
+
+        const list: any[] = [];
+        // Participant 1: The Main Tourist
+        list.push({
+          isMainUser: true,
+          title: profile.title || "Mr",
+          name: profile.name || "",
+          passportNumber: profile.passportNumber || "",
+          idCardNumber: profile.idCardNumber || "",
+          birthDate: profile.birthDate ? profile.birthDate.split("T")[0] : "",
+          age: profile.age ? profile.age.toString() : "",
+        });
+
+        // Additional Participants
+        for (let i = 1; i < groupSize; i++) {
+          list.push({
+            isMainUser: false,
+            title: "Mr",
+            name: "",
+            passportNumber: "",
+            idCardNumber: "",
+            birthDate: "",
+            age: "",
+            selectedCompanionId: "",
+          });
+        }
+
+        setPassengerDetails(list);
+        setShowPassengerModal(true);
+      } else {
+        toast.error("Failed to load tourist profile");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error loading passenger details");
+    } finally {
+      toast.dismiss();
+    }
+  };
+
+  const handleSelectCompanion = (index: number, companionId: string) => {
+    const updated = [...passengerDetails];
+    if (companionId === "") {
+      updated[index] = {
+        ...updated[index],
+        selectedCompanionId: "",
+        title: "Mr",
+        name: "",
+        passportNumber: "",
+        idCardNumber: "",
+        birthDate: "",
+        age: "",
+      };
+    } else {
+      const companion = savedCompanions.find((c) => c.id === companionId);
+      if (companion) {
+        updated[index] = {
+          ...updated[index],
+          selectedCompanionId: companionId,
+          title: companion.title || "Mr",
+          name: companion.name || "",
+          passportNumber: companion.passportNumber || "",
+          idCardNumber: companion.idCardNumber || "",
+          birthDate: companion.birthDate ? companion.birthDate.split("T")[0] : "",
+          age: companion.age ? companion.age.toString() : "",
+        };
+      }
+    }
+    setPassengerDetails(updated);
+  };
+
+  const handlePassengerFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validations: Name must be entered. At least one of Passport or ID Card must be filled. Age & BirthDate must be entered.
+    for (let i = 0; i < passengerDetails.length; i++) {
+      const p = passengerDetails[i];
+      const pName = i === 0 ? "You (Main Traveler)" : `Passenger ${i + 1}`;
+      
+      if (!p.name.trim()) {
+        toast.error(`Name is required for ${pName}`);
+        return;
+      }
+      if (!p.passportNumber.trim() && !p.idCardNumber.trim()) {
+        toast.error(`Please provide either a Passport Number or ID Card Number for ${pName}`);
+        return;
+      }
+      if (!p.birthDate) {
+        toast.error(`Birth Date is required for ${pName}`);
+        return;
+      }
+      if (!p.age) {
+        toast.error(`Age is required for ${pName}`);
+        return;
+      }
+    }
+
+    // Save main user's profile details if they edited them during checkout
+    const mainUser = passengerDetails[0];
+    if (mainUser) {
+      try {
+        await fetch("/api/users/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: mainUser.name,
+            title: mainUser.title,
+            passportNumber: mainUser.passportNumber,
+            idCardNumber: mainUser.idCardNumber,
+            birthDate: mainUser.birthDate,
+            age: mainUser.age ? parseInt(mainUser.age) : null,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to sync main tourist profile:", err);
+      }
+    }
+
+    setShowPassengerModal(false);
+    setShowWalletModal(true);
+  };
+
+  const handleBookNow = async (walletType: "metamask" | "coinbase" | "walletconnect") => {
+    try {
+      setShowWalletModal(false);
+      setIsBooking(true);
+
+      // 1. Create a pending booking in the database first
+      const createRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId: gig.id,
+          bookingDate,
+          bookingTime,
+          groupSize,
+          participants: passengerDetails,
+          cryptoToken: "USDC",
+        }),
+      });
+
+      if (!createRes.ok) {
+        const errorData = await createRes.json();
+        throw new Error(errorData.message || "Failed to create booking in database");
+      }
+
+      const dbBooking = await createRes.json();
+      const bookingId = dbBooking.id;
+
+      if (walletType !== "metamask") {
+        toast.info(`Simulating ${walletType} connection...`);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
+      toast.info(`Requesting Approval via ${walletType.toUpperCase()}...`);
+      
+      let hash = "";
+      if (walletType === "metamask") {
+        hash = await initiatePayment({
+          bookingId,
+          amountUSD: gig.priceUSD * groupSize,
+          token: "USDC", 
+          network: "base", 
+          guideWalletAddress: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 
+          walletType: "metamask"
+        });
+      } else {
+        await new Promise(r => setTimeout(r, 2000));
+        hash = "0xMOCK_WALLET_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      }
+
+      // 2. Update booking status to CONFIRMED (funded)
+      await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "CONFIRMED",
+          txHash: hash,
+          paymentNetwork: "base",
+        }),
+      });
+
+      setTxHash(hash);
+      setShowSuccessModal(true);
+      toast.success("Payment Successful! Escrow locked.");
+      
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Transaction failed");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const handleMoonPaySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cardNumber.length < 15) {
+      toast.error("Please enter a valid credit card number");
+      return;
+    }
+    
+    setShowMoonPayModal(false);
+    setIsBooking(true);
+    
+    try {
+      // 1. Create pending booking in database
+      const createRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId: gig.id,
+          bookingDate,
+          bookingTime,
+          groupSize,
+          participants: passengerDetails,
+          cryptoToken: "USDC",
+        }),
+      });
+
+      if (!createRes.ok) {
+        throw new Error("Failed to create booking in database");
+      }
+
+      const dbBooking = await createRes.json();
+      const bookingId = dbBooking.id;
+
+      toast.info("Processing Fiat-to-Crypto via MoonPay...");
+      await new Promise(r => setTimeout(r, 2500));
+      toast.success("USDC Successfully Purchased!");
+      
+      toast.info("Executing Smart Contract Escrow...");
+      await new Promise(r => setTimeout(r, 2000));
+      
+      const mockTxHash = "0xMOCK_MOONPAY_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+
+      // 2. Update booking status to CONFIRMED (funded)
+      await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "CONFIRMED",
+          txHash: mockTxHash,
+          paymentNetwork: "base",
+        }),
+      });
+
+      setTxHash(mockTxHash);
+      setShowSuccessModal(true);
+      toast.success("Payment Successful! Escrow locked.");
+    } catch (error: any) {
+      toast.error(error.message || "MoonPay transaction failed");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const handlePaypalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (paypalStep === "login") {
+      setPaypalStep("review");
+    }
+  };
+
+  const handlePaypalPay = async () => {
+    if (!gig) return;
+    setIsBooking(true);
+    setPaypalStep("processing");
+    setPaypalStatus("Verifying PayPal credentials...");
+    await new Promise((r) => setTimeout(r, 1500));
+    setPaypalStatus("PayPal payment approved. Swapping fiat to USDC/USDT...");
+    await new Promise((r) => setTimeout(r, 1500));
+    setPaypalStatus(`Minting smart escrow contract lock for ${(gig.priceUSD * groupSize).toFixed(2)} USDC on Polygon...`);
+    await new Promise((r) => setTimeout(r, 1500));
+
+    try {
+      // 1. Create pending booking in database
+      const createRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId: gig.id,
+          bookingDate,
+          bookingTime,
+          groupSize,
+          participants: passengerDetails,
+          cryptoToken: "USDC",
+        }),
+      });
+
+      if (!createRes.ok) {
+        throw new Error("Failed to create booking in database");
+      }
+
+      const dbBooking = await createRes.json();
+      const bookingId = dbBooking.id;
+
+      const mockTxHash = "0xMOCK_PAYPAL_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+
+      // 2. Update booking status to CONFIRMED (funded)
+      await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "CONFIRMED",
+          txHash: mockTxHash,
+          paymentNetwork: "base",
+        }),
+      });
+
+      setTxHash(mockTxHash);
+      setShowPayPalModal(false);
+      setShowSuccessModal(true);
+      toast.success("PayPal Payment Completed! Escrow secured.");
+    } catch (error: any) {
+      toast.error(error.message || "PayPal bridge failed");
+      setPaypalStep("login");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const handleAskGuide = async () => {
+    if (!session) {
+      toast.error("Please sign in to chat with the guide");
+      router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+
+    try {
+      const user = session.user as any;
+      if (user.id === gig.guide.id) {
+        toast.error("You cannot chat with yourself");
+        return;
+      }
+
+      toast.info("Opening chat with guide...");
+      const res = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          touristId: user.id,
+          guideId: gig.guide.id,
+          gigId: gig.id,
+        }),
+      });
+
+      if (res.ok) {
+        router.push(`/dashboard/tourist/messages`);
+      } else {
+        toast.error("Failed to start chat session");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred");
+    }
+  };
+
+  if (!gig) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark-50">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  const totalPrice = gig.priceUSD * groupSize;
+
+  return (
+    <div className="min-h-screen bg-dark-50">
+      <Navbar />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-dark-500 mb-6">
+          <Link href="/" className="hover:text-primary">Home</Link>
+          <span>/</span>
+          <Link href="/explore" className="hover:text-primary">Explore</Link>
+          <span>/</span>
+          <span className="text-dark-900">{gig.title}</span>
+        </nav>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Image Gallery */}
+            <div className="space-y-3">
+              <div className="relative rounded-2xl overflow-hidden h-[400px] group shadow-md border border-dark-150">
+                <img
+                  src={gig.images[currentImage] || "/assets/placeholder.jpg"}
+                  alt={gig.title}
+                  className="w-full h-full object-cover transition-all duration-500"
+                />
+                {gig.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentImage((prev) => (prev === 0 ? gig.images.length - 1 : prev - 1))}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-dark-800 flex items-center justify-center shadow-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setCurrentImage((prev) => (prev === gig.images.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-dark-800 flex items-center justify-center shadow-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              {gig.images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto py-1 no-scrollbar scroll-smooth">
+                  {gig.images.map((img: string, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentImage(i)}
+                      className={cn(
+                        "w-20 h-14 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer relative",
+                        currentImage === i ? "border-primary scale-95 shadow-md" : "border-transparent opacity-60 hover:opacity-90"
+                      )}
+                    >
+                      <img src={img} alt={`Preview ${i+1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Title & Meta */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="badge badge-primary">{getCategoryIcon(gig.category)} {gig.category}</span>
+                <span className="badge badge-secondary">≈ {totalPrice.toFixed(0)} USDT</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-dark-900 mb-4">{gig.title}</h1>
+              <div className="flex flex-wrap items-center gap-4 text-dark-500">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{gig.location} {getCountryFlag(gig.country)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span>{gig.durationHours} hours</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  <span>Max {gig.maxGroupSize} people</span>
+                </div>
+                {gig.avgRating > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-accent text-accent" />
+                    <span className="font-medium text-dark-900">{gig.avgRating.toFixed(1)}</span>
+                    <span>({gig.reviewCount} reviews)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Guide Info */}
+            <div className="card p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl text-primary font-bold">
+                  {gig.guide.avatar ? (
+                    <img src={gig.guide.avatar} alt="" className="w-14 h-14 rounded-full object-cover" />
+                  ) : (
+                    gig.guide.name[0]
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Link href={`/guides/${gig.guide.id}`} className="font-display font-semibold text-dark-900 hover:text-primary transition-colors">
+                    {gig.guide.name}
+                  </Link>
+                  <p className="text-sm text-dark-500">Local Guide · {gig.guide.country} {getCountryFlag(gig.guide.country)}</p>
+                </div>
+                <Link
+                  href={`/guides/${gig.guide.id}`}
+                  className="btn-ghost text-sm"
+                >
+                  View Profile
+                </Link>
+              </div>
+              {gig.guide.bio && (
+                <p className="mt-4 text-dark-600 text-sm leading-relaxed">{gig.guide.bio}</p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div>
+              <h2 className="text-xl font-bold text-dark-900 mb-4">About This Tour</h2>
+              <p className="text-dark-600 leading-relaxed whitespace-pre-line">{gig.description}</p>
+            </div>
+
+            {/* Languages */}
+            {gig.languages?.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-dark-900 mb-4">Languages</h2>
+                <div className="flex flex-wrap gap-2">
+                  {gig.languages.map((lang: string) => (
+                    <span key={lang} className="badge badge-primary">{lang}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Included/Excluded */}
+            <div className="grid sm:grid-cols-2 gap-6">
+              {gig.included?.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-secondary" /> What&apos;s Included
+                  </h3>
+                  <ul className="space-y-2">
+                    {gig.included.map((item: string) => (
+                      <li key={item} className="flex items-start gap-2 text-sm text-dark-600">
+                        <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {gig.excluded?.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2">
+                    <XCircle className="w-5 h-5 text-danger" /> Not Included
+                  </h3>
+                  <ul className="space-y-2">
+                    {gig.excluded.map((item: string) => (
+                      <li key={item} className="flex items-start gap-2 text-sm text-dark-600">
+                        <XCircle className="w-4 h-4 text-danger flex-shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Custom Benefits */}
+            {gig.benefits?.length > 0 && (
+              <div className="border-t border-dark-100 pt-6">
+                <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2">
+                  <span className="text-secondary font-bold">✨</span> Tour Perks & Benefits
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {gig.benefits.map((benefit: string) => (
+                    <span key={benefit} className="inline-flex items-center gap-1 bg-secondary/10 text-secondary px-3.5 py-1.5 rounded-full text-xs font-bold border border-secondary/20 shadow-sm">
+                      {benefit}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Meeting Point */}
+            {gig.meetingPoint && (
+              <div>
+                <h2 className="text-xl font-bold text-dark-900 mb-3">Meeting Point</h2>
+                <div className="card p-4 flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  <span className="text-dark-700">{gig.meetingPoint}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Reviews */}
+            <div>
+              <h2 className="text-xl font-bold text-dark-900 mb-6">
+                Reviews {gig.reviewCount > 0 && `(${gig.reviewCount})`}
+              </h2>
+              {gig.reviews?.length > 0 ? (
+                <div className="space-y-4">
+                  {gig.reviews.map((review: any) => (
+                    <ReviewCard key={review.id} review={review} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-dark-500">No reviews yet. Be the first to review!</p>
+              )}
+            </div>
+          </div>
+
+          {/* Booking Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 card p-6 space-y-5">
+              <div className="flex items-baseline justify-between">
+                <span className="text-3xl font-bold text-dark-900">{formatCurrency(gig.priceUSD)}</span>
+                <span className="text-sm text-dark-400">/ person</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="badge badge-secondary">≈ {gig.priceUSD.toFixed(0)} USDT</span>
+                <span className="text-dark-400">per person</span>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={bookingDate}
+                    onChange={(e) => setBookingDate(e.target.value)}
+                    className="input"
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Time</label>
+                  <select
+                    value={bookingTime}
+                    onChange={(e) => setBookingTime(e.target.value)}
+                    className="input"
+                  >
+                    <option value="08:00">08:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="14:00">02:00 PM</option>
+                    <option value="16:00">04:00 PM</option>
+                    <option value="18:00">06:00 PM</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Group Size</label>
+                  <select
+                    value={groupSize}
+                    onChange={(e) => setGroupSize(parseInt(e.target.value))}
+                    className="input"
+                  >
+                    {Array.from({ length: gig.maxGroupSize }).map((_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {i + 1} {i === 0 ? "person" : "people"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="border-t border-dark-100 pt-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-dark-500">{formatCurrency(gig.priceUSD)} × {groupSize}</span>
+                  <span className="text-dark-900">{formatCurrency(totalPrice)}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-3">
+                  <span className="text-dark-500">Crypto equivalent</span>
+                  <span className="text-secondary font-medium">{totalPrice.toFixed(0)} USDT</span>
+                </div>
+                <div className="flex justify-between font-bold text-dark-900 pt-3 border-t border-dark-100">
+                  <span>Total</span>
+                  <span>{formatCurrency(totalPrice)}</span>
+                </div>
+              </div>
+
+               <div className="space-y-3">
+                {!gig?.guide?.walletAddress && (
+                  <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-xl flex items-start gap-2 mb-3">
+                    <AlertCircle className="w-4.5 h-4.5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-red-750 font-bold leading-relaxed">
+                      Booking is temporarily disabled because this guide has not connected their payout wallet to receive payments.
+                    </p>
+                  </div>
+                )}
+                
+                <button 
+                  onClick={handleOpenPassengerModal}
+                  disabled={isBooking || loading || !gig?.guide?.walletAddress}
+                  className={`btn-primary w-full py-4 text-lg font-bold shadow-lg ${(isBooking || loading || !gig?.guide?.walletAddress) ? 'opacity-50 cursor-not-allowed shadow-none' : 'shadow-primary/20 cursor-pointer'}`}
+                >
+                  {isBooking ? "Processing Payment..." : "Book & Pay"}
+                </button>
+                {txHash && (
+                  <div className="text-xs text-secondary break-all bg-secondary/10 p-2 rounded">
+                    Tx Hash: {txHash}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={handleAskGuide}
+                className="btn-outline w-full flex items-center justify-center gap-2 py-3 cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Ask Guide
+              </button>
+
+              <div className="flex items-center gap-2 text-xs text-dark-400 pt-2">
+                <Shield className="w-4 h-4" />
+                <span>Secure crypto escrow · Free cancellation 48h before</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Passenger Details Completion Modal */}
+      {showPassengerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl relative my-8 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <button 
+              onClick={() => setShowPassengerModal(false)}
+              className="absolute top-4 right-4 text-dark-400 hover:text-dark-900 p-1 bg-dark-50 hover:bg-dark-100 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="pb-4 border-b border-dark-100">
+              <h2 className="text-xl font-bold text-dark-900">Passenger Information</h2>
+              <p className="text-xs text-dark-500 mt-1">Please provide required details for all participants. At least one document number (Passport or ID Card) is required per traveler.</p>
+            </div>
+
+            <form onSubmit={handlePassengerFormSubmit} className="flex-1 overflow-y-auto py-6 space-y-6 pr-2">
+              {passengerDetails.map((passenger, index) => (
+                <div key={index} className="bg-dark-50 border border-dark-100 rounded-2xl p-5 space-y-4">
+                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 pb-2 border-b border-dark-200">
+                    <h3 className="font-bold text-sm text-dark-800 flex items-center gap-2">
+                      <UserIcon className="w-4 h-4 text-primary" />
+                      {index === 0 ? "Traveler 1 (You / Main Account)" : `Traveler ${index + 1}`}
+                    </h3>
+
+                    {index > 0 && savedCompanions.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-dark-500 uppercase">Load Saved:</span>
+                        <select
+                          value={passenger.selectedCompanionId || ""}
+                          onChange={(e) => handleSelectCompanion(index, e.target.value)}
+                          className="text-[11px] font-semibold bg-white border border-dark-200 rounded px-2 py-1 max-w-[160px] focus:border-primary outline-none"
+                        >
+                          <option value="">-- Add New Member --</option>
+                          {savedCompanions.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.title ? `${c.title}. ` : ""}{c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-dark-600 uppercase tracking-wider mb-1">Salutation</label>
+                      <select
+                        value={passenger.title}
+                        onChange={(e) => {
+                          const updated = [...passengerDetails];
+                          updated[index].title = e.target.value;
+                          setPassengerDetails(updated);
+                        }}
+                        className="input text-xs py-2 px-2"
+                        required
+                      >
+                        <option value="Mr">Mr.</option>
+                        <option value="Mrs">Mrs.</option>
+                        <option value="Ms">Ms.</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-bold text-dark-600 uppercase tracking-wider mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={passenger.name}
+                        onChange={(e) => {
+                          const updated = [...passengerDetails];
+                          updated[index].name = e.target.value;
+                          setPassengerDetails(updated);
+                        }}
+                        placeholder="Name (as in Passport/ID)"
+                        className="input text-xs py-2"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-dark-600 uppercase tracking-wider mb-1">Passport Number</label>
+                      <input
+                        type="text"
+                        value={passenger.passportNumber}
+                        onChange={(e) => {
+                          const updated = [...passengerDetails];
+                          updated[index].passportNumber = e.target.value.toUpperCase();
+                          setPassengerDetails(updated);
+                        }}
+                        placeholder="Passport Number (E.g. A1234567)"
+                        className="input text-xs py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-dark-600 uppercase tracking-wider mb-1">ID Card Number (NIK)</label>
+                      <input
+                        type="text"
+                        value={passenger.idCardNumber}
+                        onChange={(e) => {
+                          const updated = [...passengerDetails];
+                          updated[index].idCardNumber = e.target.value.replace(/\D/g, "");
+                          setPassengerDetails(updated);
+                        }}
+                        placeholder="ID NIK (16 Digits)"
+                        className="input text-xs py-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-dark-600 uppercase tracking-wider mb-1">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={passenger.birthDate}
+                        onChange={(e) => {
+                          const updated = [...passengerDetails];
+                          updated[index].birthDate = e.target.value;
+                          setPassengerDetails(updated);
+                        }}
+                        className="input text-xs py-2"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-dark-600 uppercase tracking-wider mb-1">Age</label>
+                      <input
+                        type="number"
+                        value={passenger.age}
+                        onChange={(e) => {
+                          const updated = [...passengerDetails];
+                          updated[index].age = e.target.value;
+                          setPassengerDetails(updated);
+                        }}
+                        placeholder="Age"
+                        className="input text-xs py-2"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-primary/10"
+                >
+                  Confirm Details & Proceed to Pay
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in duration-300">
+            <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-secondary" />
+            </div>
+            
+            <h2 className="text-2xl font-bold text-center text-dark-900 mb-2">Payment Successful!</h2>
+            <p className="text-center text-dark-500 mb-6">Your funds are securely locked in the smart contract escrow.</p>
+            
+            <div className="bg-dark-50 rounded-xl p-5 mb-6 space-y-3">
+              <div className="flex items-center gap-2 text-dark-900 font-semibold mb-2">
+                <Receipt className="w-5 h-5" /> Receipt
+              </div>
+              <div className="flex justify-between text-sm text-dark-600">
+                <span>Tour</span>
+                <span className="font-medium text-right max-w-[150px] truncate">{gig.title}</span>
+              </div>
+              <div className="flex justify-between text-sm text-dark-600">
+                <span>Date & Time</span>
+                <span className="font-medium">{bookingDate} @ {bookingTime}</span>
+              </div>
+              <div className="flex justify-between text-sm text-dark-600">
+                <span>Group Size</span>
+                <span className="font-medium">{groupSize} {groupSize === 1 ? "person" : "people"}</span>
+              </div>
+              <div className="border-t border-dark-200 my-2 pt-2 flex justify-between text-sm font-bold text-dark-900">
+                <span>Total Paid</span>
+                <span className="text-secondary">{totalPrice.toFixed(0)} USDC</span>
+              </div>
+              <div className="text-[10px] text-dark-400 font-mono break-all mt-2 pt-2 border-t border-dark-100">
+                Tx: {txHash}
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => router.push('/dashboard/tourist/bookings')}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              Go to My Bookings <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Wallet Selection Modal */}
+      {showWalletModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 border-b border-dark-100 flex justify-between items-center bg-dark-50/50">
+              <h2 className="text-xl font-bold text-dark-900">Connect Wallet</h2>
+              <button onClick={() => setShowWalletModal(false)} className="text-dark-400 hover:text-dark-900 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div className="p-6 space-y-3">
+              <button onClick={() => handleBookNow("metamask")} className="w-full p-4 border border-dark-200 hover:border-primary hover:bg-primary/5 rounded-xl flex items-center justify-between transition-all group">
+                <div className="flex items-center gap-4">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" className="w-8 h-8" />
+                  <span className="font-semibold text-dark-900 group-hover:text-primary transition-colors">MetaMask</span>
+                </div>
+                <span className="text-xs font-medium bg-dark-100 text-dark-500 px-2 py-1 rounded-full">Detected</span>
+              </button>
+              
+              <button onClick={() => handleBookNow("coinbase")} className="w-full p-4 border border-dark-200 hover:border-blue-500 hover:bg-blue-50 rounded-xl flex items-center justify-between transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <div className="w-3 h-3 bg-white rounded-sm"></div>
+                  </div>
+                  <span className="font-semibold text-dark-900 group-hover:text-blue-600 transition-colors">Coinbase Wallet</span>
+                </div>
+              </button>
+
+              <button onClick={() => handleBookNow("walletconnect")} className="w-full p-4 border border-dark-200 hover:border-blue-400 hover:bg-blue-50/50 rounded-xl flex items-center justify-between transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">WC</div>
+                  <div className="text-left">
+                    <span className="font-semibold text-dark-900 block group-hover:text-blue-500 transition-colors">WalletConnect</span>
+                    <span className="text-xs text-dark-400">Trust Wallet, Phantom, etc.</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Fiat On-Ramp Section */}
+            <div className="p-6 bg-dark-900 text-white mt-2 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard className="w-5 h-5 text-secondary" />
+                <h3 className="font-bold">Don&apos;t have Crypto?</h3>
+               </div>
+              <p className="text-xs text-dark-300 mb-2">Pay instantly using Credit Card or PayPal via our Web3 bridges:</p>
+              
+              <button 
+                onClick={() => {
+                  setShowWalletModal(false);
+                  setShowMoonPayModal(true);
+                }}
+                className="w-full bg-[#7A00FF] hover:bg-[#6400d1] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+              >
+                Buy with MoonPay
+              </button>
+
+              <button 
+                onClick={() => {
+                  setShowWalletModal(false);
+                  setShowPayPalModal(true);
+                }}
+                className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+              >
+                Pay with PayPal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MoonPay Sandbox Modal */}
+      {showMoonPayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/70 backdrop-blur-md p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300">
+            <div className="bg-[#7A00FF] p-6 text-white text-center relative">
+              <button onClick={() => { setShowMoonPayModal(false); setShowMoonpayIframe(false); }} className="absolute top-4 right-4 text-white/70 hover:text-white">&times;</button>
+              <h2 className="text-2xl font-black tracking-tight mb-1">MoonPay</h2>
+              <p className="text-white/80 text-sm">Fiat-to-Crypto Sandbox Checkout</p>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {!showMoonpayIframe ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-dark-50 p-4 rounded-xl">
+                    <span className="text-dark-500 text-sm">You Pay</span>
+                    <span className="text-lg font-bold text-dark-900">${totalPrice.toFixed(2)} USD</span>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-dark-600 uppercase tracking-wider mb-1.5">Polygon Wallet Address</label>
+                    <input 
+                      type="text" 
+                      value={moonpayWallet} 
+                      onChange={e => setMoonpayWallet(e.target.value)}
+                      className="w-full p-3 border border-dark-200 rounded-xl focus:border-[#7A00FF] focus:ring-1 focus:ring-[#7A00FF] outline-none font-mono text-xs text-dark-900"
+                      placeholder="0x..."
+                      required
+                    />
+                  </div>
+                  <button 
+                    onClick={() => setShowMoonpayIframe(true)}
+                    className="w-full bg-[#7A00FF] hover:bg-[#6400d1] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    Open MoonPay Sandbox
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className="border border-dark-200 rounded-2xl overflow-hidden">
+                    <iframe 
+                      src={`https://buy-sandbox.moonpay.com?apiKey=pk_test_Ol50lJrgbXKJ6vGqRQ7T1ePRjtdTsqF&currencyCode=usdc&walletAddress=${moonpayWallet}&baseCurrencyCode=usd&baseCurrencyAmount=${totalPrice}`}
+                      className="w-full h-[360px] border-0"
+                      allow="accelerometer; autoplay; camera; gyroscope; payment"
+                    ></iframe>
+                  </div>
+                  <button 
+                    onClick={async () => {
+                      setShowMoonPayModal(false);
+                      setIsBooking(true);
+                      toast.info("Executing Smart Escrow Contract...");
+                      await new Promise(r => setTimeout(r, 2000));
+                      const mockTxHash = "0xMOCK_MOONPAY_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+                      
+                      // Create booking
+                      const createRes = await fetch("/api/bookings", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          gigId: gig.id,
+                          bookingDate,
+                          bookingTime,
+                          groupSize,
+                          participants: passengerDetails,
+                          cryptoToken: "USDC",
+                        }),
+                      });
+                      if (createRes.ok) {
+                        const dbBooking = await createRes.json();
+                        await fetch(`/api/bookings/${dbBooking.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            status: "CONFIRMED",
+                            txHash: mockTxHash,
+                            paymentNetwork: "base",
+                          }),
+                        });
+                        setTxHash(mockTxHash);
+                        setShowSuccessModal(true);
+                        toast.success("Payment Successful! Escrow locked.");
+                      } else {
+                        toast.error("Failed to register booking in escrow");
+                      }
+                      setIsBooking(false);
+                    }}
+                    className="w-full bg-[#7A00FF] hover:bg-[#6400d1] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    Confirm Escrow Lock
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PayPal Bridged Modal */}
+      {showPayPalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/70 backdrop-blur-md p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300">
+            <div className="bg-[#003087] p-6 text-white text-center relative">
+              <button onClick={() => { setShowPayPalModal(false); setPaypalStep("login"); }} className="absolute top-4 right-4 text-white/70 hover:text-white">&times;</button>
+              <h2 className="text-xl font-bold tracking-tight mb-1">PayPal Sandbox</h2>
+              <p className="text-white/80 text-xs">Web3 Liquidity Bridge</p>
+            </div>
+            
+            <div className="p-6">
+              {paypalStep === "login" && (
+                <form onSubmit={handlePaypalSubmit} className="space-y-4">
+                  <div className="flex justify-between items-center bg-dark-50 p-3 rounded-xl text-xs">
+                    <span className="text-dark-500">Amount due</span>
+                    <span className="font-bold text-dark-900">${totalPrice.toFixed(2)} USD</span>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-dark-600 uppercase mb-1">PayPal Email</label>
+                    <input 
+                      type="email" 
+                      value={paypalEmail}
+                      onChange={e => setPaypalEmail(e.target.value)}
+                      placeholder="buyer@paypal.com"
+                      className="w-full p-3 border border-dark-200 rounded-xl focus:border-blue-500 outline-none text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-dark-600 uppercase mb-1">PayPal Password</label>
+                    <input 
+                      type="password" 
+                      value={paypalPassword}
+                      onChange={e => setPaypalPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full p-3 border border-dark-200 rounded-xl focus:border-blue-500 outline-none text-sm"
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-[#0079C1] hover:bg-[#00457C] text-white font-bold py-3 rounded-xl transition-all text-sm mt-2">
+                    Log In
+                  </button>
+                </form>
+              )}
+
+              {paypalStep === "review" && (
+                <div className="space-y-4 text-left">
+                  <div className="bg-[#f8fafc] border border-dark-200 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center text-xs border-b border-dark-100 pb-2">
+                      <span className="text-dark-500">Pay to</span>
+                      <span className="font-bold text-dark-900">Explomate.ly Escrow</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs border-b border-dark-100 pb-2">
+                      <span className="text-dark-500">Source</span>
+                      <span className="font-medium text-dark-900">💳 Visa •••• 4242</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-dark-500">Total Charged</span>
+                      <span className="font-extrabold text-dark-900 text-sm">${totalPrice.toFixed(2)} USD</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-[11px] text-primary-700 leading-normal">
+                    <strong>Notice:</strong> Explomate&apos;s automated liquidity pool automatically locks the corresponding {totalPrice.toFixed(2)} USDC in the smart contract escrow once your PayPal fiat payment is confirmed.
+                  </div>
+
+                  <button 
+                    onClick={handlePaypalPay}
+                    className="w-full bg-[#0079C1] hover:bg-[#00457C] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                  >
+                    <ShieldCheck className="w-4.5 h-4.5" /> Confirm &amp; Pay Now
+                  </button>
+                </div>
+              )}
+
+              {paypalStep === "processing" && (
+                <div className="text-center py-6 space-y-4">
+                  <Loader2 className="w-8 h-8 text-[#0079C1] animate-spin mx-auto" />
+                  <div>
+                    <p className="text-dark-900 font-semibold text-sm">Executing Bridge...</p>
+                    <p className="text-xs text-dark-500 mt-1">{paypalStatus}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+}

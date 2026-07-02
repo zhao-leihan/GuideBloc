@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  body {
+    @apply font-body bg-dark-50 text-dark-900 antialiased selection:bg-primary-100 selection:text-primary-800;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  /* Premium Primary Button (Royal Blue with elegant gradient & shadow) */
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/20 active:scale-[0.98] border border-primary-600/10;
+  }
+
+  /* Premium Secondary Button (Golden/Yellow with metallic luxury look) */
+  .btn-secondary {
+    @apply bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-secondary-500/20 active:scale-[0.98] border border-secondary-500/10;
+  }
+
+  /* Elegant Outline Button */
+  .btn-outline {
+    @apply border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-md hover:shadow-primary-500/10 active:scale-[0.98];
+  }
+
+  /* Premium Ghost Button */
+  .btn-ghost {
+    @apply text-dark-500 hover:text-primary hover:bg-primary-50/50 font-medium py-2 px-4 rounded-xl transition-all duration-300;
+  }
+
+  /* Elegant Card Design */
+  .card {
+    @apply bg-white rounded-2xl border border-dark-200/80 shadow-[0_8px_30px_rgb(15,23,42,0.02)] hover:shadow-[0_12px_40px_rgb(29,78,216,0.06)] hover:border-primary-500/30 transition-all duration-300 overflow-hidden;
+  }
+
+  /* Dark Luxury Card */
+  .card-dark {
+    @apply bg-dark-900 rounded-2xl border border-dark-800 shadow-xl overflow-hidden transition-all duration-300 hover:border-secondary-500/20;
+  }
+
+  /* Sleek Input Fields */
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-dark-200 bg-white text-dark-900 placeholder:text-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary shadow-sm transition-all duration-300;
+  }
+
+  /* Dark Theme Input */
+  .input-dark {
+    @apply w-full px-4 py-3 rounded-xl border border-dark-700 bg-dark-800 text-white placeholder:text-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary shadow-sm transition-all duration-300;
+  }
+
+  /* Clean Badge Pills */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase;
+  }
+
+  .badge-primary {
+    @apply bg-primary-50 text-primary border border-primary-100;
+  }
+
+  .badge-secondary {
+    @apply bg-secondary-50 text-secondary-700 border border-secondary-100;
+  }
+
+  .badge-accent {
+    @apply bg-accent-50 text-accent-600 border border-accent-100;
+  }
+
+  /* Luxury Glassmorphism */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-sm;
+  }
+
+  .glass-dark {
+    @apply bg-dark-900/80 backdrop-blur-xl border border-dark-800/40 shadow-md;
+  }
+}
+
+/* Custom premium scrollbar - styled as a sleek floating blue pill/dot */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-600;
+}
+
+/* Gradient Text Shimmer Animation */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

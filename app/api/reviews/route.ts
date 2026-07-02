@@ -1,0 +1,111 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const gigId = searchParams.get("gigId");
+    const bookingId = searchParams.get("bookingId");
+
+    const where: any = {};
+
+    if (gigId) {
+      where.booking = { gigId };
+    }
+    if (bookingId) {
+      where.bookingId = bookingId;
+    }
+
+    const reviews = await prisma.review.findMany({
+      where,
+      include: {
+        reviewer: { select: { id: true, name: true, avatar: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const avgRating = reviews.length
+      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+    return NextResponse.json({
+      reviews,
+      avgRating: Math.round(avgRating * 10) / 10,
+      total: reviews.length,
+    });
+  } catch (error) {
+    console.error("Reviews GET error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { bookingId, rating, comment } = body;
+
+    if (!bookingId || !rating || rating < 1 || rating > 5) {
+      return NextResponse.json(
+        { message: "bookingId and rating (1-5) are required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the booking belongs to this user and is completed
+    const booking = await prisma.booking.findFirst({
+      where: {
+        id: bookingId,
+        touristId: (session.user as any).id,
+        status: "COMPLETED",
+      },
+      include: { gig: true },
+    });
+
+    if (!booking) {
+      return NextResponse.json(
+        { message: "Booking not found or not completed" },
+        { status: 404 }
+      );
+    }
+
+    // Check if review already exists
+    const existing = await prisma.review.findFirst({
+      where: { bookingId, reviewerId: (session.user as any).id },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { message: "You have already reviewed this booking" },
+        { status: 409 }
+      );
+    }
+
+    const review = await prisma.review.create({
+      data: {
+        reviewerId: (session.user as any).id,
+        guideId: booking.gig.guideId,
+        bookingId,
+        gigId: booking.gigId,
+        rating,
+        comment: comment || "",
+      },
+    });
+
+    return NextResponse.json({ review }, { status: 201 });
+  } catch (error) {
+    console.error("Reviews POST error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}

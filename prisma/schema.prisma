@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── CORE MODELS ─────────────────────────────────────────
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  password        String?
+  role            Role     @default(TOURIST)
+  avatar          String?
+  walletAddress   String?
+  bio             String?
+  country         String?
+  language        String[]
+  createdAt       DateTime @default(now())
+  guideStatus       GuideStatus @default(NONE)
+  certificationText String?
+  certificationFile String?
+
+  // Tourist-specific fields
+  passportNumber    String?
+  idCardNumber      String?
+  birthDate         DateTime?
+  title             String?
+  age               Int?
+  savedMembers      GroupMember[]
+
+  gigs            Gig[]
+  bookings        Booking[]
+  reviewsGiven    Review[]       @relation("ReviewGiver")
+  reviewsReceived Review[]       @relation("ReviewReceiver")
+
+  touristConversations Conversation[] @relation("TouristConversations")
+  guideConversations   Conversation[] @relation("GuideConversations")
+  sentMessages         Message[]
+  subscriptions        UserSubscription[]
+  boosts               GigBoost[]
+
+  subscription_type   String   @default("FREE")
+  subscription_expiry DateTime?
+
+  // Gamification & Moderation
+  xp                  Int      @default(0)
+  level               Int      @default(1)
+  isBlocked           Boolean  @default(false)
+  benefits            String[]
+
+  mails               Mail[]
+  warnings            Warning[]
+
+  @@map("users")
+}
+
+enum Role {
+  TOURIST
+  GUIDE
+  ADMIN
+}
+
+enum GuideStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Gig {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  category     String
+  location     String
+  country      String
+  lat          Float?
+  lng          Float?
+  durationHours Int
+  maxGroupSize  Int
+  priceUSD     Float
+  guide_price   Float    @default(0)
+  client_price  Float    @default(0)
+  platform_fee  Float    @default(0)
+  featured_until DateTime?
+  ranking_score Float    @default(0)
+  booking_count Int      @default(0)
+  avgRating     Float    @default(0)
+  reviewCount   Int      @default(0)
+  images       String[]
+  tags         String[]
+  languages    String[]
+  included     String[]
+  excluded     String[]
+  benefits     String[]
+  meetingPoint String?
+  isActive     Boolean  @default(true)
+  guideId      String
+  createdAt    DateTime @default(now())
+
+  guide        User      @relation(fields: [guideId], references: [id])
+  bookings     Booking[]
+  reviews      Review[]
+  conversations Conversation[]
+  boosts       GigBoost[]
+
+  @@map("gigs")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  gigId           String
+  touristId       String
+  bookingDate     DateTime
+  groupSize       Int
+  totalPriceUSD   Float
+  totalPriceCrypto Float
+  guide_price   Float?
+  client_price  Float?
+  platform_fee  Float?
+  cryptoToken     CryptoToken
+  status          BookingStatus @default(PENDING)
+  txHash          String?
+  paymentNetwork  String?
+  specialRequests String?
+  bookingTime     String?
+  participants    Json?
+  createdAt       DateTime      @default(now())
+
+  gig             Gig      @relation(fields: [gigId], references: [id])
+  tourist         User     @relation(fields: [touristId], references: [id])
+  review          Review?
+  conversations   Conversation[]
+  meetSession     MeetSession?
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  AWAITING_PAYMENT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum CryptoToken {
+  USDT
+  USDC
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  gigId      String
+  bookingId  String   @unique
+  reviewerId String
+  guideId    String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+
+  gig        Gig     @relation(fields: [gigId], references: [id])
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  reviewer   User    @relation("ReviewGiver", fields: [reviewerId], references: [id])
+  guide      User    @relation("ReviewReceiver", fields: [guideId], references: [id])
+
+  @@map("reviews")
+}
+
+// ─── PLATFORM SETTINGS ────────────────────────────────────
+
+model PlatformSettings {
+  id              String   @id @default("singleton")
+  commissionRate  Float    @default(0.10)
+  supportedChains String[]
+
+  @@map("platform_settings")
+}
+
+// ─── CHAT SYSTEM ──────────────────────────────────────────
+
+model Conversation {
+  id           String    @id @default(cuid())
+  gigId        String?
+  bookingId    String?
+  touristId    String
+  guideId      String
+  isArchived   Boolean   @default(false)
+  lastMessageAt DateTime?
+  createdAt    DateTime  @default(now())
+
+  gig          Gig?      @relation(fields: [gigId], references: [id])
+  booking      Booking?  @relation(fields: [bookingId], references: [id])
+  tourist      User      @relation("TouristConversations", fields: [touristId], references: [id])
+  guide        User      @relation("GuideConversations", fields: [guideId], references: [id])
+  messages     Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           MessageType  @default(TEXT)
+  mediaUrl       String?
+  isRead         Boolean      @default(false)
+  isDeleted      Boolean      @default(false)
+  isFlagged      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  LOCATION
+  BOOKING_CARD
+  SYSTEM
+}
+
+// ─── MONETIZATION SYSTEM ─────────────────────────────────
+
+model SubscriptionPlan {
+  id             String   @id @default(cuid())
+  name           String
+  role           Role
+  priceMonthly   Float
+  priceYearly    Float
+  features       String[]
+  maxGigs        Int?
+  commissionRate Float
+  isFeatured     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  subscribers    UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model UserSubscription {
+  id                   String           @id @default(cuid())
+  userId               String
+  planId               String
+  billingCycle         BillingCycle     @default(MONTHLY)
+  status               SubStatus        @default(ACTIVE)
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  txHash               String?
+  createdAt            DateTime         @default(now())
+
+  user                 User             @relation(fields: [userId], references: [id])
+  plan                 SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@map("user_subscriptions")
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+}
+
+model GigBoost {
+  id        String    @id @default(cuid())
+  gigId     String
+  guideId   String
+  boostType BoostType
+  priceUSDT Float
+  txHash    String
+  startsAt  DateTime
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  gig       Gig  @relation(fields: [gigId], references: [id])
+  guide     User @relation(fields: [guideId], references: [id])
+
+  @@map("gig_boosts")
+}
+
+enum BoostType {
+  FEATURED_HOME
+  TOP_SEARCH
+  CATEGORY_BANNER
+}
+
+model PlatformRevenue {
+  id          String        @id @default(cuid())
+  source      RevenueSource
+  amountUSDT  Float
+  txHash      String?
+  referenceId String?
+  createdAt   DateTime      @default(now())
+
+  @@map("platform_revenue")
+}
+
+enum RevenueSource {
+  BOOKING_COMMISSION
+  SUBSCRIPTION_FEE
+  GIG_BOOST
+  FEATURED_LISTING
+  TIP_FEE
+}
+
+model GroupMember {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  passportNumber String?
+  idCardNumber   String?
+  birthDate      DateTime?
+  title          String?
+  age            Int?
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("group_members")
+}
+
+model MeetSession {
+  id                     String   @id @default(cuid())
+  bookingId              String   @unique
+  touristLat             Float?
+  touristLng             Float?
+  guideLat               Float?
+  guideLng               Float?
+  touristPhoto           String?
+  guidePhoto             String?
+  touristLocationUpdated DateTime?
+  guideLocationUpdated   DateTime?
+  status                 String   @default("NOT_STARTED") // NOT_STARTED, SHARING, ARRIVED, COMPLETED
+  createdAt              DateTime @default(now())
+
+  booking                Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("meet_sessions")
+}
+
+model Mail {
+  id          String   @id @default(cuid())
+  recipientId String
+  subject     String
+  body        String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  recipient   User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("mails")
+}
+
+model Warning {
+  id             String   @id @default(cuid())
+  userId         String
+  adminId        String
+  reason         String
+  details        String?
+  isAcknowledged Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("warnings")
+}

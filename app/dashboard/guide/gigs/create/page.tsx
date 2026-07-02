@@ -1,0 +1,499 @@
+"use client";
+
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import toast from "react-hot-toast";
+import { Rocket, Info, Image as ImageIcon, MapPin, DollarSign, Clock, Users, X, FileText, Globe, Loader2, AlertCircle } from "lucide-react";
+import { connectWallet } from "@/lib/crypto/payment";
+import { useRouter } from "next/navigation";
+import { CONFIG } from "@/lib/config";
+import { ethers } from "ethers";
+
+const categories = [
+  "Adventure",
+  "Cultural",
+  "Food",
+  "Nature",
+  "City",
+  "Water",
+  "Historical",
+  "Nightlife",
+  "Photography",
+  "Wellness",
+];
+
+import { COUNTRIES as countries } from "@/lib/countries";
+
+export default function CreateGigPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as any;
+  const hasWallet = !!user?.walletAddress;
+
+  const [isCreating, setIsCreating] = useState(false);
+  const [boostAlgorithm, setBoostAlgorithm] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [formData, setFormData] = useState({
+    title: "",
+    price: "",
+    durationHours: "4",
+    maxGroupSize: "8",
+    location: "",
+    category: "Adventure",
+    country: "Indonesia",
+    description: "",
+  });
+  const [benefitInput, setBenefitInput] = useState("");
+  const [benefitsList, setBenefitsList] = useState<string[]>([]);
+
+  const addBenefit = () => {
+    if (benefitInput.trim()) {
+      setBenefitsList([...benefitsList, benefitInput.trim()]);
+      setBenefitInput("");
+    }
+  };
+
+  const removeBenefit = (idx: number) => {
+    setBenefitsList(benefitsList.filter((_, i) => i !== idx));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      
+      // Limit to 5 images
+      if (images.length + filesArray.length > 5) {
+        toast.error("You can upload a maximum of 5 images");
+        return;
+      }
+
+      filesArray.forEach((file) => {
+        if (!file.type.startsWith("image/")) {
+          toast.error(`${file.name} is not an image file`);
+          return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds the 5MB size limit`);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === "string") {
+            setImages((prev) => [...prev, reader.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.title || !formData.price || !formData.location || !formData.description) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (images.length === 0) {
+      toast.error("Please upload at least one image of your tour");
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      toast.loading("Creating your tour gig...", { id: "create-gig" });
+
+      // 1. Create Gig on backend
+      const res = await fetch("/api/gigs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          location: formData.location,
+          country: formData.country,
+          durationHours: parseInt(formData.durationHours),
+          maxGroupSize: parseInt(formData.maxGroupSize),
+          guide_price: parseFloat(formData.price),
+          images: images,
+          benefits: benefitsList,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to create gig");
+      }
+
+      const newGig = await res.json();
+      toast.success("Gig created successfully!", { id: "create-gig" });
+
+      // 2. If boosted, pay boost fee and register boost
+      if (boostAlgorithm) {
+        try {
+          toast.loading(`Connecting wallet & switching to Base for ${CONFIG.FEATURED_GIG_PRICE} USDC boost...`, { id: "boost-gig" });
+          const { provider } = await connectWallet("base");
+          const signer = await provider.getSigner();
+
+          // USDC address on Base
+          const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+          const USDC_TRANSFER_ABI = [
+            "function transfer(address to, uint256 amount) external returns (bool)",
+          ];
+
+          const contract = new ethers.Contract(USDC_BASE_ADDRESS, USDC_TRANSFER_ABI, signer);
+          const amount = ethers.parseUnits(CONFIG.FEATURED_GIG_PRICE.toString(), 6); // USDC uses 6 decimals
+
+          toast.loading(`Please confirm payment of ${CONFIG.FEATURED_GIG_PRICE} USDC in your wallet...`, { id: "boost-gig" });
+          const tx = await contract.transfer(CONFIG.TREASURY_WALLET_ADDRESS, amount);
+          const receipt = await tx.wait();
+
+          toast.loading("Registering boost on platform...", { id: "boost-gig" });
+          const boostRes = await fetch("/api/monetization/boost", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              gigId: newGig.id,
+              txHash: receipt.hash,
+            }),
+          });
+
+          if (boostRes.ok) {
+            toast.success("Gig successfully created and boosted to Featured! 🚀", { id: "boost-gig" });
+          } else {
+            const boostErr = await boostRes.json();
+            toast.error(boostErr.message || "Gig created, but failed to register boost. You can try boosting from My Gigs list.", { id: "boost-gig" });
+          }
+        } catch (payErr: any) {
+          console.error("Boost payment failed:", payErr);
+          toast.error("Gig created successfully, but boost payment failed. You can boost it later from My Gigs.", { id: "boost-gig" });
+        }
+      }
+
+      router.push("/dashboard/guide/gigs");
+      
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Failed to create gig", { id: "create-gig" });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  return (
+    <DashboardLayout role="guide">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold text-dark-900">Create New Tour Gig</h1>
+          <p className="text-dark-500">Offer a new authentic experience to travelers and display it on the Explore page.</p>
+        </div>
+
+        {!hasWallet && (
+          <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3 animate-in slide-in-from-top-4 duration-300">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-amber-900 text-sm">Payout Wallet Required</h4>
+              <p className="text-xs text-amber-805 mt-1 leading-relaxed font-semibold">
+                You must connect a Web3 wallet (MetaMask, Coinbase Wallet, or Solflare) in the **Wallet** tab before you can create and publish gig listings. This ensures you can receive secure escrow payouts upon tour completion.
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard/guide/wallet")}
+                className="mt-2 text-xs font-bold text-primary hover:underline block cursor-pointer"
+              >
+                Go to Wallet Setup →
+              </button>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleCreate} className="space-y-6">
+          {/* Section 1: Basic Info */}
+          <div className="card p-6 space-y-6">
+            <h2 className="text-lg font-bold text-dark-900 border-b border-dark-100 pb-2 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" /> Basic Info
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Tour Title *</label>
+                <input 
+                  type="text" 
+                  className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-dark-950 font-medium"
+                  placeholder="e.g. Ubud Hidden Waterfall & Jungle Swings"
+                  value={formData.title}
+                  onChange={e => setFormData({...formData, title: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
+                    <Globe className="w-4 h-4 text-dark-400" /> Category *
+                  </label>
+                  <select
+                    className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
+                    value={formData.category}
+                    onChange={e => setFormData({...formData, category: e.target.value})}
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
+                    <MapPin className="w-4 h-4 text-dark-400" /> Country *
+                  </label>
+                  <select
+                    className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
+                    value={formData.country}
+                    onChange={e => setFormData({...formData, country: e.target.value})}
+                  >
+                    {countries.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Specific Location / City *</label>
+                <input 
+                  type="text" 
+                  className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
+                  placeholder="e.g. Ubud, Bali"
+                  value={formData.location}
+                  onChange={e => setFormData({...formData, location: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Details & Pricing */}
+          <div className="card p-6 space-y-6">
+            <h2 className="text-lg font-bold text-dark-900 border-b border-dark-100 pb-2 flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" /> Pricing & Logistics
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
+                    <DollarSign className="w-4 h-4 text-dark-400" /> Price per Person (USDC) *
+                  </label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    min="1"
+                    className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 font-semibold"
+                    placeholder="45.00"
+                    value={formData.price}
+                    onChange={e => setFormData({...formData, price: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
+                    <Clock className="w-4 h-4 text-dark-400" /> Duration (Hours) *
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
+                    placeholder="4"
+                    value={formData.durationHours}
+                    onChange={e => setFormData({...formData, durationHours: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
+                    <Users className="w-4 h-4 text-dark-400" /> Max Group Size *
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
+                    placeholder="8"
+                    value={formData.maxGroupSize}
+                    onChange={e => setFormData({...formData, maxGroupSize: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Description *</label>
+                <textarea 
+                  className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 h-32 resize-none"
+                  placeholder="Provide a detailed description of the tour, what travelers will experience, what is included/excluded, etc."
+                  value={formData.description}
+                  onChange={e => setFormData({...formData, description: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-1">Custom Benefits / Tour Perks</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    className="flex-grow p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
+                    placeholder="e.g. Free local snacks, Exclusive camera photography"
+                    value={benefitInput}
+                    onChange={e => setBenefitInput(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={addBenefit}
+                    className="px-5 bg-secondary text-white font-semibold rounded-xl hover:bg-secondary-600 transition-colors cursor-pointer"
+                  >
+                    Add
+                  </button>
+                </div>
+                {benefitsList.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {benefitsList.map((benefit, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-semibold">
+                        {benefit}
+                        <button
+                          type="button"
+                          onClick={() => removeBenefit(idx)}
+                          className="hover:text-red-500 font-bold ml-1 cursor-pointer"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Gallery Upload */}
+          <div className="card p-6 space-y-6">
+            <h2 className="text-lg font-bold text-dark-900 border-b border-dark-100 pb-2 flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-primary" /> Tour Photos
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-2">Upload Images * (Max 5, up to 5MB each)</label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dark-200 border-dashed rounded-2xl cursor-pointer bg-dark-50 hover:bg-dark-100/50 transition-all">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <ImageIcon className="w-8 h-8 text-dark-400 mb-2" />
+                      <p className="text-sm text-dark-500 font-semibold">Click to upload photos</p>
+                      <p className="text-xs text-dark-400">PNG, JPG or JPEG</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      multiple 
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={images.length >= 5}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-2">
+                  {images.map((img, idx) => (
+                    <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-dark-200 bg-dark-50">
+                      <img src={img} alt={`Tour Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1.5 right-1.5 p-1 rounded-full bg-red-500 text-white opacity-90 hover:opacity-100 shadow-md transition-opacity"
+                        title="Remove photo"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 4: Algorithmic Boost */}
+          <div className="card p-6 border-2 border-secondary/30 bg-secondary/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+              <Rocket className="w-24 h-24 text-secondary" />
+            </div>
+            
+            <div className="flex justify-between items-start mb-4 relative z-10">
+              <div>
+                <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2">
+                  <Rocket className="w-5 h-5 text-secondary" /> Algorithmic Boost
+                </h2>
+                <p className="text-sm text-dark-600 max-w-md mt-1">
+                  Pay a one-time <strong>{CONFIG.FEATURED_GIG_PRICE} USDC</strong> Web3 network fee to boost your gig to the top of the search results for 7 days.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer"
+                  checked={boostAlgorithm}
+                  onChange={() => setBoostAlgorithm(!boostAlgorithm)}
+                />
+                <div className="w-11 h-6 bg-dark-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+              </label>
+            </div>
+            
+            {boostAlgorithm && (
+              <div className="bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-secondary/20 flex items-start gap-2 animate-in fade-in zoom-in duration-300 relative z-10">
+                <Info className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
+                <p className="text-xs text-dark-600">
+                  You will be prompted by your connected wallet to pay <strong>{CONFIG.FEATURED_GIG_PRICE} USDC</strong> on the <strong>Base Network</strong>. This boost will immediately feature your gig.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard/guide/gigs")}
+              className="btn-ghost px-6 cursor-pointer"
+              disabled={isCreating}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={isCreating || !hasWallet}
+              className={`btn-primary px-8 flex items-center gap-2 cursor-pointer ${(isCreating || !hasWallet) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                </>
+              ) : boostAlgorithm ? (
+                `Pay ${CONFIG.FEATURED_GIG_PRICE} USDC & Create Boosted Gig`
+              ) : (
+                "Create Gig"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </DashboardLayout>
+  );
+}
