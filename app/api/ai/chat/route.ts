@@ -4,6 +4,17 @@ import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
+    // 1. Environment Verification
+    const apiKey = process.env.GEMINI_API_KEY;
+    const dbUrl = process.env.DATABASE_URL;
+
+    if (!apiKey || !dbUrl) {
+      return NextResponse.json({
+        reply: "⚠️ Hosting Environment Variables Missing: Please configure GEMINI_API_KEY and DATABASE_URL in your hosting platform dashboard (e.g. Vercel Project Settings > Environment Variables) so Michelle can connect and retrieve local tours.",
+        action: "NONE",
+      });
+    }
+
     const { message, history } = await req.json();
 
     // 2. Input Security: Validate user message to prevent prompt injection & extreme loads
@@ -78,14 +89,7 @@ If no action is currently requested or the user is just chatting, use "NONE".
 You MUST respond strictly in JSON matching the specified output schema. Do not prepend or append any explanation outside the JSON format.`;
 
     // 5. Call Google Gemini API securely on the server-side
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey.includes("...")) {
-      // Return a friendly fallback response if the API key is not fully configured
-      return NextResponse.json({
-        reply: "Hello! I'm Michelle, your explomate AI. It looks like my API key is not fully set up yet. Once my captain updates the GEMINI_API_KEY in the env settings, I'll be fully functional to search, book, and handle payments for you!",
-        action: "NONE",
-      });
-    }
+    const apiKey = process.env.GEMINI_API_KEY as string;
 
     // Format chat history for Gemini API
     const contents = (history || []).map((h: any) => ({
