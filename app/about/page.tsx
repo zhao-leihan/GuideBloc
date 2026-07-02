@@ -92,7 +92,7 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Rachel Card */}
-            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300">
+            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 max-w-[280px] md:max-w-none mx-auto w-full">
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-dark-100">
                 <img 
                   src="/assets/founder(2).jpeg" 
@@ -114,7 +114,7 @@ export default function AboutPage() {
             </div>
 
             {/* Rayhan Card (Middle) */}
-            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-primary/20 shadow-md">
+            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-primary/20 shadow-md max-w-[280px] md:max-w-none mx-auto w-full">
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-dark-100">
                 <img 
                   src="/assets/founder(1).jpeg" 
@@ -136,7 +136,7 @@ export default function AboutPage() {
             </div>
 
             {/* Gracia Card */}
-            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300">
+            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 max-w-[280px] md:max-w-none mx-auto w-full">
               <div className="relative aspect-[3/4] w-full overflow-hidden bg-dark-100">
                 <img 
                   src="/assets/Founder(3).jpeg" 
