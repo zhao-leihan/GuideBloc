@@ -89,7 +89,6 @@ If no action is currently requested or the user is just chatting, use "NONE".
 You MUST respond strictly in JSON matching the specified output schema. Do not prepend or append any explanation outside the JSON format.`;
 
     // 5. Call Google Gemini API securely on the server-side
-    const apiKey = process.env.GEMINI_API_KEY as string;
 
     // Format chat history for Gemini API
     const contents = (history || []).map((h: any) => ({
