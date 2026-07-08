@@ -25,6 +25,9 @@ export async function GET(req: Request) {
     const bookings = await prisma.booking.findMany({
       where,
       include: {
+        reviews: {
+          select: { id: true, reviewerId: true }
+        },
         gig: {
           include: { guide: { select: { id: true, name: true, avatar: true, country: true } } },
         },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, CheckCircle2, AlertCircle, ExternalLink, CreditCard, DollarSign, Wallet, ArrowLeft, ShieldCheck } from "lucide-react";
+import { X, Loader2, CheckCircle2, AlertCircle, ExternalLink, CreditCard, DollarSign, Wallet, ArrowLeft, ShieldCheck, ArrowRightLeft } from "lucide-react";
 import { connectWallet } from "@/lib/crypto/payment";
 
 interface PaymentModalProps {
@@ -23,22 +23,21 @@ export default function PaymentModal({
   bookingDate,
   onConfirm,
 }: PaymentModalProps) {
-  const [step, setStep] = useState<"select_method" | "connect" | "confirm" | "processing" | "success" | "error" | "moonpay" | "paypal_flow">("select_method");
+  const [step, setStep] = useState<"select_method" | "connect" | "confirm" | "processing" | "success" | "error" | "alchemypay" | "transak">("select_method");
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [walletType, setWalletType] = useState<"metamask" | "coinbase" | "solflare" | null>(null);
 
-  // MoonPay destination wallet
-  const [moonpayWallet, setMoonpayWallet] = useState("0x70997970C51812dc3A010C7d01b50e0d17dc79C8");
-  const [showMoonpayIframe, setShowMoonpayIframe] = useState(false);
+  // Alchemy Pay destination wallet
+  const [alchemypayWallet, setAlchemypayWallet] = useState("0x70997970C51812dc3A010C7d01b50e0d17dc79C8");
+  const [showAlchemypayIframe, setShowAlchemypayIframe] = useState(false);
 
-  // PayPal checkout variables
-  const [paypalEmail, setPaypalEmail] = useState("");
-  const [paypalPassword, setPaypalPassword] = useState("");
-  const [paypalStep, setPaypalStep] = useState<"login" | "review" | "processing">("login");
-  const [paypalProcessingStatus, setPaypalProcessingStatus] = useState("");
+  // Transak destination wallet
+  const [transakWallet, setTransakWallet] = useState("0x70997970C51812dc3A010C7d01b50e0d17dc79C8");
+  const [showTransakIframe, setShowTransakIframe] = useState(false);
+  const [transakOrderId, setTransakOrderId] = useState("");
 
   if (!isOpen) return null;
 
@@ -49,7 +48,8 @@ export default function PaymentModal({
     try {
       const { address } = await connectWallet("base", providerType);
       setWalletAddress(address);
-      setMoonpayWallet(address); // Sync moonpay wallet with connected wallet
+      setAlchemypayWallet(address); // Sync alchemy wallet with connected wallet
+      setTransakWallet(address); // Sync transak wallet with connected wallet
       setStep("confirm");
     } catch (err: any) {
       setError(err.reason || err.message || "Connection failed");
@@ -72,49 +72,40 @@ export default function PaymentModal({
       setStep("success");
       onConfirm?.(mockTxHash);
     } catch (err: any) {
-      setError(err.message || "Payment failed");
+      setError(err.message || "Direct deposit transaction failed");
       setStep("error");
     }
   };
 
-  const handleMoonpayConfirm = async () => {
+  const handleAlchemypayConfirm = async () => {
     setStep("processing");
     setError(null);
     try {
       await new Promise((r) => setTimeout(r, 2000));
-      const mockTxHash = "0xMOCK_MOONPAY_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+      const mockTxHash = "0xMOCK_ALCHEMY_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
       setTxHash(mockTxHash);
       setStep("success");
       onConfirm?.(mockTxHash);
     } catch (err: any) {
-      setError(err.message || "MoonPay verification failed");
+      setError(err.message || "Alchemy Pay verification failed");
       setStep("error");
     }
   };
 
-  const handlePaypalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (paypalStep === "login") {
-      setPaypalStep("review");
+  const handleTransakConfirm = async () => {
+    if (!transakOrderId.trim()) {
+      setError("Please enter your Transak Order ID.");
+      return;
     }
-  };
-
-  const handlePaypalPay = async () => {
-    setPaypalStep("processing");
-    setPaypalProcessingStatus("Verifying PayPal credentials...");
-    await new Promise((r) => setTimeout(r, 1500));
-    setPaypalProcessingStatus("PayPal payment approved. Converting USD to Web3 liquidity...");
-    await new Promise((r) => setTimeout(r, 1500));
-    setPaypalProcessingStatus(`Minting smart escrow contract lock for ${amount} ${token} on Polygon...`);
-    await new Promise((r) => setTimeout(r, 1500));
-
+    setStep("processing");
+    setError(null);
     try {
-      const mockTxHash = "0xMOCK_PAYPAL_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
-      setTxHash(mockTxHash);
+      await new Promise((r) => setTimeout(r, 1000));
+      setTxHash(transakOrderId.trim());
       setStep("success");
-      onConfirm?.(mockTxHash);
+      onConfirm?.(transakOrderId.trim());
     } catch (err: any) {
-      setError(err.message || "PayPal Web3 bridge failed");
+      setError(err.message || "Transak verification failed");
       setStep("error");
     }
   };
@@ -131,8 +122,8 @@ export default function PaymentModal({
                 onClick={() => {
                   setError(null);
                   setStep("select_method");
-                  setShowMoonpayIframe(false);
-                  setPaypalStep("login");
+                  setShowAlchemypayIframe(false);
+                  setShowTransakIframe(false);
                 }}
                 className="text-dark-500 hover:text-dark-900 mr-1"
               >
@@ -140,7 +131,7 @@ export default function PaymentModal({
               </button>
             )}
             <h3 className="text-lg font-bold text-dark-900">
-              {step === "moonpay" ? "MoonPay Checkout" : step === "paypal_flow" ? "PayPal Bridged Checkout" : "Checkout Payment"}
+              {step === "alchemypay" ? "Alchemy Pay Checkout" : step === "transak" ? "Transak Checkout" : "Checkout Payment"}
             </h3>
           </div>
           <button onClick={onClose} className="text-dark-400 hover:text-dark-600">
@@ -152,7 +143,7 @@ export default function PaymentModal({
         <div className="p-6">
           
           {/* Order Summary */}
-          {step !== "paypal_flow" || paypalStep !== "processing" ? (
+          {step !== "processing" ? (
             <div className="bg-dark-50 rounded-xl p-4 mb-6">
               <p className="text-[10px] uppercase font-bold tracking-wider text-dark-400 mb-1">Booking Details</p>
               <p className="font-semibold text-dark-900 text-sm">{gigTitle}</p>
@@ -174,9 +165,9 @@ export default function PaymentModal({
               {/* Option A: Direct Web3 Wallet */}
               <button
                 onClick={() => setStep("connect")}
-                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-xl hover:border-[#003087] hover:bg-[#003087]/5 transition-all text-left group"
               >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-lg bg-[#003087]/10 text-[#003087] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
                   <Wallet className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -185,31 +176,31 @@ export default function PaymentModal({
                 </div>
               </button>
 
-              {/* Option B: MoonPay Fiat-to-Crypto */}
+              {/* Option B: Transak Gateway */}
               <button
-                onClick={() => setStep("moonpay")}
-                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-xl hover:border-[#7A00FF] hover:bg-[#7A00FF]/5 transition-all text-left group"
+                onClick={() => setStep("transak")}
+                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-left group"
               >
-                <div className="w-10 h-10 rounded-lg bg-[#7A00FF]/10 text-[#7A00FF] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <CreditCard className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <ArrowRightLeft className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="font-semibold text-dark-900 text-sm block">Credit Card (via MoonPay)</span>
+                  <span className="font-semibold text-dark-900 text-sm block">Credit Card (via Transak)</span>
                   <span className="text-xs text-dark-400 block truncate">Buy crypto instantly with credit card/Apple Pay</span>
                 </div>
               </button>
 
-              {/* Option C: PayPal Web3 Bridged */}
+              {/* Option C: Alchemy Pay Gateway */}
               <button
-                onClick={() => setStep("paypal_flow")}
-                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-xl hover:border-[#003087] hover:bg-[#003087]/5 transition-all text-left group"
+                onClick={() => setStep("alchemypay")}
+                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-left group"
               >
-                <div className="w-10 h-10 rounded-lg bg-[#003087]/10 text-[#003087] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <DollarSign className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <CreditCard className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="font-semibold text-dark-900 text-sm block">PayPal (Web3 Bridged)</span>
-                  <span className="text-xs text-dark-400 block truncate">Pay with PayPal; Guide receives USDT/USDC</span>
+                  <span className="font-semibold text-dark-900 text-sm block">Credit Card (via Alchemy Pay)</span>
+                  <span className="text-xs text-dark-400 block truncate">Alternative card checkout on Base</span>
                 </div>
               </button>
             </div>
@@ -219,7 +210,7 @@ export default function PaymentModal({
           {step === "connect" && (
             <div className="space-y-4">
               <p className="text-xs text-dark-500 text-center mb-4">
-                Select your crypto wallet to pay on Polygon:
+                Select your crypto wallet to pay on Base:
               </p>
               <div className="grid grid-cols-1 gap-3">
                 <button
@@ -283,128 +274,47 @@ export default function PaymentModal({
             </div>
           )}
 
-          {/* 4. STEP: MOONPAY FIAT ON-RAMP */}
-          {step === "moonpay" && (
-            <div className="space-y-4">
-              {!showMoonpayIframe ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-dark-600 uppercase tracking-wider mb-1.5">Polygon Wallet Address (to receive USDT/USDC)</label>
-                    <input 
-                      type="text" 
-                      value={moonpayWallet} 
-                      onChange={e => setMoonpayWallet(e.target.value)}
-                      className="w-full p-3 border border-dark-200 rounded-xl focus:border-[#7A00FF] focus:ring-1 focus:ring-[#7A00FF] outline-none font-mono text-xs text-dark-900"
-                      placeholder="0x..."
-                      required
-                    />
-                    <p className="text-[10px] text-dark-400 mt-1">Prefilled with DApp address. Replace if you want to use a custom address.</p>
-                  </div>
-                  <button 
-                    onClick={() => setShowMoonpayIframe(true)}
-                    className="w-full bg-[#7A00FF] hover:bg-[#6400d1] text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-[#7A00FF]/25 flex items-center justify-center gap-2"
-                  >
-                    <CreditCard className="w-4 h-4" /> Open MoonPay Sandbox
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4 animate-in fade-in zoom-in duration-200">
-                  <div className="border border-dark-200 rounded-2xl overflow-hidden shadow-inner">
-                    <iframe 
-                      src={`https://buy-sandbox.moonpay.com?apiKey=pk_test_Ol50lJrgbXKJ6vGqRQ7T1ePRjtdTsqF&currencyCode=${token.toLowerCase()}&walletAddress=${moonpayWallet}&baseCurrencyCode=usd&baseCurrencyAmount=${amount}`}
-                      className="w-full h-[380px] border-0"
-                      allow="accelerometer; autoplay; camera; gyroscope; payment"
-                    ></iframe>
-                  </div>
-                  <button 
-                    onClick={handleMoonpayConfirm}
-                    className="w-full btn-primary py-3 flex items-center justify-center gap-2"
-                  >
-                    <ShieldCheck className="w-5 h-5" /> I Have Completed MoonPay Checkout
-                  </button>
-                </div>
-              )}
+          {/* 4. STEP: ALCHEMY PAY FIAT ON-RAMP */}
+          {step === "alchemypay" && (
+            <div className="space-y-4 text-center py-6 animate-in fade-in zoom-in duration-200">
+              <div className="w-16 h-16 bg-yellow-500/10 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-dark-900">Alchemy Pay Under Maintenance</h3>
+              <p className="text-sm text-dark-600 max-w-xs mx-auto leading-relaxed">
+                Alchemy Pay is currently undergoing scheduled platform upgrades. We will be back online on <strong className="text-dark-900 font-bold">July 20, 2026</strong>.
+              </p>
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep("select_method")}
+                  className="btn-outline px-6 py-2.5 text-xs font-semibold rounded-xl"
+                >
+                  Choose Another Method
+                </button>
+              </div>
             </div>
           )}
 
-          {/* 5. STEP: PAYPAL FLOW */}
-          {step === "paypal_flow" && (
-            <div className="animate-in fade-in zoom-in duration-200">
-              {paypalStep === "login" && (
-                <form onSubmit={handlePaypalSubmit} className="space-y-4">
-                  <div className="bg-[#003087] text-white p-4 rounded-xl flex items-center justify-between mb-4">
-                    <span className="font-bold text-sm">PayPal Sandbox</span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider opacity-85">Web3 Liquidity Bridge</span>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-dark-600 uppercase mb-1">PayPal Email Address</label>
-                    <input 
-                      type="email" 
-                      value={paypalEmail}
-                      onChange={e => setPaypalEmail(e.target.value)}
-                      placeholder="buyer@paypal.com"
-                      className="w-full p-3 border border-dark-200 rounded-xl focus:border-blue-500 outline-none text-sm"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-dark-600 uppercase mb-1">PayPal Password</label>
-                    <input 
-                      type="password" 
-                      value={paypalPassword}
-                      onChange={e => setPaypalPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full p-3 border border-dark-200 rounded-xl focus:border-blue-500 outline-none text-sm"
-                      required
-                    />
-                  </div>
-                  <button type="submit" className="w-full bg-[#0079C1] hover:bg-[#00457C] text-white font-bold py-3 rounded-xl transition-all shadow-md mt-2">
-                    Log In to PayPal
-                  </button>
-                </form>
-              )}
-
-              {paypalStep === "review" && (
-                <div className="space-y-4">
-                  <div className="bg-[#f8fafc] border border-dark-200 rounded-xl p-4 space-y-3">
-                    <div className="flex justify-between items-center text-xs border-b border-dark-100 pb-2">
-                      <span className="text-dark-500">Destination</span>
-                      <span className="font-bold text-dark-900">Explomate.ly Escrow Pool</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs border-b border-dark-100 pb-2">
-                      <span className="text-dark-500">Payment Source</span>
-                      <span className="font-medium text-dark-900 flex items-center gap-1.5">
-                        💳 Visa •••• 4242
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-dark-500">Amount to Charge</span>
-                      <span className="font-extrabold text-dark-900 text-sm">${amount.toFixed(2)} USD</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-[11px] text-primary-700 leading-normal">
-                    <strong>Fiat-to-Crypto Bridge Notice:</strong> Explomate&apos;s automated liquidity pool automatically locks the corresponding {amount.toFixed(2)} {token} in the smart contract escrow on Polygon once your PayPal payment is completed.
-                  </div>
-
-                  <button 
-                    onClick={handlePaypalPay}
-                    className="w-full bg-[#0079C1] hover:bg-[#00457C] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2"
-                  >
-                    <ShieldCheck className="w-4.5 h-4.5" /> Agree &amp; Pay Now
-                  </button>
-                </div>
-              )}
-
-              {paypalStep === "processing" && (
-                <div className="text-center py-6 space-y-4 animate-in fade-in duration-300">
-                  <Loader2 className="w-10 h-10 text-[#0079C1] animate-spin mx-auto" />
-                  <div>
-                    <p className="text-dark-900 font-semibold text-sm">Executing Bridge...</p>
-                    <p className="text-xs text-dark-500 mt-1">{paypalProcessingStatus}</p>
-                  </div>
-                </div>
-              )}
+          {/* 5. STEP: TRANSAK FLOW */}
+          {step === "transak" && (
+            <div className="space-y-4 text-center py-6 animate-in fade-in zoom-in duration-200">
+              <div className="w-16 h-16 bg-yellow-500/10 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold text-dark-900">Transak Under Maintenance</h3>
+              <p className="text-sm text-dark-600 max-w-xs mx-auto leading-relaxed">
+                Transak Gateway is currently undergoing scheduled platform upgrades. We will be back online on <strong className="text-dark-900 font-bold">July 20, 2026</strong>.
+              </p>
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep("select_method")}
+                  className="btn-outline px-6 py-2.5 text-xs font-semibold rounded-xl"
+                >
+                  Choose Another Method
+                </button>
+              </div>
             </div>
           )}
 
@@ -427,7 +337,7 @@ export default function PaymentModal({
               <p className="text-sm text-dark-500 mb-4">Your booking has been created in escrow</p>
               {txHash && (
                 <a
-                  href={`https://amoy.polygonscan.com/tx/${txHash}`}
+                  href={`https://sepolia.basescan.org/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"

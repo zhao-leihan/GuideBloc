@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, Search, MoreVertical, Phone, Video, Image as ImageIcon, Paperclip } from "lucide-react";
+import { Send, Search, MoreVertical, Phone, Video, Image as ImageIcon, Paperclip, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import toast from "react-hot-toast";
 
@@ -40,6 +40,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
   const [loadingConvs, setLoadingConvs] = useState(true);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [search, setSearch] = useState("");
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -205,7 +206,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
   return (
     <div className="flex h-[calc(100vh-200px)] bg-white rounded-2xl shadow-sm border border-dark-100 overflow-hidden">
       {/* Sidebar: Conversations List */}
-      <div className="w-80 flex-shrink-0 border-r border-dark-100 flex flex-col bg-dark-50/30">
+      <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full md:w-80 flex-shrink-0 border-r border-dark-100 flex-col bg-dark-50/30`}>
         <div className="p-4 border-b border-dark-100">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" />
@@ -229,7 +230,10 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
             filteredConversations.map((conv) => (
               <button
                 key={conv.id}
-                onClick={() => setActiveConversationId(conv.id)}
+                onClick={() => {
+                  setActiveConversationId(conv.id);
+                  setMobileView("chat");
+                }}
                 className={`w-full flex items-start gap-3 p-4 transition-colors text-left ${
                   activeConversationId === conv.id ? "bg-primary/5 border-l-4 border-primary" : "hover:bg-white border-l-4 border-transparent"
                 }`}
@@ -267,10 +271,17 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
 
       {/* Main Chat Area */}
       {activeConversation ? (
-        <div className="flex-1 flex flex-col bg-white">
+        <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 flex-col bg-white`}>
           {/* Chat Header */}
-          <div className="h-16 border-b border-dark-100 flex items-center justify-between px-6 bg-white/50 backdrop-blur-sm z-10">
-            <div className="flex items-center gap-3">
+          <div className="h-16 border-b border-dark-100 flex items-center justify-between px-4 md:px-6 bg-white/50 backdrop-blur-sm z-10">
+            <div className="flex items-center gap-2 md:gap-3">
+              <button 
+                type="button"
+                onClick={() => setMobileView("list")} 
+                className="md:hidden p-1.5 hover:bg-dark-50 rounded-full text-dark-600 transition-colors mr-1 cursor-pointer"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <div>
                 {activeConversation.otherParticipant.avatar ? (
                   <img src={activeConversation.otherParticipant.avatar} alt={activeConversation.otherParticipant.name} className="w-10 h-10 rounded-full object-cover" />
@@ -381,7 +392,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-dark-50/20 text-dark-400">
+        <div className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex flex-1 items-center justify-center bg-dark-50/20 text-dark-400`}>
           <p>Select a contact to start messaging</p>
         </div>
       )}

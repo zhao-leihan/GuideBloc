@@ -26,8 +26,11 @@ contract ExplomateEscrow is Ownable, ReentrancyGuard {
         BookingStatus status;
     }
 
-    // State variables
-    address public platformTreasury;
+    // Vaults for commission distribution
+    address public gasOpsVault;
+    address public saasGrowthVault;
+    address public holdingDividendsVault;
+
     uint256 public defaultCommissionBps = 1000; // 10% = 1000 bps
     mapping(bytes32 => BookingInfo) public bookings;
     mapping(address => uint256) public guideCommissions; // per-guide commission override
@@ -39,10 +42,20 @@ contract ExplomateEscrow is Ownable, ReentrancyGuard {
     event FundsRefunded(bytes32 indexed bookingId, uint256 amount);
     event DisputeOpened(bytes32 indexed bookingId);
     event GuideCommissionSet(address indexed guide, uint256 bps);
-    event TreasuryUpdated(address oldTreasury, address newTreasury);
+    event VaultsUpdated(address indexed gasOpsVault, address indexed saasGrowthVault, address indexed holdingDividendsVault);
 
-    constructor(address _treasury) Ownable(msg.sender) {
-        platformTreasury = _treasury;
+    constructor(
+        address _gasOpsVault,
+        address _saasGrowthVault,
+        address _holdingDividendsVault
+    ) Ownable(msg.sender) {
+        require(_gasOpsVault != address(0), "Invalid gasOpsVault");
+        require(_saasGrowthVault != address(0), "Invalid saasGrowthVault");
+        require(_holdingDividendsVault != address(0), "Invalid holdingDividendsVault");
+
+        gasOpsVault = _gasOpsVault;
+        saasGrowthVault = _saasGrowthVault;
+        holdingDividendsVault = _holdingDividendsVault;
     }
 
     // Create a booking and lock funds in escrow
@@ -96,8 +109,9 @@ contract ExplomateEscrow is Ownable, ReentrancyGuard {
 
         // Transfer net to guide
         IERC20(b.token).safeTransfer(b.guide, guideAmount);
-        // Transfer commission to platform treasury
-        IERC20(b.token).safeTransfer(platformTreasury, commission);
+
+        // Atomic Split of Commission
+        _splitCommission(b.token, commission);
 
         emit FundsReleased(bookingId, guideAmount, commission);
     }
@@ -134,7 +148,9 @@ contract ExplomateEscrow is Ownable, ReentrancyGuard {
         b.status = BookingStatus.RELEASED;
 
         IERC20(b.token).safeTransfer(b.guide, guideAmount);
-        IERC20(b.token).safeTransfer(platformTreasury, commission);
+        
+        // Atomic Split of Commission
+        _splitCommission(b.token, commission);
 
         emit FundsReleased(bookingId, guideAmount, commission);
     }
@@ -152,6 +168,19 @@ contract ExplomateEscrow is Ownable, ReentrancyGuard {
         emit DisputeOpened(bookingId);
     }
 
+    // Internal helper for atomic commission splitting
+    function _splitCommission(address token, uint256 commission) private {
+        if (commission > 0) {
+            uint256 gasOpsShare = (commission * 10) / 100; // 10% alokasi ops
+            uint256 saasGrowthShare = (commission * 50) / 100; // 50% alokasi ekspansi
+            uint256 dividendsShare = commission - gasOpsShare - saasGrowthShare; // 40% alokasi deviden
+
+            IERC20(token).safeTransfer(gasOpsVault, gasOpsShare);
+            IERC20(token).safeTransfer(saasGrowthVault, saasGrowthShare);
+            IERC20(token).safeTransfer(holdingDividendsVault, dividendsShare);
+        }
+    }
+
     // Admin functions
     function setGuideCommissionBps(address guide, uint256 bps) external onlyOwner {
         require(bps <= 5000, "Commission too high"); // max 50%
@@ -159,15 +188,26 @@ contract ExplomateEscrow is Ownable, ReentrancyGuard {
         emit GuideCommissionSet(guide, bps);
     }
 
+    // Set vaults
+    function setVaults(
+        address _gasOpsVault,
+        address _saasGrowthVault,
+        address _holdingDividendsVault
+    ) external onlyOwner {
+        require(_gasOpsVault != address(0), "Invalid gasOpsVault");
+        require(_saasGrowthVault != address(0), "Invalid saasGrowthVault");
+        require(_holdingDividendsVault != address(0), "Invalid holdingDividendsVault");
+
+        gasOpsVault = _gasOpsVault;
+        saasGrowthVault = _saasGrowthVault;
+        holdingDividendsVault = _holdingDividendsVault;
+
+        emit VaultsUpdated(_gasOpsVault, _saasGrowthVault, _holdingDividendsVault);
+    }
+
     function setDefaultCommissionBps(uint256 bps) external onlyOwner {
         require(bps <= 5000, "Commission too high");
         defaultCommissionBps = bps;
-    }
-
-    function setTreasury(address newTreasury) external onlyOwner {
-        require(newTreasury != address(0), "Invalid treasury");
-        emit TreasuryUpdated(platformTreasury, newTreasury);
-        platformTreasury = newTreasury;
     }
 
     function getBooking(bytes32 bookingId) external view returns (BookingInfo memory) {

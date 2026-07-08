@@ -46,21 +46,23 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
-        token.avatar = (user as any).avatar;
+        token.avatar = (user as any).avatar && (user as any).avatar.startsWith("data:") ? null : (user as any).avatar;
         token.guideStatus = (user as any).guideStatus;
+        token.walletAddress = (user as any).walletAddress;
       }
       // Always fetch the freshest user role and guideStatus from the database
       if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },
-          select: { id: true, role: true, avatar: true, guideStatus: true, isBlocked: true },
+          select: { id: true, role: true, avatar: true, guideStatus: true, isBlocked: true, walletAddress: true },
         });
         if (dbUser) {
           token.id = dbUser.id;
           token.role = dbUser.role;
-          token.avatar = dbUser.avatar;
+          token.avatar = dbUser.avatar && dbUser.avatar.startsWith("data:") ? null : dbUser.avatar;
           token.guideStatus = dbUser.guideStatus;
           token.isBlocked = dbUser.isBlocked;
+          token.walletAddress = dbUser.walletAddress;
         }
       }
       return token;
@@ -72,6 +74,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).avatar = token.avatar;
         (session.user as any).guideStatus = token.guideStatus;
         (session.user as any).isBlocked = token.isBlocked;
+        (session.user as any).walletAddress = token.walletAddress;
       }
       return session;
     },

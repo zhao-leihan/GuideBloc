@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -20,15 +21,33 @@ export default function TouristBookingsPage() {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // Double Review system states
+  const [reviewBooking, setReviewBooking] = useState<any | null>(null);
+  const [guideRating, setGuideRating] = useState(5);
+  const [guideComment, setGuideComment] = useState("");
+  const [guideImages, setGuideImages] = useState<string[]>([]);
+  const [platformRating, setPlatformRating] = useState(5);
+  const [platformComment, setPlatformComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Tour Completion Verification states
+  const [completionBooking, setCompletionBooking] = useState<any | null>(null);
+  const [proofPhoto, setProofPhoto] = useState<string>("");
+  const [isUploadingProof, setIsUploadingProof] = useState<boolean>(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (session?.user) {
+      fetchBookings();
+    }
+  }, [session]);
 
   const fetchBookings = async () => {
     try {
       const res = await fetch("/api/bookings");
       if (res.ok) {
         const data = await res.json();
+        const userId = (session?.user as any)?.id;
         // Map database schema to frontend expected layout
         const mapped = data.map((b: any) => ({
           id: b.id,
@@ -44,6 +63,7 @@ export default function TouristBookingsPage() {
           location: b.gig?.location || "Unknown Location",
           participants: b.participants || [],
           tourist: b.tourist || null,
+          hasReviewed: b.reviews?.some((r: any) => r.reviewerId === userId) || false,
         }));
         setBookings(mapped);
       }
@@ -54,7 +74,7 @@ export default function TouristBookingsPage() {
     }
   };
 
-  const handleMarkComplete = async (bookingId: string) => {
+  const handleMarkComplete = async (bookingId: string, photo: string) => {
     setIsProcessing(bookingId);
     toast.info("Processing automated payout on the blockchain...");
     
@@ -64,20 +84,58 @@ export default function TouristBookingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: "COMPLETED",
+          proofPhoto: photo,
         }),
       });
 
       if (res.ok) {
         setBookings(prev => 
-          prev.map(b => b.id === bookingId ? { ...b, status: "COMPLETED" } : b)
+          prev.map(b => b.id === bookingId ? { ...b, status: "COMPLETED", proofPhoto: photo } : b)
         );
         toast.success("Tour marked as complete! Funds automatically sent to Guide & Treasury.");
+        setCompletionBooking(null);
+        setProofPhoto("");
       } else {
         toast.error("Failed to complete tour in database");
       }
     } catch (err) {
       console.error(err);
       toast.error("Failed to complete tour transaction");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to cancel this booking? If funded, your USDC/USDT escrow funds will be fully refunded to your wallet.")) {
+      return;
+    }
+    
+    setIsProcessing(bookingId);
+    toast.info("Processing cancellation and escrow refund on-chain...");
+    
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "CANCELLED",
+        }),
+      });
+
+      if (res.ok) {
+        setBookings(prev => 
+          prev.map(b => b.id === bookingId ? { ...b, status: "CANCELLED" } : b)
+        );
+        toast.success("Booking cancelled and refunded successfully!");
+        fetchBookings();
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "Failed to cancel booking");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to process booking cancellation");
     } finally {
       setIsProcessing(null);
     }
@@ -248,17 +306,17 @@ export default function TouristBookingsPage() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${allTravelers.map((t: any, idx: number) => `
-                    <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#fafcff'}; border-bottom: 1px solid #f0f3f8;">
-                        <td style="padding: 8px 10px; color: #94a3b8; text-align: center; font-weight: 500; font-size: 10px;">${idx + 1}</td>
-                        <td style="padding: 8px 10px; font-weight: 600; color: #0f172a;">
-                            <span>${t.title ? t.title + '. ' : ''}${t.name}</span>
-                            ${idx === 0 ? `<span style="display: inline-block; vertical-align: middle; font-size: 7px; font-weight: 700; color: #1e40af; background: #dbeafe; border: 1px solid #bfdbfe; padding: 1px 7px; border-radius: 12px; margin-left: 6px; line-height: 1.6; text-transform: uppercase; letter-spacing: 0.3px;">Lead</span>` : ''}
-                        </td>
-                        <td style="padding: 8px 10px; color: #334155; font-family: 'SF Mono', 'Courier New', monospace; font-size: 9.5px; letter-spacing: 0.3px;">${t.document}</td>
-                        <td style="padding: 8px 10px; color: #334155; text-align: center; font-weight: 500;">${t.age}</td>
-                    </tr>
-                    `).join('')}
+                    ${allTravelers.map((t: any, idx: number) => 
+                      '<tr style="background: ' + (idx % 2 === 0 ? '#ffffff' : '#fafcff') + '; border-bottom: 1px solid #f0f3f8;">' +
+                          '<td style="padding: 8px 10px; color: #94a3b8; text-align: center; font-weight: 500; font-size: 10px;">' + (idx + 1) + '</td>' +
+                          '<td style="padding: 8px 10px; font-weight: 600; color: #0f172a;">' +
+                              '<span>' + (t.title ? t.title + '. ' : '') + t.name + '</span>' +
+                              (idx === 0 ? '<span style="display: inline-block; vertical-align: middle; font-size: 7px; font-weight: 700; color: #1e40af; background: #dbeafe; border: 1px solid #bfdbfe; padding: 1px 7px; border-radius: 12px; margin-left: 6px; line-height: 1.6; text-transform: uppercase; letter-spacing: 0.3px;">Lead</span>' : '') +
+                          '</td>' +
+                          '<td style="padding: 8px 10px; color: #334155; font-family: \'SF Mono\', \'Courier New\', monospace; font-size: 9.5px; letter-spacing: 0.3px;">' + t.document + '</td>' +
+                          '<td style="padding: 8px 10px; color: #334155; text-align: center; font-weight: 500;">' + t.age + '</td>' +
+                      '</tr>'
+                    ).join('')}
                 </tbody>
             </table>
         </div>
@@ -338,6 +396,80 @@ export default function TouristBookingsPage() {
     }
   };
 
+  const handleReviewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      if (guideImages.length + filesArray.length > 5) {
+        toast.error("You can upload a maximum of 5 images");
+        return;
+      }
+      filesArray.forEach((file) => {
+        if (!file.type.startsWith("image/")) {
+          toast.error(`${file.name} is not an image file`);
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds the 5MB size limit`);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === "string") {
+            setGuideImages((prev) => [...prev, reader.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeReviewImage = (index: number) => {
+    setGuideImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitReviews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeReviewBooking) return;
+    setSubmittingReview(true);
+
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: activeReviewBooking.id,
+          rating: guideRating,
+          comment: guideComment,
+          images: guideImages,
+          platformRating,
+          platformComment,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Thank you for your feedback!");
+        setBookings((prev) =>
+          prev.map((b) => (b.id === activeReviewBooking.id ? { ...b, hasReviewed: true } : b))
+        );
+        setReviewBooking(null);
+        // Reset state
+        setGuideRating(5);
+        setGuideComment("");
+        setGuideImages([]);
+        setPlatformRating(5);
+        setPlatformComment("");
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "Failed to submit reviews");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error submitting reviews");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case "COMPLETED":
@@ -355,6 +487,10 @@ export default function TouristBookingsPage() {
 
   const activeBookingsCount = bookings.filter(b => !["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status)).length;
   const historyBookingsCount = bookings.filter(b => ["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status)).length;
+
+  const unreviewedCompletedBooking = bookings.find(b => b.status === "COMPLETED" && !b.hasReviewed);
+  const activeReviewBooking = reviewBooking || unreviewedCompletedBooking;
+  const isReviewMandatory = !!unreviewedCompletedBooking;
 
   const filteredBookings = bookings.filter(b => {
     const isHistory = ["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status);
@@ -405,7 +541,7 @@ export default function TouristBookingsPage() {
             </div>
           ) : (
             filteredBookings.map((booking) => (
-              <div key={booking.id} className="card p-6 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+              <div key={booking.id} className="card p-6 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center !overflow-visible">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <h3 className="text-xl font-bold text-dark-900">{booking.tourName}</h3>
@@ -450,43 +586,110 @@ export default function TouristBookingsPage() {
                 <div className="flex flex-col items-end gap-3 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0">
                   <div className="text-2xl font-bold text-dark-900">{formatCurrency(booking.amountUSD)}</div>
                   
-                  <div className="flex flex-col sm:flex-row gap-2 w-full">
-                    <button 
-                      onClick={() => handleDownloadPDF(booking)}
-                      className="btn-outline flex items-center justify-center gap-2 w-full whitespace-nowrap"
-                    >
-                      <Download className="w-4 h-4" /> PDF
-                    </button>
-
-                    <button 
-                      onClick={() => handleChatWithGuide(booking)}
-                      className="btn-outline flex items-center justify-center gap-2 w-full whitespace-nowrap cursor-pointer text-primary hover:bg-primary/5 hover:border-primary"
-                    >
-                      <MessageSquare className="w-4 h-4" /> Chat Guide
-                    </button>
-
-                    {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
+                  <div className="flex items-center gap-2 justify-end w-full mt-1">
+                    {/* Cancellation X Button */}
+                    {(booking.status === "PENDING" || booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
                       <button 
-                        onClick={() => setActiveMeetBooking(booking)}
-                        className="btn-outline flex items-center justify-center gap-2 w-full whitespace-nowrap text-secondary border-secondary hover:bg-secondary/5 hover:border-secondary cursor-pointer"
-                      >
-                        <Compass className="w-4 h-4" /> Meet Radar
-                      </button>
-                    )}
-
-                    {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
-                      <button 
-                        onClick={() => handleMarkComplete(booking.id)}
+                        onClick={() => handleCancelBooking(booking.id)}
                         disabled={isProcessing === booking.id}
-                        className="btn-primary w-full whitespace-nowrap cursor-pointer"
+                        className="text-dark-400 hover:text-danger hover:bg-danger/10 border border-dark-200 hover:border-danger/20 p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center active:scale-95 duration-200 hover:-translate-y-0.5"
+                        title="Cancel Booking"
                       >
-                        {isProcessing === booking.id ? "Releasing..." : "Complete Tour"}
+                        <X className="w-4 h-4" />
                       </button>
                     )}
-                    {booking.status === "COMPLETED" && (
-                      <button className="btn-outline w-full whitespace-nowrap opacity-50 cursor-not-allowed" disabled>
-                        Done
+
+                    {/* Primary Complete Tour Action */}
+                    {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
+                      <button 
+                        onClick={() => setCompletionBooking(booking)}
+                        disabled={isProcessing === booking.id}
+                        className="bg-primary hover:bg-primary-hover text-white font-bold py-2 px-3 rounded-xl text-xs whitespace-nowrap cursor-pointer flex items-center justify-center shadow-md shadow-primary-500/10 transition-all active:scale-95 duration-200 hover:-translate-y-0.5"
+                      >
+                        Complete Tour
                       </button>
+                    )}
+
+                    {/* Action Dropdown Menu - Put at the end ("di ujung") */}
+                    <div className="relative">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenDropdownId(openDropdownId === booking.id ? null : booking.id);
+                        }}
+                        className={`flex items-center justify-center gap-1 py-2 px-3 rounded-xl text-xs font-semibold whitespace-nowrap cursor-pointer border transition-all active:scale-95 duration-200 hover:-translate-y-0.5 ${
+                          openDropdownId === booking.id
+                            ? "bg-dark-900 border-dark-900 text-white hover:bg-dark-950"
+                            : "bg-white border-primary text-primary hover:bg-primary/5 focus:text-primary focus:bg-white focus:outline-none"
+                        }`}
+                      >
+                        Actions <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+
+                      <AnimatePresence>
+                        {openDropdownId === booking.id && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={() => setOpenDropdownId(null)}
+                            />
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                              transition={{ duration: 0.15, ease: "easeOut" }}
+                              className="absolute right-0 mt-1.5 w-48 bg-dark-950 border border-dark-800 rounded-xl shadow-2xl py-1.5 z-20"
+                            >
+                              <button
+                                onClick={() => {
+                                  handleDownloadPDF(booking);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-xs text-dark-100 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
+                              >
+                                <Download className="w-3.5 h-3.5 text-dark-400" /> Download PDF Receipt
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  handleChatWithGuide(booking);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-xs text-dark-100 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 text-dark-400" /> Chat with Guide
+                              </button>
+
+                              {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
+                                <button
+                                  onClick={() => {
+                                    setActiveMeetBooking(booking);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-xs text-secondary border-t border-dark-800 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
+                                >
+                                  <Compass className="w-3.5 h-3.5 text-secondary" /> Open Meet Radar
+                                </button>
+                              )}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    {booking.status === "COMPLETED" && (
+                      booking.hasReviewed ? (
+                        <button className="btn-outline w-full whitespace-nowrap opacity-50 cursor-not-allowed" disabled>
+                          Done
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => setReviewBooking(booking)}
+                          className="btn-primary w-full whitespace-nowrap bg-emerald-600 border-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                        >
+                          Write Review
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -514,6 +717,249 @@ export default function TouristBookingsPage() {
                 otherPartyAvatar={activeMeetBooking.guideAvatar}
               />
             </div>
+          </div>
+        </div>
+      )}
+      {/* Double Review Modal */}
+      {activeReviewBooking && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl border border-dark-100 animate-in zoom-in duration-200 my-8">
+            {!isReviewMandatory && (
+              <button 
+                onClick={() => setReviewBooking(null)}
+                className="absolute top-4 right-4 text-dark-400 hover:text-dark-900 p-2 hover:bg-dark-50 rounded-full transition-colors z-20 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+            
+            <div className="p-6 border-b border-dark-100 bg-dark-50/50">
+              <h2 className="text-xl font-bold text-dark-900">Leave Your Feedback</h2>
+              <p className="text-xs text-dark-500 mt-1">Help us improve by reviewing both your Tour Guide and your Explomate platform experience.</p>
+            </div>
+
+            <form onSubmit={handleSubmitReviews} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              
+              {/* Section 1: Review for Tour Guide */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">1. Review for Tour Guide ({activeReviewBooking.guideName})</h3>
+                
+                {/* Rating selection */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-2">Guide Rating</label>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setGuideRating(star)}
+                        className="p-1 hover:scale-115 transition-transform cursor-pointer"
+                      >
+                        <Star 
+                          className={`w-8 h-8 ${star <= guideRating ? "fill-accent text-accent" : "text-dark-200"}`} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Comment */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-1.5">Guide Review Comment</label>
+                  <textarea
+                    value={guideComment}
+                    onChange={(e) => setGuideComment(e.target.value)}
+                    rows={3}
+                    placeholder="Share details of your experience with this guide..."
+                    className="input py-2 px-3 text-sm resize-none"
+                    required
+                  />
+                </div>
+
+                {/* Images Upload */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-2">Attach Pictures (Max 5, up to 5MB each)</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {guideImages.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-dark-150 group">
+                        <img src={img} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeReviewImage(idx)}
+                          className="absolute inset-0 bg-black/50 text-white font-bold opacity-0 group-hover:opacity-100 flex items-center justify-center text-xs transition-opacity cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {guideImages.length < 5 && (
+                      <label className="aspect-square rounded-lg border border-dashed border-dark-350 flex flex-col items-center justify-center cursor-pointer hover:bg-dark-50/50 transition-colors">
+                        <Upload className="w-5 h-5 text-dark-400" />
+                        <span className="text-[9px] text-dark-500 font-bold mt-1">Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleReviewImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-dark-100 pt-6 space-y-4">
+                {/* Section 2: Review for Explomate */}
+                <h3 className="text-sm font-bold text-secondary uppercase tracking-wider">2. Review for Explomate Platform</h3>
+                
+                {/* Platform Rating */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-2">Platform Rating</label>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setPlatformRating(star)}
+                        className="p-1 hover:scale-115 transition-transform cursor-pointer"
+                      >
+                        <Star 
+                          className={`w-8 h-8 ${star <= platformRating ? "fill-secondary text-secondary" : "text-dark-200"}`} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Platform Comment */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-1.5">Platform Feedback Comment</label>
+                  <textarea
+                    value={platformComment}
+                    onChange={(e) => setPlatformComment(e.target.value)}
+                    rows={3}
+                    placeholder="Tell us what you think of Explomate (escrow system, web speed, layouts)..."
+                    className="input py-2 px-3 text-sm resize-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer mt-4"
+              >
+                {submittingReview ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
+                  </>
+                ) : (
+                  "Submit Both Reviews"
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tour Completion Modal */}
+      {completionBooking && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl border border-dark-100 animate-in zoom-in duration-200">
+            <button 
+              onClick={() => { setCompletionBooking(null); setProofPhoto(""); }}
+              className="absolute top-4 right-4 text-dark-400 hover:text-dark-900 p-2 hover:bg-dark-50 rounded-full transition-colors z-20 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="p-6 border-b border-dark-100 bg-dark-50/50">
+              <h2 className="text-xl font-bold text-dark-900">Verify Tour Completion</h2>
+              <p className="text-xs text-dark-500 mt-1">Please upload a verification photo from your tour to release guide funds and complete the booking.</p>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!proofPhoto) {
+                  toast.error("Please upload a proof photo first.");
+                  return;
+                }
+                handleMarkComplete(completionBooking.id, proofPhoto);
+              }} 
+              className="p-6 space-y-6"
+            >
+              <div>
+                <label className="block text-xs font-bold text-dark-600 uppercase mb-2">Upload Tour Photo (Mandatory)</label>
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-dark-300 rounded-2xl p-6 hover:bg-dark-50/50 transition-colors relative">
+                  {proofPhoto ? (
+                    <div className="space-y-4 w-full">
+                      <img src={proofPhoto} alt="Proof Preview" className="w-full h-40 object-cover rounded-xl border border-dark-200" />
+                      <button 
+                        type="button" 
+                        onClick={() => setProofPhoto("")}
+                        className="btn-outline w-full py-2 text-xs border-danger text-danger hover:bg-danger/5 cursor-pointer"
+                      >
+                        Remove Photo
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center cursor-pointer w-full h-32">
+                      <Upload className="w-8 h-8 text-primary animate-pulse mb-2" />
+                      <span className="text-xs font-bold text-dark-800">Select Image File</span>
+                      <span className="text-[10px] text-dark-400 mt-1">PNG, JPG or WEBP up to 5MB</span>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 5 * 1024 * 1024) {
+                              toast.error("File size must be less than 5MB");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (typeof reader.result === "string") {
+                                setProofPhoto(reader.result);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                        required
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  type="button"
+                  onClick={() => { setCompletionBooking(null); setProofPhoto(""); }}
+                  className="btn-outline flex-1 py-3 text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!proofPhoto || isProcessing === completionBooking.id}
+                  className="btn-primary flex-1 py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isProcessing === completionBooking.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Releasing...
+                    </>
+                  ) : (
+                    "Complete & Release Payout"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

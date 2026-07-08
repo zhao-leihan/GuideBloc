@@ -6,6 +6,7 @@ interface ReviewCardProps {
     id: string;
     rating: number;
     comment: string;
+    images?: string[];
     createdAt: string | Date;
     reviewer: {
       id: string;
@@ -40,6 +41,18 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         </div>
       </div>
       <p className="text-dark-600 text-sm leading-relaxed">{review.comment}</p>
+      {review.images && review.images.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {review.images.map((img, idx) => (
+            <img
+              key={idx}
+              src={img}
+              alt="Review Attachment"
+              className="w-16 h-16 object-cover rounded-lg border border-dark-200 hover:opacity-90 transition-opacity"
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

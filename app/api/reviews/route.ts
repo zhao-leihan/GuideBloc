@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { bookingId, rating, comment } = body;
+    const { bookingId, rating, comment, images, platformRating, platformComment } = body;
 
     if (!bookingId || !rating || rating < 1 || rating > 5) {
       return NextResponse.json(
@@ -64,25 +64,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify the booking belongs to this user and is completed
+    const userId = (session.user as any).id;
     const booking = await prisma.booking.findFirst({
       where: {
         id: bookingId,
-        touristId: (session.user as any).id,
         status: "COMPLETED",
+        OR: [
+          { touristId: userId },
+          { gig: { guideId: userId } }
+        ]
       },
       include: { gig: true },
     });
 
     if (!booking) {
       return NextResponse.json(
-        { message: "Booking not found or not completed" },
+        { message: "Booking not found, not completed, or you are not authorized to review it" },
         { status: 404 }
       );
     }
 
     // Check if review already exists
     const existing = await prisma.review.findFirst({
-      where: { bookingId, reviewerId: (session.user as any).id },
+      where: { bookingId, reviewerId: userId },
     });
 
     if (existing) {
@@ -92,16 +96,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Determine target recipient (who is being reviewed)
+    const isTouristReviewer = booking.touristId === userId;
+    const targetUserId = isTouristReviewer ? booking.gig.guideId : booking.touristId;
+
     const review = await prisma.review.create({
       data: {
-        reviewerId: (session.user as any).id,
-        guideId: booking.gig.guideId,
+        reviewerId: userId,
+        guideId: targetUserId,
         bookingId,
         gigId: booking.gigId,
         rating,
         comment: comment || "",
+        images: images || [],
       },
     });
+
+    // Save Platform Review if submitted
+    if (platformRating && platformRating >= 1 && platformRating <= 5) {
+      try {
+        await prisma.platformReview.create({
+          data: {
+            reviewerId: userId,
+            bookingId: bookingId,
+            rating: platformRating,
+            comment: platformComment || "",
+          },
+        });
+      } catch (platErr) {
+        console.error("Failed to save PlatformReview:", platErr);
+      }
+    }
+
+    // Run check for guide anomalies/bad reviews
+    try {
+      const { detectAndFlagAnomaly } = await import("@/lib/anomaly");
+      await detectAndFlagAnomaly(booking.gig.guideId);
+    } catch (err) {
+      console.error("Anomaly checking error:", err);
+    }
 
     return NextResponse.json({ review }, { status: 201 });
   } catch (error) {

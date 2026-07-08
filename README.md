@@ -1,6 +1,6 @@
 # 🌍 Explomate.ly - Web3 Tour Marketplace & In-Person Guide Finder
 
-Explomate.ly adalah platform marketplace pemandu wisata terdesentralisasi (DApp) premium yang dirancang untuk menghubungkan wisatawan (tourists) dengan pemandu lokal (guides) secara aman menggunakan Web3 smart escrow pada **Base Network**.
+Explomate.com adalah platform marketplace pemandu wisata terdesentralisasi (DApp) premium yang dirancang untuk menghubungkan wisatawan (tourists) dengan pemandu lokal (guides) secara aman menggunakan Web3 smart escrow pada **Base Network**.
 
 ---
 

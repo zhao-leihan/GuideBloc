@@ -15,36 +15,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const user = session?.user as any;
-
-  const [showCountdown, setShowCountdown] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    if (!showCountdown) return;
-
-    const targetDate = new Date("2026-07-09T00:00:00").getTime();
-
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-
-      if (difference <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    return () => clearInterval(interval);
-  }, [showCountdown]);
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,7 +29,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const bleedPages = ["/", "/about", "/how-it-works", "/explore", "/freelancer"];
+  useEffect(() => {
+    if (session) {
+      if (user?.avatar && !user.avatar.startsWith("data:")) {
+        setAvatar(user.avatar);
+      }
+      fetch("/api/users/profile")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.avatar) {
+            setAvatar(data.avatar);
+          }
+        })
+        .catch((err) => console.error("Error loading navbar avatar:", err));
+    } else {
+      setAvatar(null);
+    }
+  }, [session, user?.avatar]);
+
+  const bleedPages = ["/", "/about", "/how-it-works", "/explore", "/freelancer", "/team", "/help-center", "/safety", "/terms-of-service", "/privacy-policy", "/cookie-policy"];
   const shouldShowSpacer = !bleedPages.includes(pathname);
 
   const navLinks = [
@@ -80,7 +69,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center group">
           <img 
             src="/assets/Navbar-logo.webp" 
-            alt="explomate Logo" 
+            alt="Explomate Logo" 
             className="h-7 md:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
@@ -124,8 +113,8 @@ export default function Navbar() {
                   className="flex items-center gap-2 p-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full transition-all pr-3.5 cursor-pointer"
                 >
                   <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/10">
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                    {avatar ? (
+                      <img src={avatar} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-3.5 h-3.5 text-white" />
                     )}
@@ -186,18 +175,18 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <button 
-                onClick={() => setShowCountdown(true)}
-                className="text-white/80 hover:text-white px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer"
+              <Link 
+                href="/auth/login" 
+                className="text-white/80 hover:text-white px-4 py-2 rounded-full text-xs font-semibold transition-colors"
               >
                 Log In
-              </button>
-              <button 
-                onClick={() => setShowCountdown(true)}
-                className="bg-white text-dark-950 hover:bg-white/90 px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md shadow-white/5 cursor-pointer"
+              </Link>
+              <Link 
+                href="/auth/register" 
+                className="bg-white text-dark-950 hover:bg-white/90 px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md shadow-white/5"
               >
                 Sign Up
-              </button>
+              </Link>
             </>
           )}
         </div>
@@ -256,86 +245,26 @@ export default function Navbar() {
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                  <button 
-                    onClick={() => { setShowCountdown(true); setMobileOpen(false); }} 
-                    className="text-center text-xs font-semibold py-2.5 rounded-xl border border-white/10 text-white hover:bg-white/5 cursor-pointer"
+                  <Link 
+                    href="/auth/login" 
+                    className="text-center text-xs font-semibold py-2.5 rounded-xl border border-white/10 text-white hover:bg-white/5"
+                    onClick={() => setMobileOpen(false)}
                   >
                     Log In
-                  </button>
-                  <button 
-                    onClick={() => { setShowCountdown(true); setMobileOpen(false); }} 
-                    className="text-center text-xs font-bold py-2.5 rounded-xl bg-white text-dark-950 cursor-pointer"
+                  </Link>
+                  <Link 
+                    href="/auth/register" 
+                    className="text-center text-xs font-bold py-2.5 rounded-xl bg-white text-dark-950"
+                    onClick={() => setMobileOpen(false)}
                   >
                     Sign Up
-                  </button>
+                  </Link>
                 </div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </nav>
-
-      {/* Countdown Modal */}
-      <AnimatePresence>
-        {showCountdown && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-dark-950/80 backdrop-blur-md p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", duration: 0.5 }}
-              className="w-full max-w-md bg-dark-900 border border-white/10 p-8 rounded-3xl text-center relative overflow-hidden shadow-2xl"
-            >
-              {/* Decorative radial gradient */}
-              <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
-              <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-secondary/15 rounded-full blur-[100px] pointer-events-none" />
-
-              <button 
-                onClick={() => setShowCountdown(false)}
-                className="absolute top-4 right-4 p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary/20">
-                <LayoutDashboard className="w-8 h-8 text-primary animate-pulse" />
-              </div>
-
-              <h3 className="text-xl font-bold text-white mb-2">Platform Under Development</h3>
-              <p className="text-xs text-white/60 mb-6 leading-relaxed">
-                We are currently polishing the web application and deploying the smart contracts on the Base Network. Registration and login will launch in:
-              </p>
-
-              {/* Countdown Numbers */}
-              <div className="grid grid-cols-4 gap-2 mb-8">
-                <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                  <span className="block text-2xl font-black text-primary font-mono">{timeLeft.days}</span>
-                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Days</span>
-                </div>
-                <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                  <span className="block text-2xl font-black text-white font-mono">{String(timeLeft.hours).padStart(2, '0')}</span>
-                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Hours</span>
-                </div>
-                <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                  <span className="block text-2xl font-black text-white font-mono">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Mins</span>
-                </div>
-                <div className="bg-white/5 border border-white/5 p-3 rounded-2xl">
-                  <span className="block text-2xl font-black text-secondary font-mono">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Secs</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setShowCountdown(false)}
-                className="btn-primary w-full py-3.5 font-bold rounded-xl cursor-pointer"
-              >
-                Got It
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Spacer to prevent header overlaying layout */}
       {shouldShowSpacer && <div className="h-24 w-full" />}

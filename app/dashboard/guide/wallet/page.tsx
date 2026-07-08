@@ -397,7 +397,7 @@ export default function GuideWalletPage() {
                 <div className="flex items-start gap-2 text-left">
                   <AlertCircle className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-dark-500">
-                    Never share your private keys. explomate will never ask for them. Transactions are verified directly via smart contracts.
+                    Never share your private keys. Explomate will never ask for them. Transactions are verified directly via smart contracts.
                   </p>
                 </div>
               </div>

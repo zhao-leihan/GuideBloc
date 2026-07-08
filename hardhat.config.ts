@@ -5,7 +5,16 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.20",
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+      evmVersion: "paris",
+    },
+  },
   networks: {
     polygon_amoy: {
       url: "https://rpc-amoy.polygon.technology",
@@ -15,6 +24,16 @@ const config: HardhatUserConfig = {
     polygon: {
       url: "https://polygon-rpc.com",
       chainId: 137,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+    },
+    base: {
+      url: "https://mainnet.base.org",
+      chainId: 8453,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+    },
+    base_sepolia: {
+      url: "https://sepolia.base.org",
+      chainId: 84532,
       accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
     }
   },

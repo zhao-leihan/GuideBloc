@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
-              <img src="/assets/Navbar-logo.webp" alt="explomate Logo" className="h-8 w-auto object-contain" />
+              <img src="/assets/Navbar-logo.webp" alt="Explomate Logo" className="h-8 w-auto object-contain" />
             </Link>
             <p className="text-sm text-dark-400 leading-relaxed">
               Explore the world with local guides. Pay securely with crypto.
@@ -45,9 +45,7 @@ export default function Footer() {
             <ul className="space-y-2.5">
               <li><Link href="/about" className="text-sm hover:text-primary transition-colors">About Us</Link></li>
               <li><Link href="/how-it-works" className="text-sm hover:text-primary transition-colors">How It Works</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Careers</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Press</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Blog</Link></li>
+              <li><Link href="/team" className="text-sm hover:text-primary transition-colors">Our Team</Link></li>
             </ul>
           </div>
 
@@ -55,18 +53,18 @@ export default function Footer() {
           <div>
             <h4 className="font-display font-semibold text-white mb-4">Support</h4>
             <ul className="space-y-2.5">
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Help Center</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Safety</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Terms of Service</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="text-sm hover:text-primary transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/help-center" className="text-sm hover:text-primary transition-colors">Help Center</Link></li>
+              <li><Link href="/safety" className="text-sm hover:text-primary transition-colors">Safety</Link></li>
+              <li><Link href="/terms-of-service" className="text-sm hover:text-primary transition-colors">Terms of Service</Link></li>
+              <li><Link href="/privacy-policy" className="text-sm hover:text-primary transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/cookie-policy" className="text-sm hover:text-primary transition-colors">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-dark-700 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-dark-500">
-            &copy; {new Date().getFullYear()} explomate. All rights reserved.
+            &copy; {new Date().getFullYear()} Explomate. All rights reserved.
           </p>
           <p className="text-sm text-dark-500">
             Built with <HeartFilledIcon className="w-3.5 h-3.5 text-danger inline-block" /> — Where Adventure Meets Web3

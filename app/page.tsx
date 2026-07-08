@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
@@ -82,7 +82,7 @@ const testimonials = [
   {
     name: "Sarah Chen",
     role: "Tourist from USA",
-    text: "explomate made my Bali trip unforgettable. The crypto payment was seamless and my guide Ahmad was incredible!",
+    text: "Explomate made my Bali trip unforgettable. The crypto payment was seamless and my guide Ahmad was incredible!",
     rating: 5,
   },
   {
@@ -104,6 +104,18 @@ export default function HomePage() {
   const [loaded, setLoaded] = useState(true);
   const [aiInput, setAiInput] = useState("");
   const [aiQuery, setAiQuery] = useState("");
+  const [experiences, setExperiences] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/experience")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.experiences) {
+          setExperiences(data.experiences);
+        }
+      })
+      .catch((err) => console.error("Error fetching experiences:", err));
+  }, []);
 
   const handleAIClick = () => {
     if (aiInput.trim()) {
@@ -374,6 +386,58 @@ export default function HomePage() {
         </div>
       </motion.section>
 
+      {/* Our Experience */}
+      {experiences.length > 0 && (
+        <motion.section 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="py-20 bg-white border-t border-dark-100"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-dark-900 mb-3 font-display">
+                Our Experience
+              </h2>
+              <p className="text-dark-500 text-lg">Real moments captured by our travelers during vetted local tours</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {experiences.map((exp) => (
+                <div key={exp.id} className="card overflow-hidden group hover:border-primary/30 hover:shadow-lg transition-all duration-300">
+                  <div className="relative aspect-video overflow-hidden">
+                    <img 
+                      src={exp.proofPhoto} 
+                      alt={exp.gig?.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+                  </div>
+                  <div className="p-5 space-y-3">
+                    <div>
+                      <h4 className="font-bold text-dark-900 text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                        {exp.gig?.title}
+                      </h4>
+                      <p className="text-[11px] text-dark-400 mt-0.5">{exp.gig?.location}</p>
+                    </div>
+                    <div className="flex items-center gap-2 border-t border-dark-100 pt-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center font-bold text-primary text-[10px]">
+                        {exp.tourist?.avatar ? (
+                          <img src={exp.tourist.avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          exp.tourist?.name[0]
+                        )}
+                      </div>
+                      <span className="text-[11px] font-medium text-dark-700">{exp.tourist?.name}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.section>
+      )}
+
       {/* Testimonials */}
       <motion.section 
         initial={{ opacity: 0, y: 40 }}
@@ -421,7 +485,7 @@ export default function HomePage() {
             Ready to Start Your Adventure?
           </h2>
           <p className="text-primary-100 text-lg mb-8">
-            Join thousands of travelers and guides on explomate.
+            Join thousands of travelers and guides on Explomate.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/auth/register?role=tourist" className="bg-white text-primary font-semibold py-3.5 px-8 rounded-xl hover:shadow-lg transition-all">

@@ -77,7 +77,7 @@ export default function SubscriptionPage() {
       const receipt = await tx.wait();
 
       toast.dismiss();
-      toast.loading("Activating your subscription on explomate...");
+      toast.loading("Activating your subscription on Explomate...");
 
       const res = await fetch("/api/monetization/subscribe", {
         method: "POST",

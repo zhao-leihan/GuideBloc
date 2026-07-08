@@ -5,15 +5,21 @@ dotenv.config();
 
 async function main() {
   const treasuryAddress = process.env.TREASURY_ADDRESS;
-  if (!treasuryAddress) {
-    throw new Error("TREASURY_ADDRESS is not set in .env");
+  const gasOpsVault = process.env.GAS_OPS_VAULT_ADDRESS || treasuryAddress;
+  const saasGrowthVault = process.env.SAAS_GROWTH_VAULT_ADDRESS || treasuryAddress;
+  const holdingDividendsVault = process.env.HOLDING_DIVIDENDS_VAULT_ADDRESS || treasuryAddress;
+
+  if (!gasOpsVault || !saasGrowthVault || !holdingDividendsVault) {
+    throw new Error("Treasury or Vault addresses are not set in .env");
   }
 
-  console.log("Deploying ExplomateEscrow...");
-  console.log("Treasury Address:", treasuryAddress);
+  console.log("Deploying ExplomateEscrow with Vaults:");
+  console.log("Gas & Ops Vault:", gasOpsVault);
+  console.log("SaaS Growth Vault:", saasGrowthVault);
+  console.log("Holding Dividends Vault:", holdingDividendsVault);
 
   const ExplomateEscrow = await hre.ethers.getContractFactory("ExplomateEscrow");
-  const escrow = await ExplomateEscrow.deploy(treasuryAddress);
+  const escrow = await ExplomateEscrow.deploy(gasOpsVault, saasGrowthVault, holdingDividendsVault);
 
   await escrow.waitForDeployment();
   const address = await escrow.getAddress();

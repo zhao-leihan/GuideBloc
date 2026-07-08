@@ -41,8 +41,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse scale-150" />
               <motion.img 
                 src="/assets/Navbar-logo.webp" 
-                alt="explomate Logo" 
-                className="relative h-16 md:h-20 w-auto object-contain"
+                alt="Explomate Logo" 
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}

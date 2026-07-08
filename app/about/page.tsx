@@ -11,7 +11,7 @@ export default function AboutPage() {
       <section className="relative pt-36 pb-32 overflow-hidden bg-dark-950">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=1200')] bg-cover bg-center opacity-30" />
         <div className="relative max-w-4xl mx-auto px-4 text-center z-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">About explomate</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">About Explomate</h1>
           <p className="text-xl text-dark-200">
             Where Adventure Meets Web3. Connecting tourists with local guides worldwide through blockchain-powered trust.
           </p>
@@ -31,7 +31,7 @@ export default function AboutPage() {
             <div>
               <h2 className="text-3xl font-bold text-dark-900 mb-4">Our Mission</h2>
               <p className="text-dark-600 leading-relaxed mb-4">
-                explomate was born from a simple idea: travel should be authentic, accessible, and fair for everyone.
+                Explomate was born from a simple idea: travel should be authentic, accessible, and fair for everyone.
                 We connect tourists directly with local tour guides, cutting out middlemen and using blockchain
                 technology to ensure secure, transparent payments.
               </p>
@@ -80,85 +80,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Founders Section */}
-      <section className="py-24 bg-dark-50 border-t border-dark-200/50">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-dark-900">Meet the Founders</h2>
-            <p className="text-dark-500 mt-2 max-w-md mx-auto text-sm md:text-base">
-              The creative and engineering minds behind the explomate platform.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Rachel Card */}
-            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 max-w-[280px] md:max-w-none mx-auto w-full">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-dark-100">
-                <img 
-                  src="/assets/founder(2).jpeg" 
-                  alt="Rachel Angeline" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-primary text-white shadow-sm">
-                    Co-Founder
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 text-center">
-                <h3 className="font-display font-bold text-dark-900 text-lg">
-                  Rachel
-                </h3>
-                <p className="text-primary font-medium text-xs mt-1">Lead UI/UX Designer</p>
-              </div>
-            </div>
-
-            {/* Rayhan Card (Middle) */}
-            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 border-2 border-primary/20 shadow-md max-w-[280px] md:max-w-none mx-auto w-full">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-dark-100">
-                <img 
-                  src="/assets/founder(1).jpeg" 
-                  alt="Rayhan Aziel Abbrar" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-blue-600 text-white shadow-sm">
-                    Founder
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 text-center">
-                <h3 className="font-display font-bold text-dark-900 text-lg">
-                  Rayhan
-                </h3>
-                <p className="text-primary font-medium text-xs mt-1">Founder & Lead Engineer</p>
-              </div>
-            </div>
-
-            {/* Gracia Card */}
-            <div className="card overflow-hidden group hover:shadow-xl transition-all duration-300 max-w-[280px] md:max-w-none mx-auto w-full">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-dark-100">
-                <img 
-                  src="/assets/Founder(3).jpeg" 
-                  alt="Gracia Angeline" 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-primary text-white shadow-sm">
-                    Co-Founder
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 text-center">
-                <h3 className="font-display font-bold text-dark-900 text-lg">
-                  Gracia
-                </h3>
-                <p className="text-primary font-medium text-xs mt-1">Creative Director</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </div>

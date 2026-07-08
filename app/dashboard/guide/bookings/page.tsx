@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Calendar, CheckCircle, XCircle, Clock, Eye, Compass, X } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, Clock, Eye, Compass, X, Star, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import MeetInterface from "@/components/meet/MeetInterface";
@@ -22,9 +22,19 @@ export default function GuideBookingsPage() {
   const [activeMeetBooking, setActiveMeetBooking] = useState<any | null>(null);
   const { data: session } = useSession();
 
+  // Double Review system states
+  const [reviewBooking, setReviewBooking] = useState<any | null>(null);
+  const [touristRating, setTouristRating] = useState(5);
+  const [touristComment, setTouristComment] = useState("");
+  const [platformRating, setPlatformRating] = useState(5);
+  const [platformComment, setPlatformComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (session?.user) {
+      fetchBookings();
+    }
+  }, [session]);
 
   const fetchBookings = async () => {
     try {
@@ -59,6 +69,41 @@ export default function GuideBookingsPage() {
     }
   };
 
+  const handleSubmitReviews = async (bookingId: string) => {
+    setSubmittingReview(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          rating: touristRating,
+          comment: touristComment,
+          platformRating,
+          platformComment,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("Reviews submitted successfully!");
+        setReviewBooking(null);
+        setTouristRating(5);
+        setTouristComment("");
+        setPlatformRating(5);
+        setPlatformComment("");
+        fetchBookings();
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "Failed to submit reviews");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to submit reviews");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const pendingCount = bookings.filter((b) => b.status === "PENDING").length;
   const confirmedCount = bookings.filter((b) => b.status === "CONFIRMED").length;
   const completedCount = bookings.filter((b) => b.status === "COMPLETED").length;
@@ -67,6 +112,12 @@ export default function GuideBookingsPage() {
   const totalRevenue = bookings
     .filter((b) => b.status === "COMPLETED")
     .reduce((sum, b) => sum + (b.guide_price || (b.totalPriceUSD * 0.90)), 0);
+
+  const unreviewedCompletedBooking = bookings.find(
+    (b) => b.status === "COMPLETED" && !b.reviews?.some((r: any) => r.reviewerId === (session?.user as any)?.id)
+  );
+  const activeReviewBooking = reviewBooking || unreviewedCompletedBooking;
+  const isReviewMandatory = !!unreviewedCompletedBooking;
 
   return (
     <DashboardLayout role="guide">
@@ -203,6 +254,124 @@ export default function GuideBookingsPage() {
         </div>
       </div>
 
+      {/* Double Review Modal */}
+      {activeReviewBooking && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl border border-dark-100 animate-in zoom-in duration-200 my-8">
+            {!isReviewMandatory && (
+              <button 
+                onClick={() => setReviewBooking(null)}
+                className="absolute top-4 right-4 text-dark-400 hover:text-dark-900 p-2 hover:bg-dark-50 rounded-full transition-colors z-20 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+            
+            <div className="p-6 border-b border-dark-100 bg-dark-50/50">
+              <h2 className="text-xl font-bold text-dark-900">Leave Your Feedback</h2>
+              <p className="text-xs text-dark-500 mt-1">Help us improve by reviewing both the Tourist and your Explomate platform experience.</p>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitReviews(activeReviewBooking.id);
+              }} 
+              className="p-6 space-y-6 max-h-[70vh] overflow-y-auto"
+            >
+              
+              {/* Section 1: Review for Tourist */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-bold text-primary uppercase tracking-wider">1. Review for Tourist ({activeReviewBooking.tourist?.name || "Customer"})</h3>
+                
+                {/* Rating selection */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-2">Tourist Rating</label>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setTouristRating(star)}
+                        className="p-1 hover:scale-115 transition-transform cursor-pointer"
+                      >
+                        <Star 
+                          className={`w-8 h-8 ${star <= touristRating ? "fill-accent text-accent" : "text-dark-200"}`} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Comment */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-1.5">Review Comment</label>
+                  <textarea
+                    value={touristComment}
+                    onChange={(e) => setTouristComment(e.target.value)}
+                    rows={3}
+                    placeholder="Share your experience guiding this tourist (punctuality, communication, behavior)..."
+                    className="w-full bg-dark-50 border border-dark-200 rounded-xl p-3 text-sm focus:border-primary outline-none resize-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-dark-100 pt-6 space-y-4">
+                {/* Section 2: Review for Explomate */}
+                <h3 className="text-sm font-bold text-secondary uppercase tracking-wider">2. Review for Explomate Platform</h3>
+                
+                {/* Platform Rating */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-2">Platform Rating</label>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setPlatformRating(star)}
+                        className="p-1 hover:scale-115 transition-transform cursor-pointer"
+                      >
+                        <Star 
+                          className={`w-8 h-8 ${star <= platformRating ? "fill-secondary text-secondary" : "text-dark-200"}`} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Platform Comment */}
+                <div>
+                  <label className="block text-xs font-bold text-dark-600 uppercase mb-1.5">Platform Feedback Comment</label>
+                  <textarea
+                    value={platformComment}
+                    onChange={(e) => setPlatformComment(e.target.value)}
+                    rows={3}
+                    placeholder="Tell us what you think of Explomate (escrow system, payouts, guide tools, layout)..."
+                    className="w-full bg-dark-50 border border-dark-200 rounded-xl p-3 text-sm focus:border-primary outline-none resize-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="btn-primary w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer mt-4"
+              >
+                {submittingReview ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
+                  </>
+                ) : (
+                  "Submit Both Reviews"
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Meetup Radar Overlay Modal */}
       {activeMeetBooking && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -217,8 +386,8 @@ export default function GuideBookingsPage() {
               <MeetInterface 
                 bookingId={activeMeetBooking.id}
                 role="GUIDE"
-                otherPartyName={activeMeetBooking.touristName || "Tourist"}
-                otherPartyAvatar={activeMeetBooking.touristAvatar}
+                otherPartyName={activeMeetBooking.tourist?.name || "Tourist"}
+                otherPartyAvatar={activeMeetBooking.tourist?.avatar}
               />
             </div>
           </div>

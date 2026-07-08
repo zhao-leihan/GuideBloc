@@ -73,9 +73,9 @@ export default function FreelancerPage() {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="text-xl text-dark-300 max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            Become an explomate Freelance Tour Guide. Share your city&apos;s best hidden spots, host unique experiences for global travelers, and get paid instantly in crypto.
+            Become an Explomate Freelance Tour Guide. Share your city&apos;s best hidden spots, host unique experiences for global travelers, and get paid instantly in crypto.
           </motion.p>
-
+ 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -104,7 +104,7 @@ export default function FreelancerPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Freelance with Us?</h2>
-            <p className="text-dark-400 text-lg max-w-2xl mx-auto">explomate is designed to give power back to local experts with modern technology.</p>
+            <p className="text-dark-400 text-lg max-w-2xl mx-auto">Explomate is designed to give power back to local experts with modern technology.</p>
           </div>
 
           <motion.div 
@@ -118,7 +118,7 @@ export default function FreelancerPage() {
               {
                 icon: DollarSign,
                 title: "Keep 90% of Earnings",
-                desc: "Traditional agencies take up to 40% cut. With explomate, our commission is a flat 10%. You keep what is yours."
+                desc: "Traditional agencies take up to 40% cut. With Explomate, our commission is a flat 10%. You keep what is yours."
               },
               {
                 icon: Wallet,
@@ -219,7 +219,7 @@ export default function FreelancerPage() {
               <div className="absolute inset-0 bg-primary-500/10 rounded-3xl blur-3xl" />
               <img 
                 src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800" 
-                alt="explomate Guide showing sights to tourists" 
+                alt="Explomate Guide showing sights to tourists" 
                 className="relative rounded-3xl overflow-hidden border border-dark-800 shadow-2xl w-full h-[450px] object-cover" 
               />
             </div>

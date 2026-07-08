@@ -58,19 +58,24 @@ export interface PaymentParams {
 
 export function getTokenAddress(token: "USDT" | "USDC", network: "celo" | "polygon" | "base"): string {
   if (network === "celo") {
-    // Celo uses USDC mostly
     return USDC_CELO;
   }
   if (network === "base") {
     const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+    const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+    
+    if (!isBaseMainnet && !isBaseSepolia) {
+      return localAddresses.usdc || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    }
+
     if (token === "USDC") {
       return isBaseMainnet 
         ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-        : "0x036CbD53842c5426634e7929541eC2318f3dCF7e"; // Base Sepolia USDC
+        : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
     } else {
       return isBaseMainnet
-        ? "0x50c5725949A6F0c72E6C4a641F24049A91D18C41" // Base Mainnet USDT
-        : "0x036CbD53842c5426634e7929541eC2318f3dCF7e"; // Fallback USDC
+        ? "0x50c5725949A6F0c72E6C4a641F24049A91D18C41"
+        : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
     }
   }
   return token === "USDT" ? USDT_POLYGON : USDC_POLYGON;
@@ -78,6 +83,12 @@ export function getTokenAddress(token: "USDT" | "USDC", network: "celo" | "polyg
 
 export function getEscrowAddress(network: "celo" | "polygon" | "base"): string {
   if (network === "base") {
+    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+    const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+    
+    if (!isBaseMainnet && !isBaseSepolia) {
+      return localAddresses.escrow || "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+    }
     return process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE || process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
   }
   return network === "celo" ? ESCROW_CELO : ESCROW_POLYGON;
@@ -213,23 +224,24 @@ export async function connectWallet(
   const isCelo = network === "celo";
   const isBase = network === "base";
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
   
   const chainIdHex = isCelo 
     ? "0xaa36a7" 
     : isBase 
-      ? (isBaseMainnet ? "0x2105" : "0x14a34") // 8453 vs 84532
-      : "0x7a69"; // Localhost Hardhat Network Chain ID is 31337 = 0x7a69
+      ? (isBaseMainnet ? "0x2105" : (isBaseSepolia ? "0x14a34" : "0x7a69")) // 8453 vs 84532 vs 31337
+      : "0x7a69"; 
       
   const chainName = isCelo 
     ? "Celo Sepolia Testnet" 
     : isBase 
-      ? (isBaseMainnet ? "Base Mainnet" : "Base Sepolia Testnet") 
+      ? (isBaseMainnet ? "Base Mainnet" : (isBaseSepolia ? "Base Sepolia Testnet" : "Base Localhost")) 
       : "Hardhat Localhost";
       
   const rpcUrl = isCelo 
     ? "https://forno.celo-sepolia.celo-testnet.org" 
     : isBase 
-      ? (isBaseMainnet ? "https://mainnet.base.org" : "https://sepolia.base.org") 
+      ? (isBaseMainnet ? "https://mainnet.base.org" : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545")) 
       : "http://127.0.0.1:8545";
       
   const nativeCurrency = isCelo
@@ -262,10 +274,13 @@ export async function connectWallet(
 export async function getTokenBalance(token: "USDT" | "USDC", address: string, network: "celo" | "polygon" | "base" = "base"): Promise<string> {
   let rpcUrl = "http://127.0.0.1:8545"; // fallback localhost
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
   if (network === "celo") {
     rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
   } else if (network === "base") {
-    rpcUrl = isBaseMainnet ? "https://mainnet.base.org" : "https://sepolia.base.org";
+    rpcUrl = isBaseMainnet 
+      ? "https://mainnet.base.org" 
+      : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
   } else if (network === "polygon") {
     rpcUrl = "http://127.0.0.1:8545";
   }

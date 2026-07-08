@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
           />
         </div>
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-x-auto">
           {loading ? (
             <div className="p-12 text-center text-dark-500">Loading users...</div>
           ) : (

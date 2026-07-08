@@ -38,6 +38,14 @@ export async function POST(req: Request) {
       },
     });
 
+    // Trigger welcome email
+    try {
+      const { triggerWelcomeEmail } = await import("@/lib/email");
+      await triggerWelcomeEmail(email.toLowerCase(), name, user.role);
+    } catch (err) {
+      console.error("Welcome email error:", err);
+    }
+
     return NextResponse.json(
       { message: "User created successfully", userId: user.id },
       { status: 201 }

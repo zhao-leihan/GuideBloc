@@ -53,6 +53,12 @@ async function main() {
   console.log("Deleting user subscriptions...");
   await prisma.userSubscription.deleteMany({});
 
+  console.log("Deleting platform revenue records...");
+  await prisma.platformRevenue.deleteMany({});
+
+  console.log("Deleting warnings...");
+  await prisma.warning.deleteMany({});
+
   console.log("Deleting gigs...");
   await prisma.gig.deleteMany({});
 

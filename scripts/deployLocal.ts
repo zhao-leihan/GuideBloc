@@ -1,6 +1,5 @@
 import hre from "hardhat";
 import * as fs from "fs";
-import * as path from "path";
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
@@ -13,9 +12,9 @@ async function main() {
   const usdcAddress = await usdc.getAddress();
   console.log("MockUSDC deployed to:", usdcAddress);
 
-  // 2. Deploy ExplomateEscrow (Treasury is deployer for now)
+  // 2. Deploy ExplomateEscrow (Treasury Splitters are deployer for now)
   const ExplomateEscrow = await hre.ethers.getContractFactory("ExplomateEscrow");
-  const escrow = await ExplomateEscrow.deploy(deployer.address);
+  const escrow = await ExplomateEscrow.deploy(deployer.address, deployer.address, deployer.address);
   await escrow.waitForDeployment();
   const escrowAddress = await escrow.getAddress();
   console.log("ExplomateEscrow deployed to:", escrowAddress);

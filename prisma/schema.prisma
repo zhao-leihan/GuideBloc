@@ -27,7 +27,11 @@ model User {
 
   // Tourist-specific fields
   passportNumber    String?
+  passportPhoto     String?
   idCardNumber      String?
+  idCardPhoto       String?
+  verificationStatus String @default("NONE") // NONE, PENDING, APPROVED, REJECTED
+  verificationRejectReason String?
   birthDate         DateTime?
   title             String?
   age               Int?
@@ -55,6 +59,7 @@ model User {
 
   mails               Mail[]
   warnings            Warning[]
+  platformReviews     PlatformReview[] @relation("PlatformReviewGiver")
 
   @@map("users")
 }
@@ -131,10 +136,11 @@ model Booking {
   bookingTime     String?
   participants    Json?
   createdAt       DateTime      @default(now())
+  proofPhoto      String?
 
   gig             Gig      @relation(fields: [gigId], references: [id])
   tourist         User     @relation(fields: [touristId], references: [id])
-  review          Review?
+  reviews         Review[]
   conversations   Conversation[]
   meetSession     MeetSession?
 
@@ -158,11 +164,12 @@ enum CryptoToken {
 model Review {
   id         String   @id @default(cuid())
   gigId      String
-  bookingId  String   @unique
+  bookingId  String
   reviewerId String
   guideId    String
   rating     Int
   comment    String
+  images     String[]
   createdAt  DateTime @default(now())
 
   gig        Gig     @relation(fields: [gigId], references: [id])
@@ -381,4 +388,27 @@ model Warning {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("warnings")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model PlatformReview {
+  id         String   @id @default(cuid())
+  reviewerId String
+  bookingId  String?
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+
+  reviewer   User     @relation("PlatformReviewGiver", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@map("platform_reviews")
 }

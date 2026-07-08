@@ -8,6 +8,7 @@ import { GlobeIcon, Crosshair2Icon } from "@radix-ui/react-icons";
 import Navbar from "@/components/layout/Navbar";
 import toast from "react-hot-toast";
 import { COUNTRIES } from "@/lib/countries";
+import TurnstileCaptcha from "@/components/auth/TurnstileCaptcha";
 
 function RegisterContent() {
   const router = useRouter();
@@ -26,6 +27,7 @@ function RegisterContent() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,12 +74,12 @@ function RegisterContent() {
         <div className="w-full max-w-md">
           <div className="card p-8">
             <div className="text-center mb-8">
-              <img src="/assets/logo.png" alt="explomate Logo" className="w-16 h-16 object-contain mx-auto mb-4" />
+              <img src="/assets/logo.png" alt="Explomate Logo" className="w-16 h-16 object-contain mx-auto mb-4" />
               <h1 className="text-3xl font-bold text-dark-900">
                 {form.role === "GUIDE" ? "Register as a Tour Guide" : "Create your account"}
               </h1>
               <p className="text-dark-500 mt-2">
-                {form.role === "GUIDE" ? "Join explomate as a local expert" : "Join the explomate community"}
+                {form.role === "GUIDE" ? "Join Explomate as a local expert" : "Join the Explomate community"}
               </p>
             </div>
 
@@ -214,10 +216,12 @@ function RegisterContent() {
                 </div>
               </div>
 
+              <TurnstileCaptcha onVerify={setCaptchaVerified} />
+
               <button
                 type="submit"
-                disabled={loading}
-                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !captchaVerified}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? "Creating account..." : "Create Account"}
               </button>

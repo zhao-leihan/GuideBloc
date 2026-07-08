@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
 import {
   LayoutDashboard, Calendar, MessageSquare, Wallet,
   Settings, Star, TrendingUp, PlusCircle, FileText,
@@ -24,7 +25,6 @@ const guideLinks = [
   { href: "/dashboard/guide/bookings", label: "Bookings", icon: Calendar },
   { href: "/dashboard/guide/messages", label: "Messages", icon: MessageSquare },
   { href: "/dashboard/guide/earnings", label: "Earnings", icon: TrendingUp },
-  { href: "/dashboard/guide/subscription", label: "Subscription", icon: CreditCard },
   { href: "/dashboard/guide/wallet", label: "Wallet", icon: Wallet },
   { href: "/dashboard/guide/profile", label: "Profile", icon: User },
 ];
@@ -33,7 +33,6 @@ const touristLinks = [
   { href: "/dashboard/tourist/bookings", label: "My Bookings", icon: Calendar },
   { href: "/dashboard/tourist/messages", label: "Messages", icon: MessageSquare },
   { href: "/dashboard/tourist/wallet", label: "Wallet", icon: Wallet },
-  { href: "/dashboard/tourist/subscription", label: "Subscription", icon: CreditCard },
   { href: "/dashboard/tourist/profile", label: "Profile", icon: User },
 ];
 
@@ -41,13 +40,16 @@ const adminLinks = [
   { href: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: User },
   { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },
+  { href: "/admin/wallet", label: "Wallet", icon: Wallet },
 ];
 
 export default function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user as any;
   const [warnings, setWarnings] = useState<any[]>([]);
+  const [isProfileIncomplete, setIsProfileIncomplete] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -57,10 +59,26 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
           if (data.warnings) {
             setWarnings(data.warnings);
           }
+
+          // Check if profile is incomplete (missing country or bio)
+          if (role !== "admin") {
+            const profilePage = role === "guide" ? "/dashboard/guide/profile" : "/dashboard/tourist/profile";
+            const isIncomplete = !data.country || !data.bio;
+
+            if (isIncomplete) {
+              setIsProfileIncomplete(true);
+              if (pathname !== profilePage) {
+                toast.error("Please complete your profile details (Country and Bio) first!");
+                router.replace(profilePage);
+              }
+            } else {
+              setIsProfileIncomplete(false);
+            }
+          }
         })
         .catch((err) => console.error(err));
     }
-  }, [session]);
+  }, [session, pathname, router, role]);
 
   if (user?.isBlocked) {
     return (
@@ -91,7 +109,9 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
     );
   }
 
-  const links = role === "guide" ? guideLinks : role === "admin" ? adminLinks : touristLinks;
+  const links = isProfileIncomplete 
+    ? (role === "guide" ? [guideLinks.find(l => l.href.includes("profile"))] : [touristLinks.find(l => l.href.includes("profile"))]).filter(Boolean) as typeof guideLinks
+    : (role === "guide" ? guideLinks : role === "admin" ? adminLinks : touristLinks);
   const title = role === "guide" ? "Guide Dashboard" : role === "admin" ? "Admin Panel" : "Tourist Dashboard";
 
   if (role === "guide" && user?.guideStatus === "PENDING") {
@@ -106,7 +126,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             <div className="space-y-2">
               <h2 className="text-2xl font-display font-bold text-dark-900">Application Under Review</h2>
               <p className="text-sm text-dark-500 leading-relaxed">
-                Hi <span className="font-semibold text-dark-800">{user?.name}</span>, thank you for registering as a Tour Guide on explomate!
+                Hi <span className="font-semibold text-dark-800">{user?.name}</span>, thank you for registering as a Tour Guide on Explomate!
               </p>
               <p className="text-xs text-dark-400">
                 Your submitted certification and details are currently being verified by our administrator. You will be granted full dashboard access once approved.
@@ -186,7 +206,32 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0">
+          <main className="flex-1 min-w-0 space-y-6">
+            {/* Mobile Sub-Navigation Bar */}
+            <div className="lg:hidden w-full overflow-x-auto pb-1.5 scrollbar-none border-b border-dark-200/50">
+              <div className="flex gap-2 min-w-max px-0.5 py-1">
+                {links.map((link) => {
+                  const Icon = link.icon;
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        "flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border shadow-sm",
+                        isActive
+                          ? "bg-primary border-primary text-white"
+                          : "bg-white border-dark-200 text-dark-600 hover:bg-dark-50"
+                      )}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
             {warnings.length > 0 && (
               <div className="space-y-3 mb-6 animate-in slide-in-from-top-4 duration-300">
                 {warnings.map((warn) => (

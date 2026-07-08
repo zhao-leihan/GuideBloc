@@ -13,7 +13,7 @@ export default function HowItWorksPage() {
       <section className="relative pt-36 pb-32 overflow-hidden bg-dark-950">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200')] bg-cover bg-center opacity-25" />
         <div className="relative max-w-4xl mx-auto px-4 text-center z-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">How explomate Works</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">How Explomate Works</h1>
           <p className="text-xl text-dark-200">Discover, book, and pay for unique tours — powered by blockchain.</p>
         </div>
 
