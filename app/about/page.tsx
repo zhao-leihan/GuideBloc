@@ -1,7 +1,7 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Globe, Heart, Shield, Zap } from "lucide-react";
-import { GlobeIcon, LockClosedIcon, HandIcon } from "@radix-ui/react-icons";
+import { Globe, Heart, Shield, Zap, Scale } from "lucide-react";
+import { GlobeIcon, LockClosedIcon } from "@radix-ui/react-icons";
 
 export default function AboutPage() {
   return (
@@ -66,7 +66,7 @@ export default function AboutPage() {
             {[
               { Icon: GlobeIcon, title: "Authentic Experiences", desc: "Real local guides sharing their culture and expertise with travelers from around the world." },
               { Icon: LockClosedIcon, title: "Trust & Security", desc: "Blockchain escrow ensures payments are protected. No middlemen, no hidden fees." },
-              { Icon: HandIcon, title: "Fair for Everyone", desc: "Low commission rates mean guides earn more. Transparent pricing means tourists pay fairly." },
+              { Icon: Scale, title: "Fair for Everyone", desc: "Low commission rates mean guides earn more. Transparent pricing means tourists pay fairly." },
             ].map((value) => (
               <div key={value.title} className="text-center">
                 <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
