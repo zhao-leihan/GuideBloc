@@ -37,6 +37,9 @@ const config: HardhatUserConfig = {
       accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
     }
   },
+  etherscan: {
+    apiKey: "M5QF2D19P5ECJ9NAJ59RFKANU2I1GPRDZ2"
+  }
 };
 
 export default config;
