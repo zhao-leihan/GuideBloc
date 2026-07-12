@@ -53,7 +53,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
         },
         {
           sender: "ai",
-          text: `Hi! I'm **Michelle**, your personal AI travel companion at Explomate! ✨🌴\n\nI'm super excited to help you discover beautiful spots, connect with local guides, and handle payments securely on-chain. 🎒💸\n\nWhat kind of adventure are we looking for today?`,
+          text: `Hi! I'm **Kira**, your personal AI travel companion at Explomate! ✨🌴\n\nI'm super excited to help you discover beautiful spots, connect with local guides, and handle payments securely on-chain. 🎒💸\n\nWhat kind of adventure are we looking for today?`,
         },
       ]);
     }
@@ -90,7 +90,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
       });
 
       if (!response.ok) {
-        throw new Error("Failed to contact Michelle");
+        throw new Error("Failed to contact Kira");
       }
 
       const data = await response.json();
@@ -133,7 +133,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
   // Perform booking creation on-demand
   const handleConfirmBooking = async (gigId: string, bookingDate: string, groupSize: number, msgIndex: number) => {
     if (!session) {
-      toast.error("Please log in or register to complete your booking with Michelle!");
+      toast.error("Please log in or register to complete your booking with Kira!");
       setTimeout(() => {
         window.location.href = `/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
       }, 1500);
@@ -257,9 +257,9 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
         >
           <div className="absolute inset-0 bg-primary rounded-full blur-md opacity-35 group-hover:opacity-60 transition-opacity -z-10" />
           <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
-            <img src="/assets/michelle.webp" alt="Michelle" className="w-full h-full object-cover" />
+            <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
           </div>
-          <span className="text-sm font-semibold tracking-wide font-sans text-white relative z-10">Ask Michelle</span>
+          <span className="text-sm font-semibold tracking-wide font-sans text-white relative z-10">Ask Kira</span>
         </motion.button>
       </div>
 
@@ -277,10 +277,10 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
             <div className="p-4 border-b border-dark-700/50 flex items-center justify-between bg-dark-950">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center bg-transparent">
-                  <img src="/assets/michelle.webp" alt="Michelle" className="w-full h-full object-cover" />
+                  <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="font-display font-semibold text-white text-sm">Michelle</h4>
+                  <h4 className="font-display font-semibold text-white text-sm">Kira</h4>
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                     <span className="text-[10px] text-dark-400 font-medium uppercase tracking-wide">Online</span>
@@ -429,11 +429,11 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
               {loading && (
                 <div className="flex items-start gap-2.5">
                   <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center bg-transparent flex-shrink-0 animate-pulse">
-                    <img src="/assets/michelle.webp" alt="Michelle" className="w-full h-full object-cover" />
+                    <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
                   </div>
                   <div className="bg-dark-800 text-dark-300 rounded-2xl rounded-tl-none px-4 py-3 text-sm flex items-center gap-2 border border-dark-700/40">
                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                    <span>Michelle is searching the map...</span>
+                    <span>Kira is searching the map...</span>
                   </div>
                 </div>
               )}
@@ -444,7 +444,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
             <div className="p-4 border-t border-dark-700/50 bg-dark-950 flex gap-2">
               <input
                 type="text"
-                placeholder="Ask Michelle about Bali tours..."
+                placeholder="Ask Kira about Bali tours..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

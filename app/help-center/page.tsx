@@ -131,13 +131,13 @@ export default function HelpCenterPage() {
           )}
         </section>
 
-        {/* Michelle Assist banner */}
+        {/* Kira Assist banner */}
         <section className="bg-dark-900 py-12 text-center text-white">
           <div className="max-w-2xl mx-auto px-4 space-y-4">
             <MessageCircle className="w-10 h-10 text-primary mx-auto animate-bounce" />
             <h3 className="text-xl font-bold font-display">Still need help?</h3>
             <p className="text-dark-300 text-xs leading-relaxed">
-              Our AI Assistant **Michelle** is available 24/7 to solve your booking questions, guide vetting, or transaction issues.
+              Our AI Assistant **Kira** is available 24/7 to solve your booking questions, guide vetting, or transaction issues.
             </p>
             <button
               onClick={() => {
@@ -146,7 +146,7 @@ export default function HelpCenterPage() {
               }}
               className="btn-primary inline-flex items-center gap-2 text-xs font-bold px-6 py-2.5 rounded-xl cursor-pointer"
             >
-              Ask Michelle Now <ArrowRight className="w-4 h-4" />
+              Ask Kira Now <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </section>

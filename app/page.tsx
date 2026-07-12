@@ -122,7 +122,7 @@ export default function HomePage() {
       setAiQuery(aiInput);
       setAiInput("");
     } else {
-      setAiQuery("Hi Michelle!");
+      setAiQuery("Hi Kira!");
     }
   };
 
@@ -185,7 +185,7 @@ export default function HomePage() {
               </div>
               <input
                 type="text"
-                placeholder="Ask Michelle about tours, guides, or bookings..."
+                placeholder="Ask Kira about tours, guides, or bookings..."
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -197,7 +197,7 @@ export default function HomePage() {
                 onClick={handleAIClick}
                 className="bg-primary hover:bg-primary-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-primary/25 whitespace-nowrap"
               >
-                Ask Michelle <ArrowRight className="w-3.5 h-3.5" />
+                Ask Kira <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </motion.div>

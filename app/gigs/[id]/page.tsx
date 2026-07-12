@@ -986,7 +986,7 @@ export default function GigDetailPage() {
               
               {/* Option 1: Web3 Wallet */}
               <div className="space-y-3">
-                <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">1. Web3 Wallet (Direct Connect)</span>
+                <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">Web3 Wallet (Direct Connect)</span>
                 
                 <div className="space-y-2">
                   <button onClick={() => handleBookNow("metamask")} className="w-full p-3.5 border border-dark-200 hover:border-primary hover:bg-primary/5 rounded-xl flex items-center justify-between transition-all group cursor-pointer text-left">
@@ -1016,53 +1016,6 @@ export default function GigDetailPage() {
                     </div>
                   </button>
                 </div>
-              </div>
-
-              {/* Option 2: Fiat-to-Crypto (Transak) */}
-              <div className="space-y-2 pt-4 border-t border-dark-100">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider">2. Transak Gateway</span>
-                </div>
-                <button 
-                  onClick={() => {
-                    setShowWalletModal(false);
-                    setShowTransakModal(true);
-                  }}
-                  className="w-full p-4 border border-dark-200 hover:border-primary/50 hover:bg-primary/5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                      <ArrowRightLeft className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-dark-900 text-sm group-hover:text-primary transition-colors block">Buy Crypto via Transak</span>
-                      <span className="text-[11px] text-dark-500 block mt-0.5">Top-up Escrow directly with Debit/Credit Card</span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold bg-primary text-white px-2.5 py-0.5 rounded-full">Popular</span>
-                </button>
-              </div>
-
-              {/* Option 3: Alchemy Pay */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">3. Alchemy Pay Gateway</span>
-                <button 
-                  onClick={() => {
-                    setShowWalletModal(false);
-                    setShowAlchemyPayModal(true);
-                  }}
-                  className="w-full p-4 border border-dark-200 hover:border-primary/50 hover:bg-primary/5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                      <CreditCard className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-dark-900 text-sm group-hover:text-primary transition-colors block">Buy Crypto via Alchemy Pay</span>
-                      <span className="text-[11px] text-dark-500 block mt-0.5">Top-up Escrow with Debit/Credit Card</span>
-                    </div>
-                  </div>
-                </button>
               </div>
               
             </div>

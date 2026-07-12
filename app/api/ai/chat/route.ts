@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (!apiKey || !dbUrl) {
       return NextResponse.json({
-        reply: "⚠️ Hosting Environment Variables Missing: Please configure GEMINI_API_KEY and DATABASE_URL in your hosting platform dashboard (e.g. Vercel Project Settings > Environment Variables) so Michelle can connect and retrieve local tours.",
+        reply: "⚠️ Hosting Environment Variables Missing: Please configure GEMINI_API_KEY and DATABASE_URL in your hosting platform dashboard (e.g. Vercel Project Settings > Environment Variables) so Kira can connect and retrieve local tours.",
         action: "NONE",
       });
     }
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       .join("\n");
 
     // 4. Secure AI Persona & System Instructions (Matey)
-    const systemPrompt = `You are "Michelle", a super friendly, casual, and awesome AI assistant for Explomate. 
+    const systemPrompt = `You are "Kira", a super friendly, casual, and awesome AI assistant for Explomate. 
 Explomate is a rad Web3 travel platform where folks can book sweet local tours and pay with crypto (USDT/USDC) on Polygon or Base!
 
 YOUR VIBE:
