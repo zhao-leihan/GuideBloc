@@ -534,12 +534,12 @@ export default function AdminUsersPage() {
                 {showRejectForm ? (
                   <div className="space-y-3 pt-3 border-t border-dark-100">
                     <label className="block text-xs font-bold text-dark-500 uppercase tracking-wider">
-                      Rejection Reason (Indonesian Language)
+                      Rejection Reason
                     </label>
                     <textarea
                       value={rejectReasonText}
                       onChange={(e) => setRejectReasonText(e.target.value)}
-                      placeholder="Contoh: Foto KTP buram, tidak terbaca, atau NIK tidak terdaftar..."
+                      placeholder="e.g. ID Card photo is blurry, unreadable, or NIK number does not match..."
                       className="w-full p-2.5 bg-dark-50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs h-20 resize-none font-sans"
                       required
                     />

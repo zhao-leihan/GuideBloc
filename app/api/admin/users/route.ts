@@ -122,7 +122,7 @@ export async function PUT(req: Request) {
         where: { id: userId },
         data: {
           verificationStatus: "REJECTED",
-          verificationRejectReason: message || "Dokumen KTP/Passport kurang jelas atau tidak cocok."
+          verificationRejectReason: message || "Identity document is blurry, unreadable, or numbers do not match."
         }
       });
       return NextResponse.json({ message: "User identity verification rejected" });

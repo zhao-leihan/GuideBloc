@@ -697,7 +697,7 @@ export default function TouristBookingsPage() {
                                   }}
                                   className="w-full text-left px-4 py-2.5 text-xs text-rose-500 border-t border-dark-800 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Hapus Riwayat
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Delete History
                                 </button>
                               )}
                             </motion.div>
