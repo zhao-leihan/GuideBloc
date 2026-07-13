@@ -306,3 +306,36 @@ export async function PATCH(
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!booking) {
+      return NextResponse.json({ message: "Booking not found" }, { status: 404 });
+    }
+
+    if (booking.status !== "PENDING") {
+      return NextResponse.json({ message: "Only unpaid pending bookings can be deleted" }, { status: 400 });
+    }
+
+    await prisma.booking.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({ message: "Booking deleted successfully" });
+  } catch (error) {
+    console.error("Booking DELETE error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}

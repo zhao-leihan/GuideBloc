@@ -202,7 +202,26 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+          >
+            <Link 
+              href="/explore" 
+              className="bg-primary hover:bg-primary-600 text-white font-bold text-sm px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/25 w-full sm:w-auto text-center cursor-pointer"
+            >
+              <Compass className="w-4 h-4" /> Explore Adventures
+            </Link>
+            <Link 
+              href="/auth/register?role=guide" 
+              className="border border-white/20 text-white hover:bg-white/10 font-bold text-sm px-8 py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 w-full sm:w-auto text-center cursor-pointer"
+            >
+              <Users className="w-4 h-4" /> Become a Tour Guide
+            </Link>
+          </motion.div>
 
           {/* Stats */}
           <motion.div

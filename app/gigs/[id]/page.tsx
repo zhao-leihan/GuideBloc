@@ -216,6 +216,7 @@ export default function GigDetailPage() {
   };
 
   const handleBookNow = async (walletType: "metamask" | "coinbase" | "walletconnect") => {
+    let bookingId: string | null = null;
     try {
       setShowWalletModal(false);
       setIsBooking(true);
@@ -240,14 +241,14 @@ export default function GigDetailPage() {
       }
 
       const dbBooking = await createRes.json();
-      const bookingId = dbBooking.id;
+      bookingId = dbBooking.id;
 
       toast.info(`Requesting Approval via ${walletType.toUpperCase()}...`);
       
       const mappedWalletType = walletType === "walletconnect" ? undefined : (walletType as any);
 
       const hash = await initiatePayment({
-        bookingId,
+        bookingId: dbBooking.id,
         amountUSD: gig.priceUSD * groupSize,
         token: "USDC", 
         network: "base", 
@@ -272,6 +273,15 @@ export default function GigDetailPage() {
       
     } catch (error: any) {
       console.error(error);
+      if (bookingId) {
+        try {
+          await fetch(`/api/bookings/${bookingId}`, {
+            method: "DELETE",
+          });
+        } catch (delErr) {
+          console.error("Failed to delete cancelled booking:", delErr);
+        }
+      }
       toast.error(error.message || "Transaction failed");
     } finally {
       setIsBooking(false);
