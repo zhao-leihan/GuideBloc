@@ -17,6 +17,12 @@ interface User {
   certificationText?: string;
   certificationFile?: string;
   isBlocked: boolean;
+  verificationStatus: "NONE" | "PENDING" | "APPROVED" | "REJECTED";
+  verificationRejectReason?: string;
+  idCardNumber?: string;
+  idCardPhoto?: string;
+  passportNumber?: string;
+  passportPhoto?: string;
 }
 
 export default function AdminUsersPage() {
@@ -24,6 +30,9 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedIdentityUser, setSelectedIdentityUser] = useState<User | null>(null);
+  const [showRejectForm, setShowRejectForm] = useState(false);
+  const [rejectReasonText, setRejectReasonText] = useState("");
   const [warningUser, setWarningUser] = useState<User | null>(null);
   const [warningMessage, setWarningMessage] = useState("");
   const [isSubmittingWarning, setIsSubmittingWarning] = useState(false);
@@ -46,6 +55,33 @@ export default function AdminUsersPage() {
       toast.error("Error loading users");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleIdentityAction = async (userId: string, action: "APPROVE_IDENTITY" | "REJECT_IDENTITY", reason?: string) => {
+    try {
+      toast.loading(`${action === "APPROVE_IDENTITY" ? "Approving" : "Rejecting"} identity...`);
+      const res = await fetch("/api/admin/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, action, message: reason }),
+      });
+
+      toast.dismiss();
+      if (res.ok) {
+        toast.success(`Identity ${action === "APPROVE_IDENTITY" ? "approved" : "rejected"}!`);
+        setSelectedIdentityUser(null);
+        setShowRejectForm(false);
+        setRejectReasonText("");
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "Failed to update identity status");
+      }
+    } catch (err) {
+      toast.dismiss();
+      console.error(err);
+      toast.error("Error updating identity status");
     }
   };
 
@@ -173,6 +209,7 @@ export default function AdminUsersPage() {
                   <th className="text-left text-xs font-medium text-dark-500 px-6 py-3">Joined</th>
                   <th className="text-left text-xs font-medium text-dark-500 px-6 py-3">Status</th>
                   <th className="text-left text-xs font-medium text-dark-500 px-6 py-3">Guide App Status</th>
+                  <th className="text-left text-xs font-medium text-dark-500 px-6 py-3">Identity Verification</th>
                   <th className="text-left text-xs font-medium text-dark-500 px-6 py-3">Actions</th>
                 </tr>
               </thead>
@@ -215,6 +252,19 @@ export default function AdminUsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
+                      {user.verificationStatus !== "NONE" ? (
+                        <span className={`badge text-xs font-semibold ${
+                          user.verificationStatus === "APPROVED" ? "bg-green-500/10 text-green-600" :
+                          user.verificationStatus === "PENDING" ? "bg-amber-500/10 text-amber-600 animate-pulse" :
+                          "bg-red-500/10 text-red-600"
+                        }`}>
+                          {user.verificationStatus}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-dark-400">Unverified</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {user.guideStatus === "PENDING" && (
                           <button 
@@ -222,6 +272,13 @@ export default function AdminUsersPage() {
                             className="btn-outline text-xs py-1.5 px-3 flex items-center gap-1 hover:border-primary/50 cursor-pointer"
                           >
                             <FileText className="w-3.5 h-3.5" /> Review Application
+                          </button>
+                        )}
+                        {user.verificationStatus === "PENDING" && (
+                          <button 
+                            onClick={() => setSelectedIdentityUser(user)}
+                            className="btn-outline text-xs py-1.5 px-3 flex items-center gap-1 hover:border-primary/50 cursor-pointer"
+                          >
                           </button>
                         )}
                         {user.role !== "ADMIN" && (
@@ -366,6 +423,158 @@ export default function AdminUsersPage() {
                     <X className="w-4 h-4" /> Reject Application
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Review Identity Modal */}
+        {selectedIdentityUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/60 backdrop-blur-sm p-4">
+            <div className="card max-w-lg w-full bg-white p-6 rounded-2xl shadow-2xl relative">
+              <button 
+                onClick={() => {
+                  setSelectedIdentityUser(null);
+                  setShowRejectForm(false);
+                  setRejectReasonText("");
+                }} 
+                className="absolute top-4 right-4 text-dark-400 hover:text-dark-600 text-lg cursor-pointer"
+              >
+                &times;
+              </button>
+              <div className="flex items-center gap-3 border-b border-dark-100 pb-4 mb-4">
+                <Shield className="w-6 h-6 text-primary" />
+                <div>
+                  <h3 className="font-display font-bold text-dark-900 text-lg">Identity Verification Review</h3>
+                  <p className="text-xs text-dark-400">{selectedIdentityUser.name} &bull; {selectedIdentityUser.email}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* ID card info */}
+                {selectedIdentityUser.idCardNumber && (
+                  <div className="bg-dark-50 p-4 rounded-xl border border-dark-100 space-y-2">
+                    <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">KTP / NIK Number</p>
+                    <p className="text-sm font-bold text-dark-900 font-mono bg-white px-2.5 py-1.5 rounded-lg border border-dark-150 inline-block">{selectedIdentityUser.idCardNumber}</p>
+                    
+                    {selectedIdentityUser.idCardPhoto ? (
+                      <div className="mt-2.5 space-y-2">
+                        <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">KTP Document Photograph</p>
+                        <div className="relative w-full max-h-60 overflow-hidden rounded-xl border border-dark-200 bg-white flex items-center justify-center p-2">
+                          <img 
+                            src={selectedIdentityUser.idCardPhoto} 
+                            alt="KTP Document" 
+                            className="max-w-full max-h-56 object-contain rounded-lg"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <a
+                            href={selectedIdentityUser.idCardPhoto}
+                            download={`${selectedIdentityUser.name.replace(/\s+/g, "_")}_ktp.png`}
+                            className="flex-1 text-center bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer"
+                          >
+                            Download KTP
+                          </a>
+                          <a
+                            href={selectedIdentityUser.idCardPhoto}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 text-center bg-dark-100 text-dark-700 hover:bg-dark-200 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer"
+                          >
+                            Open Full View
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-dark-400 italic">No KTP photograph uploaded.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Passport info */}
+                {selectedIdentityUser.passportNumber && (
+                  <div className="bg-dark-50 p-4 rounded-xl border border-dark-100 space-y-2">
+                    <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">Passport Number</p>
+                    <p className="text-sm font-bold text-dark-900 font-mono bg-white px-2.5 py-1.5 rounded-lg border border-dark-150 inline-block">{selectedIdentityUser.passportNumber}</p>
+                    
+                    {selectedIdentityUser.passportPhoto ? (
+                      <div className="mt-2.5 space-y-2">
+                        <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">Passport Photograph</p>
+                        <div className="relative w-full max-h-60 overflow-hidden rounded-xl border border-dark-200 bg-white flex items-center justify-center p-2">
+                          <img 
+                            src={selectedIdentityUser.passportPhoto} 
+                            alt="Passport Document" 
+                            className="max-w-full max-h-56 object-contain rounded-lg"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <a
+                            href={selectedIdentityUser.passportPhoto}
+                            download={`${selectedIdentityUser.name.replace(/\s+/g, "_")}_passport.png`}
+                            className="flex-1 text-center bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer"
+                          >
+                            Download Passport
+                          </a>
+                          <a
+                            href={selectedIdentityUser.passportPhoto}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 text-center bg-dark-100 text-dark-700 hover:bg-dark-200 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer"
+                          >
+                            Open Full View
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-dark-400 italic">No passport photograph uploaded.</p>
+                    )}
+                  </div>
+                )}
+
+                {showRejectForm ? (
+                  <div className="space-y-3 pt-3 border-t border-dark-100">
+                    <label className="block text-xs font-bold text-dark-500 uppercase tracking-wider">
+                      Rejection Reason (Indonesian Language)
+                    </label>
+                    <textarea
+                      value={rejectReasonText}
+                      onChange={(e) => setRejectReasonText(e.target.value)}
+                      placeholder="Contoh: Foto KTP buram, tidak terbaca, atau NIK tidak terdaftar..."
+                      className="w-full p-2.5 bg-dark-50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs h-20 resize-none font-sans"
+                      required
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowRejectForm(false)}
+                        className="btn-outline flex-1 py-2 text-xs font-semibold"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => handleIdentityAction(selectedIdentityUser.id, "REJECT_IDENTITY", rejectReasonText.trim())}
+                        disabled={!rejectReasonText.trim()}
+                        className="btn-danger flex-1 py-2 text-xs font-semibold"
+                      >
+                        Confirm Reject
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 pt-4 border-t border-dark-100">
+                    <button 
+                      onClick={() => handleIdentityAction(selectedIdentityUser.id, "APPROVE_IDENTITY")}
+                      className="btn-primary flex-1 flex items-center justify-center gap-1.5 py-3 font-semibold text-xs"
+                    >
+                      <Check className="w-4 h-4" /> Approve Identity
+                    </button>
+                    <button 
+                      onClick={() => setShowRejectForm(true)}
+                      className="btn-danger flex-1 flex items-center justify-center gap-1.5 py-3 font-semibold text-xs"
+                    >
+                      <X className="w-4 h-4" /> Reject Identity
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

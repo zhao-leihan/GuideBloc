@@ -114,7 +114,6 @@ export default function TouristProfilePage() {
       return;
     }
     setIsVerifying(true);
-    setVerificationStatus("PENDING");
     try {
       const res = await fetch("/api/users/profile", {
         method: "PUT",
@@ -129,23 +128,16 @@ export default function TouristProfilePage() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setVerificationStatus(data.verificationStatus);
-        setVerificationRejectReason(data.verificationRejectReason);
-        if (data.verificationStatus === "APPROVED") {
-          toast.success("Identity verified successfully!");
-        } else {
-          toast.error("Verification failed: " + data.verificationRejectReason);
-        }
+        setVerificationStatus("PENDING");
+        setVerificationRejectReason(null);
+        toast.success("Documents submitted successfully! Waiting for Admin approval.");
         await updateSession();
       } else {
-        toast.error("Failed to process verification request");
-        setVerificationStatus("NONE");
+        toast.error("Failed to submit verification documents");
       }
     } catch (err) {
       console.error(err);
       toast.error("Verification connection error");
-      setVerificationStatus("NONE");
     } finally {
       setIsVerifying(false);
     }
@@ -534,9 +526,9 @@ export default function TouristProfilePage() {
                       <Loader2 className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-dark-900 text-sm">AI Verification Scanning In Progress</h4>
+                      <h4 className="font-bold text-dark-900 text-sm">Verification Pending Approval</h4>
                       <p className="text-xs text-dark-500 mt-1 max-w-xs mx-auto leading-relaxed">
-                        Please wait while our verification scanner analyzes image clarity, compares faces, and cross-references document numbers.
+                        Please wait while the Super Admin reviews your uploaded documents. This process usually takes up to 24 hours.
                       </p>
                       <button
                         onClick={handleResetVerification}

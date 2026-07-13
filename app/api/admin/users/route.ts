@@ -25,6 +25,12 @@ export async function GET() {
         certificationText: true,
         certificationFile: true,
         isBlocked: true,
+        verificationStatus: true,
+        verificationRejectReason: true,
+        idCardNumber: true,
+        idCardPhoto: true,
+        passportNumber: true,
+        passportPhoto: true,
         bookings: {
           select: { id: true }
         }
@@ -44,6 +50,12 @@ export async function GET() {
       certificationText: user.certificationText,
       certificationFile: user.certificationFile,
       isBlocked: user.isBlocked,
+      verificationStatus: user.verificationStatus,
+      verificationRejectReason: user.verificationRejectReason,
+      idCardNumber: user.idCardNumber,
+      idCardPhoto: user.idCardPhoto,
+      passportNumber: user.passportNumber,
+      passportPhoto: user.passportPhoto,
     }));
 
     return NextResponse.json(mappedUsers);
@@ -96,6 +108,24 @@ export async function PUT(req: Request) {
         }
       });
       return NextResponse.json({ message: "Guide application rejected" });
+    } else if (action === "APPROVE_IDENTITY") {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          verificationStatus: "APPROVED",
+          verificationRejectReason: null
+        }
+      });
+      return NextResponse.json({ message: "User identity verified successfully" });
+    } else if (action === "REJECT_IDENTITY") {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          verificationStatus: "REJECTED",
+          verificationRejectReason: message || "Dokumen KTP/Passport kurang jelas atau tidak cocok."
+        }
+      });
+      return NextResponse.json({ message: "User identity verification rejected" });
     } else if (action === "BLOCK") {
       await prisma.user.update({
         where: { id: userId },

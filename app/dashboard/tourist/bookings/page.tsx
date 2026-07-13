@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown } from "lucide-react";
+import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
@@ -35,6 +35,20 @@ export default function TouristBookingsPage() {
   const [proofPhoto, setProofPhoto] = useState<string>("");
   const [isUploadingProof, setIsUploadingProof] = useState<boolean>(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  const [hiddenBookingIds, setHiddenBookingIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const hidden = JSON.parse(localStorage.getItem("hidden_bookings") || "[]");
+    setHiddenBookingIds(hidden);
+  }, []);
+
+  const handleHideBooking = (bookingId: string) => {
+    const nextHidden = [...hiddenBookingIds, bookingId];
+    setHiddenBookingIds(nextHidden);
+    localStorage.setItem("hidden_bookings", JSON.stringify(nextHidden));
+    toast.success("Booking removed from your history list.");
+  };
 
   useEffect(() => {
     if (session?.user) {
@@ -485,14 +499,16 @@ export default function TouristBookingsPage() {
     }
   };
 
-  const activeBookingsCount = bookings.filter(b => !["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status)).length;
-  const historyBookingsCount = bookings.filter(b => ["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status)).length;
+  const visibleBookings = bookings.filter(b => !hiddenBookingIds.includes(b.id));
 
-  const unreviewedCompletedBooking = bookings.find(b => b.status === "COMPLETED" && !b.hasReviewed);
+  const activeBookingsCount = visibleBookings.filter(b => !["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status)).length;
+  const historyBookingsCount = visibleBookings.filter(b => ["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status)).length;
+
+  const unreviewedCompletedBooking = visibleBookings.find(b => b.status === "COMPLETED" && !b.hasReviewed);
   const activeReviewBooking = reviewBooking || unreviewedCompletedBooking;
   const isReviewMandatory = !!unreviewedCompletedBooking;
 
-  const filteredBookings = bookings.filter(b => {
+  const filteredBookings = visibleBookings.filter(b => {
     const isHistory = ["COMPLETED", "CANCELLED", "REJECTED"].includes(b.status);
     return activeTab === "history" ? isHistory : !isHistory;
   });
@@ -670,6 +686,18 @@ export default function TouristBookingsPage() {
                                   className="w-full text-left px-4 py-2.5 text-xs text-secondary border-t border-dark-800 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
                                 >
                                   <Compass className="w-3.5 h-3.5 text-secondary" /> Open Meet Radar
+                                </button>
+                              )}
+
+                              {["CANCELLED", "REJECTED"].includes(booking.status) && (
+                                <button
+                                  onClick={() => {
+                                    handleHideBooking(booking.id);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-xs text-rose-500 border-t border-dark-800 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Hapus Riwayat
                                 </button>
                               )}
                             </motion.div>
