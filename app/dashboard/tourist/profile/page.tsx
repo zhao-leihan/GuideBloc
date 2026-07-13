@@ -161,6 +161,32 @@ export default function TouristProfilePage() {
       setIsVerifying(false);
     }
   };
+  const handleResetVerification = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/users/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          verificationStatus: "NONE",
+          verificationRejectReason: null,
+        }),
+      });
+      if (res.ok) {
+        setVerificationStatus("NONE");
+        setVerificationRejectReason(null);
+        toast.success("Verification state reset successfully!");
+        await updateSession();
+      } else {
+        toast.error("Failed to reset verification");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error resetting verification");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -523,6 +549,12 @@ export default function TouristProfilePage() {
                       <p className="text-xs text-dark-500 mt-1 max-w-xs mx-auto leading-relaxed">
                         Please wait while our verification scanner analyzes image clarity, compares faces, and cross-references document numbers.
                       </p>
+                      <button
+                        onClick={handleResetVerification}
+                        className="text-xs text-primary hover:underline font-semibold mt-4 block mx-auto cursor-pointer"
+                      >
+                        Cancel & Reset Verification
+                      </button>
                     </div>
                   </div>
                 )}
