@@ -116,25 +116,11 @@ export default function TouristProfilePage() {
     setIsVerifying(true);
     setVerificationStatus("PENDING");
     try {
-      await fetch("/api/users/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verificationStatus: "PENDING" }),
-      });
-
-      // 5-second simulated scanning verification process
-      await new Promise(r => setTimeout(r, 5000));
-
-      const isFail = passportNumber.toLowerCase().includes("fail") || idCardNumber.toLowerCase().includes("fail");
-      const newStatus = isFail ? "REJECTED" : "APPROVED";
-      const rejectReason = isFail ? "Photograph of documents is too dark or numbers did not match governmental registry." : null;
-
       const res = await fetch("/api/users/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          verificationStatus: newStatus,
-          verificationRejectReason: rejectReason,
+          verificationStatus: "PENDING",
           passportNumber,
           passportPhoto,
           idCardNumber,
@@ -143,20 +129,23 @@ export default function TouristProfilePage() {
       });
 
       if (res.ok) {
-        setVerificationStatus(newStatus);
-        setVerificationRejectReason(rejectReason);
-        if (newStatus === "APPROVED") {
+        const data = await res.json();
+        setVerificationStatus(data.verificationStatus);
+        setVerificationRejectReason(data.verificationRejectReason);
+        if (data.verificationStatus === "APPROVED") {
           toast.success("Identity verified successfully!");
         } else {
-          toast.error("Verification failed: " + rejectReason);
+          toast.error("Verification failed: " + data.verificationRejectReason);
         }
         await updateSession();
       } else {
-        toast.error("Failed to update verification database");
+        toast.error("Failed to process verification request");
+        setVerificationStatus("NONE");
       }
     } catch (err) {
       console.error(err);
       toast.error("Verification connection error");
+      setVerificationStatus("NONE");
     } finally {
       setIsVerifying(false);
     }
