@@ -137,7 +137,7 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-dark-900 via-dark-800 to-primary/20 pt-24 pb-44">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1920')] bg-cover bg-center opacity-10" />
+        <div className="absolute inset-0 bg-[url('/assets/background.jpg')] bg-cover bg-center opacity-10" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           {/* Badge */}
           <motion.div
