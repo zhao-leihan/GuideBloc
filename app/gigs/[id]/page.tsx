@@ -64,6 +64,24 @@ export default function GigDetailPage() {
     fetchGig();
   }, [params.id]);
 
+  useEffect(() => {
+    const midtransScriptUrl = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true"
+      ? "https://app.midtrans.com/snap/snap.js"
+      : "https://app.sandbox.midtrans.com/snap/snap.js";
+
+    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "SB-Mid-client-dummy";
+
+    const script = document.createElement("script");
+    script.src = midtransScriptUrl;
+    script.setAttribute("data-client-key", clientKey);
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const fetchGig = async () => {
     try {
       const res = await fetch(`/api/gigs/${params.id}`);
@@ -283,6 +301,97 @@ export default function GigDetailPage() {
         }
       }
       toast.error(error.message || "Transaction failed");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const handlePayMidtrans = async () => {
+    if (!gig) return;
+    setIsBooking(true);
+    let bookingId: string | null = null;
+
+    try {
+      // 1. Create a pending booking in the database
+      const createRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId: gig.id,
+          bookingDate,
+          bookingTime,
+          groupSize,
+          participants: passengerDetails,
+          cryptoToken: "USDC",
+        }),
+      });
+
+      if (!createRes.ok) {
+        const errorData = await createRes.json();
+        throw new Error(errorData.message || "Failed to create booking in database");
+      }
+
+      const dbBooking = await createRes.json();
+      bookingId = dbBooking.id;
+
+      // 2. Fetch the Midtrans token for this booking
+      toast.info("Connecting to Midtrans Local Checkout...");
+      const tokenRes = await fetch("/api/payment/midtrans-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+
+      if (!tokenRes.ok) {
+        throw new Error("Failed to get Midtrans payment token");
+      }
+
+      const { token, redirectUrl } = await tokenRes.json();
+      setShowWalletModal(false);
+
+      // 3. Open Midtrans Snap popup
+      if ((window as any).snap) {
+        (window as any).snap.pay(token, {
+          onSuccess: function (result: any) {
+            console.log("Midtrans payment success:", result);
+            toast.success("Payment successful! Escrow locked.");
+            setTxHash(result.transaction_id || "N/A");
+            setShowSuccessModal(true);
+          },
+          onPending: function (result: any) {
+            console.log("Midtrans payment pending:", result);
+            toast.info("Payment pending. Check details in your Bookings.");
+            router.push("/dashboard/tourist/bookings");
+          },
+          onError: function (result: any) {
+            console.error("Midtrans payment error:", result);
+            toast.error("Payment failed. Booking cancelled.");
+            if (bookingId) {
+              fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(console.error);
+            }
+          },
+          onClose: function () {
+            console.log("Midtrans snap popup closed");
+            toast.warning("Payment cancelled.");
+            if (bookingId) {
+              fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(console.error);
+            }
+          }
+        });
+      } else {
+        // Fallback to redirection
+        window.location.href = redirectUrl;
+      }
+    } catch (error: any) {
+      console.error(error);
+      if (bookingId) {
+        try {
+          await fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(console.error);
+        } catch (delErr) {
+          console.error("Failed to clean up booking:", delErr);
+        }
+      }
+      toast.error(error.message || "Payment checkout failed");
     } finally {
       setIsBooking(false);
     }
@@ -1026,6 +1135,28 @@ export default function GigDetailPage() {
                     </div>
                   </button>
                 </div>
+              </div>
+              
+              {/* Option 2: IDR Local Payment (QRIS/VA) */}
+              <div className="space-y-3 pt-4 border-t border-dark-100">
+                <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">IDR Local Payment (QRIS / Bank Transfer)</span>
+                
+                <button 
+                  onClick={handlePayMidtrans} 
+                  disabled={isBooking}
+                  className="w-full p-3.5 border border-primary hover:border-primary hover:bg-primary/5 rounded-xl flex items-center justify-between transition-all group cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-dark-900 text-sm group-hover:text-primary transition-colors block">Pay with Midtrans</span>
+                      <span className="text-[10px] text-dark-450">QRIS (GoPay, OVO, ShopeePay), Virtual Account, Debit Card</span>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-dark-300 group-hover:text-primary transition-colors" />
+                </button>
               </div>
               
             </div>
