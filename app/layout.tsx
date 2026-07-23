@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import AuthProvider from "@/components/providers/AuthProvider";
+import MaintenanceOverlay from "@/components/layout/MaintenanceOverlay";
 
 export const metadata: Metadata = {
   title: "Explomate | Explore the World,Pay in the Future",
@@ -20,6 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
+          <MaintenanceOverlay />
           {children}
           <Toaster richColors position="top-right" />
         </AuthProvider>

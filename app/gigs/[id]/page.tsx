@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   MapPin, Clock, Users, Star, Globe, ChevronLeft, ChevronRight,
   Calendar, Shield, CheckCircle, XCircle, MessageSquare, X,
-  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft
+  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark
 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -1137,25 +1137,28 @@ export default function GigDetailPage() {
                 </div>
               </div>
               
-              {/* Option 2: IDR Local Payment (QRIS/VA) */}
-              <div className="space-y-3 pt-4 border-t border-dark-100">
-                <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">IDR Local Payment (QRIS / Bank Transfer)</span>
-                
+              {/* Option 2: Fiat-to-Crypto (Transak) */}
+              <div className="space-y-2 pt-4 border-t border-dark-100">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">Fiat-to-Crypto On-Ramp</span>
+                </div>
                 <button 
-                  onClick={handlePayMidtrans} 
-                  disabled={isBooking}
-                  className="w-full p-3.5 border border-primary hover:border-primary hover:bg-primary/5 rounded-xl flex items-center justify-between transition-all group cursor-pointer text-left"
+                  onClick={() => {
+                    setShowWalletModal(false);
+                    setShowTransakModal(true);
+                  }}
+                  className="w-full p-4 border border-dark-200 hover:border-primary/50 hover:bg-primary/5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                      <CreditCard className="w-5 h-5" />
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                      <ArrowRightLeft className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="font-semibold text-dark-900 text-sm group-hover:text-primary transition-colors block">Pay with Midtrans</span>
-                      <span className="text-[10px] text-dark-450">QRIS (GoPay, OVO, ShopeePay), Virtual Account, Debit Card</span>
+                      <span className="font-bold text-dark-900 text-sm group-hover:text-primary transition-colors block">Buy Crypto via Transak</span>
+                      <span className="text-[11px] text-dark-500 block mt-0.5">Top-up Escrow directly with Debit/Credit Card</span>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-dark-300 group-hover:text-primary transition-colors" />
+                  <span className="text-[10px] font-bold bg-primary text-white px-2.5 py-0.5 rounded-full">Popular</span>
                 </button>
               </div>
               
@@ -1202,20 +1205,58 @@ export default function GigDetailPage() {
               <h2 className="text-2xl font-black tracking-tight mb-1">Transak Staging</h2>
               <p className="text-white/80 text-sm">Fiat-to-Crypto Sandbox Checkout</p>
             </div>
-                <div className="p-6 text-center space-y-4 py-8">
-              <div className="w-16 h-16 bg-yellow-500/10 text-yellow-600 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                <AlertCircle className="w-8 h-8" />
+            <div className="p-6 text-center space-y-4">
+              <div className="flex justify-between items-center bg-dark-50 p-3 rounded-xl text-xs">
+                <span className="text-dark-500">Amount due</span>
+                <span className="font-bold text-dark-900">${(gig.priceUSD * groupSize).toFixed(2)} USD</span>
               </div>
-              <h3 className="text-lg font-bold text-dark-900">Transak Under Maintenance</h3>
-              <p className="text-sm text-dark-600 max-w-xs mx-auto leading-relaxed">
-                Transak Gateway is currently undergoing scheduled platform upgrades. We will be back online on <strong className="text-dark-900 font-bold">July 20, 2026</strong>.
-              </p>
-              <button 
-                onClick={() => { setShowTransakModal(false); setShowWalletModal(true); }}
-                className="w-full bg-dark-900 hover:bg-dark-950 text-white font-bold py-3 rounded-xl transition-colors text-sm cursor-pointer"
+
+              {/* Button to open widget */}
+              <a
+                href={`https://staging-global.transak.com/?apiKey=${process.env.NEXT_PUBLIC_TRANSAK_API_KEY || "48715dee-7955-4215-bab4-37cf8bca836f"}&cryptoCurrencyList=USDC&network=base&fiatCurrency=USD&fiatAmount=${gig.priceUSD * groupSize}&walletAddress=${transakWallet}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-[#3c00b3] hover:bg-[#2b0080] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-xs shadow-md shadow-primary/25 cursor-pointer text-center"
               >
-                Choose Another Method
-              </button>
+                <ArrowRightLeft className="w-4 h-4" /> Open Transak On-Ramp
+              </a>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-dark-200"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-dark-450 font-semibold">Then Confirm Order</span>
+                </div>
+              </div>
+
+              <div className="space-y-1 text-left">
+                <label className="block text-[10px] font-bold text-dark-500 uppercase tracking-wider mb-1">Transak Order ID</label>
+                <input 
+                  type="text" 
+                  value={transakOrderId}
+                  onChange={e => setTransakOrderId(e.target.value)}
+                  placeholder="e.g. 1a2b3c4d-5e6f..."
+                  className="w-full p-3 border border-dark-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-xs text-dark-900 font-mono"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => { setShowTransakModal(false); setShowWalletModal(true); }}
+                  className="btn-outline flex-1 py-2.5 text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleTransakConfirm}
+                  disabled={isBooking || !transakOrderId.trim()}
+                  className="btn-primary flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5"
+                >
+                  {isBooking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />} Confirm Escrow
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -44,7 +44,7 @@ export async function PATCH(
         }
 
         try {
-          const apiKey = "daf0c0d5-9e5e-4aac-bbd5-81d6c1444489";
+          const apiKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY || "48715dee-7955-4215-bab4-37cf8bca836f";
           
           // 1. Refresh partner access token
           const tokenRes = await fetch("https://api-stg.transak.com/partners/api/v2/refresh-token", {

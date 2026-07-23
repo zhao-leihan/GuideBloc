@@ -140,16 +140,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[url('/assets/background.jpg')] bg-cover bg-center" />
         <div className="absolute inset-0 bg-dark-950/45" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
-            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary-500/20 bg-primary-500/10 text-primary-300 mb-6 backdrop-blur-md"
-          >
-            <Shield className="w-4 h-4" />
-            <span className="text-sm font-medium tracking-wide uppercase">Secured by Blockchain Escrow</span>
-          </motion.div>
+
 
           {/* Title */}
             <motion.h1
@@ -239,7 +230,7 @@ export default function HomePage() {
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
-                <p className="text-sm text-dark-400">{stat.label}</p>
+                <p className="text-sm text-white">{stat.label}</p>
               </div>
             ))}
           </motion.div>
