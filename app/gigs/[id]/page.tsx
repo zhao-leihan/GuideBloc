@@ -464,6 +464,29 @@ export default function GigDetailPage() {
   const handleOpenTransak = async () => {
     if (!gig) return;
     setIsOpeningTransak(true);
+    
+    // Open blank window immediately to bypass popup blockers
+    const checkoutWindow = window.open("about:blank", "_blank", "width=480,height=700");
+    if (checkoutWindow) {
+      checkoutWindow.document.write(`
+        <html>
+          <head>
+            <title>Loading Transak...</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0b0c10; color: #fff; text-align: center; }
+              .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #7A00FF; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+          </head>
+          <body>
+            <div class="spinner"></div>
+            <p style="font-weight: bold; margin: 0 0 8px 0;">Generating Secure Checkout...</p>
+            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 0;">Please do not close this window.</p>
+          </body>
+        </html>
+      `);
+    }
+
     toast.info("Generating secure Transak session...");
     try {
       const res = await fetch("/api/payment/transak-session", {
@@ -479,12 +502,14 @@ export default function GigDetailPage() {
         throw new Error(err.message || "Failed to generate Transak session");
       }
       const data = await res.json();
-      if (data.widgetUrl) {
-        window.open(data.widgetUrl, "_blank", "width=450,height=650");
+      if (data.widgetUrl && checkoutWindow) {
+        checkoutWindow.location.href = data.widgetUrl;
       } else {
+        if (checkoutWindow) checkoutWindow.close();
         throw new Error("No widgetUrl returned from server");
       }
     } catch (err: any) {
+      if (checkoutWindow) checkoutWindow.close();
       toast.error(err.message || "Could not open Transak checkout");
     } finally {
       setIsOpeningTransak(false);
