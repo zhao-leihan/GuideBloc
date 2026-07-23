@@ -25,6 +25,7 @@ export async function GET(
         reviews: {
           include: {
             reviewer: { select: { id: true, name: true, avatar: true } },
+            guide: { select: { id: true, name: true, avatar: true } },
           },
           orderBy: { createdAt: "desc" },
         },
