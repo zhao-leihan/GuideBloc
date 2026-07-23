@@ -18,6 +18,17 @@ export default function MaintenanceOverlay() {
   }, []);
 
   useEffect(() => {
+    if (isMaintenance) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMaintenance]);
+
+  useEffect(() => {
     if (!isMaintenance) return;
 
     // Target date: July 25, 2026 at 00:00:00 Jakarta time (UTC+7)
@@ -48,7 +59,7 @@ export default function MaintenanceOverlay() {
   if (!isMaintenance) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-dark-950 text-white p-4 relative overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[9999999] flex flex-col items-center justify-center bg-dark-950 text-white p-4 overflow-hidden font-sans select-none pointer-events-auto">
       {/* Dynamic Background Gradients */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-secondary/15 rounded-full blur-[120px] pointer-events-none" />
