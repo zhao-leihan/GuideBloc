@@ -459,6 +459,38 @@ export default function GigDetailPage() {
     }
   };
 
+  const [isOpeningTransak, setIsOpeningTransak] = useState(false);
+
+  const handleOpenTransak = async () => {
+    if (!gig) return;
+    setIsOpeningTransak(true);
+    toast.info("Generating secure Transak session...");
+    try {
+      const res = await fetch("/api/payment/transak-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: transakWallet,
+          amount: gig.priceUSD * groupSize
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to generate Transak session");
+      }
+      const data = await res.json();
+      if (data.widgetUrl) {
+        window.open(data.widgetUrl, "_blank", "width=450,height=650");
+      } else {
+        throw new Error("No widgetUrl returned from server");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Could not open Transak checkout");
+    } finally {
+      setIsOpeningTransak(false);
+    }
+  };
+
   const handleTransakConfirm = async () => {
     if (!gig) return;
     if (!transakOrderId.trim()) {
@@ -1212,14 +1244,13 @@ export default function GigDetailPage() {
               </div>
 
               {/* Button to open widget */}
-              <a
-                href={`https://staging-global.transak.com/?apiKey=${process.env.NEXT_PUBLIC_TRANSAK_API_KEY || "48715dee-7955-4215-bab4-37cf8bca836f"}&referrerDomain=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "http://localhost:3000")}&cryptoCurrencyCode=USDC&network=base&fiatCurrency=USD&fiatAmount=${gig.priceUSD * groupSize}&walletAddress=${transakWallet}&disableWalletAddressForm=true&email=${encodeURIComponent(session?.user?.email || "")}&productsAvailed=BUY`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handleOpenTransak}
+                disabled={isOpeningTransak}
                 className="w-full bg-[#3c00b3] hover:bg-[#2b0080] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-xs shadow-md shadow-primary/25 cursor-pointer text-center"
               >
-                <ArrowRightLeft className="w-4 h-4" /> Open Transak On-Ramp
-              </a>
+                {isOpeningTransak ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRightLeft className="w-4 h-4" />} Open Transak On-Ramp
+              </button>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

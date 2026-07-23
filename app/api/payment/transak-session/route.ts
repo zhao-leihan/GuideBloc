@@ -36,6 +36,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Failed to retrieve access token from Transak" }, { status: 400 });
     }
 
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+
     // 2. Create secure session widget URL
     const sessionRes = await fetch("https://api-gateway-stg.transak.com/api/v2/auth/session", {
       method: "POST",
@@ -47,13 +49,14 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         widgetParams: {
           apiKey,
-          referrerDomain: "http://localhost:3000",
-          cryptoCurrency: "USDC",
+          referrerDomain: origin,
           cryptoCurrencyCode: "USDC",
           network: "base",
           walletAddress,
+          disableWalletAddressForm: true,
           fiatCurrency: "USD",
-          defaultCryptoAmount: Number(Number(amount).toFixed(2))
+          fiatAmount: Number(amount),
+          productsAvailed: "BUY"
         }
       })
     });
