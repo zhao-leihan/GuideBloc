@@ -38,13 +38,21 @@ export async function POST(req: Request) {
 
     const referrerDomain = "explomate.com";
 
+    // Resolve user IP (fallback to public IP for local testing)
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    let userIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "";
+    if (!userIp || userIp === "127.0.0.1" || userIp === "::1" || userIp.startsWith("192.168.") || userIp.startsWith("10.")) {
+      userIp = "103.111.141.1"; // Public Indonesian IP fallback
+    }
+
     // 2. Create secure session widget URL
     const sessionRes = await fetch("https://api-gateway-stg.transak.com/api/v2/auth/session", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "access-token": accessToken,
-        "x-api-key": apiKey
+        "x-api-key": apiKey,
+        "x-user-ip": userIp
       },
       body: JSON.stringify({
         widgetParams: {
