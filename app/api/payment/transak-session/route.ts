@@ -36,8 +36,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Failed to retrieve access token from Transak" }, { status: 400 });
     }
 
-    const hostHeader = req.headers.get("host") || "localhost";
-    const referrerDomain = hostHeader.split(":")[0];
+    const referrerDomain = "explomate.com";
 
     // 2. Create secure session widget URL
     const sessionRes = await fetch("https://api-gateway-stg.transak.com/api/v2/auth/session", {
