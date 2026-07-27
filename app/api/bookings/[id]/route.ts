@@ -34,76 +34,51 @@ export async function PATCH(
         return NextResponse.json({ message: "Transaction reference is required" }, { status: 400 });
       }
 
-      // Case A: Transak Checkout verification
+      // Case A: MoonPay Checkout verification
       if (!txHash.startsWith("0x")) {
-        const apiSecret = process.env.TRANSAK_API_SECRET;
-        if (!apiSecret) {
+        const secretKey = process.env.MOONPAY_SECRET_KEY;
+        if (!secretKey) {
           return NextResponse.json({ 
-            message: "TRANSAK_API_SECRET is not configured in your server .env file. Please add it to enable Transak verification." 
+            message: "MOONPAY_SECRET_KEY is not configured in your server .env file." 
           }, { status: 400 });
         }
 
         try {
-          const apiKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY || "48715dee-7955-4215-bab4-37cf8bca836f";
-          
-          // 1. Refresh partner access token
-          const tokenRes = await fetch("https://api-stg.transak.com/partners/api/v2/refresh-token", {
-            method: "POST",
+          // Fetch transaction detail from MoonPay API
+          const orderRes = await fetch(`https://api.moonpay.com/v1/transactions/${txHash}`, {
             headers: {
-              "Content-Type": "application/json",
-              "api-secret": apiSecret,
-              "x-api-key": apiKey
-            },
-            body: JSON.stringify({ apiKey })
-          });
-
-          if (!tokenRes.ok) {
-            const tokenErr = await tokenRes.text();
-            console.error("Transak token refresh error response:", tokenErr);
-            return NextResponse.json({ message: `Transak API authentication failed: ${tokenErr}` }, { status: 400 });
-          }
-
-          const tokenData = await tokenRes.json();
-          const accessToken = tokenData.data?.accessToken;
-          if (!accessToken) {
-            return NextResponse.json({ message: "Failed to retrieve access token from Transak" }, { status: 400 });
-          }
-
-          // 2. Fetch order by ID
-          const orderRes = await fetch(`https://api-stg.transak.com/partners/api/v2/order/${txHash}`, {
-            headers: {
-              "x-api-key": apiKey,
-              "access-token": accessToken
+              "X-Api-Key": secretKey
             }
           });
 
           if (!orderRes.ok) {
-            return NextResponse.json({ message: "Transak order verification failed: Order not found on Transak" }, { status: 400 });
+            return NextResponse.json({ message: "MoonPay transaction verification failed: Transaction not found on MoonPay" }, { status: 400 });
           }
 
-          const orderData = await orderRes.json();
-          const tx = orderData.data; // Note: data contains order fields
+          const tx = await orderRes.json();
           if (!tx) {
-            return NextResponse.json({ message: "Transak order detail not found in response" }, { status: 400 });
+            return NextResponse.json({ message: "MoonPay transaction details not found in response" }, { status: 400 });
           }
 
-          const validStatuses = ["COMPLETED", "PROCESSING", "PENDING_DELIVERY"];
-          if (!validStatuses.includes(tx.status)) {
-            return NextResponse.json({ message: `Transak payment is not completed. Status: ${tx.status}` }, { status: 400 });
+          const validStatuses = ["completed", "pending"];
+          if (!validStatuses.includes(tx.status?.toLowerCase())) {
+            return NextResponse.json({ message: `MoonPay payment is not completed. Status: ${tx.status}` }, { status: 400 });
           }
 
-          // Verify token and network
-          if (tx.cryptoCurrency !== "USDC" || tx.network !== "base") {
-            return NextResponse.json({ message: "Transak payment must be USDC on Base network" }, { status: 400 });
+          // Verify token (USDC)
+          const assetCode = tx.destination?.asset?.code?.toLowerCase() || "";
+          if (assetCode !== "usdc") {
+            return NextResponse.json({ message: "MoonPay payment must be USDC" }, { status: 400 });
           }
 
           // Verify amount matches
-          if (Math.abs(tx.cryptoAmount - booking.totalPriceUSD) > 1.5) {
-            return NextResponse.json({ message: `Transak payment amount mismatch. Expected: ${booking.totalPriceUSD} USDC` }, { status: 400 });
+          const paidAmount = Number(tx.source?.amount || 0);
+          if (Math.abs(paidAmount - booking.totalPriceUSD) > 1.5) {
+            return NextResponse.json({ message: `MoonPay payment amount mismatch. Expected: ${booking.totalPriceUSD} USD` }, { status: 400 });
           }
         } catch (verifyErr: any) {
-          console.error("Transak verification server error:", verifyErr);
-          return NextResponse.json({ message: `Transak validation failed: ${verifyErr.message}` }, { status: 400 });
+          console.error("MoonPay verification server error:", verifyErr);
+          return NextResponse.json({ message: `MoonPay validation failed: ${verifyErr.message}` }, { status: 400 });
         }
       }
 
