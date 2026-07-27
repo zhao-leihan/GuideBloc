@@ -31,8 +31,8 @@ export default function MaintenanceOverlay() {
   useEffect(() => {
     if (!isMaintenance) return;
 
-    // Target date: July 25, 2026 at 00:00:00 Jakarta time (UTC+7)
-    const targetDate = new Date("2026-07-25T00:00:00+07:00").getTime();
+    // Target date: August 15, 2026 at 00:00:00 Jakarta time (UTC+7)
+    const targetDate = new Date("2026-08-15T00:00:00+07:00").getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -72,11 +72,11 @@ export default function MaintenanceOverlay() {
         </div>
 
         <h1 className="text-3xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-          Under Maintenance
+          Big Maintenance
         </h1>
         
         <p className="text-sm text-white/60 mb-8 leading-relaxed max-w-sm mx-auto">
-          We are currently deploying the next version of Explomate. The website will be fully online on <strong className="text-white font-semibold">July 25, 2026</strong>.
+          We are performing a major upgrade on Explomate. The website will be fully online on <strong className="text-white font-semibold">August 15, 2026</strong>.
         </p>
 
         {/* Countdown Grid */}
