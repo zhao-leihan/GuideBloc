@@ -21,7 +21,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
-          <MaintenanceOverlay />
           {children}
           <Toaster richColors position="top-right" />
         </AuthProvider>
