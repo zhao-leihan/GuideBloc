@@ -1,6 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Shield, Sparkles, Star } from "lucide-react";
+import { Shield, Sparkles, Code2, Users, Compass } from "lucide-react";
 
 export default function TeamPage() {
   return (
@@ -14,13 +14,13 @@ export default function TeamPage() {
         
         <div className="relative max-w-4xl mx-auto px-4 text-center z-10 space-y-4">
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary-500/20 bg-primary-500/10 text-primary-300 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" /> Meet the Mind behind Explomate
+            <Sparkles className="w-3.5 h-3.5" /> Driven by Decentralized Innovation
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white font-display">
-            Founder
+            Our Team & Ecosystem
           </h1>
           <p className="text-lg text-dark-300 max-w-2xl mx-auto">
-            Dedicated to building a decentralized travel economy where local guides get paid fairly and tourists enjoy authentic, vetted adventures.
+            Explomate is powered by a global network of open-source contributors, Web3 security auditors, and passionate local tour guides.
           </p>
         </div>
 
@@ -32,36 +32,37 @@ export default function TeamPage() {
         </div>
       </section>
 
-      {/* Featured Founder Card */}
-      <section className="py-24 flex items-center justify-center">
-        <div className="max-w-md w-full px-4">
-          <div className="card bg-white border border-dark-200 shadow-xl overflow-hidden group hover:border-primary/30 hover:shadow-2xl transition-all duration-300">
-            {/* Profile Photo */}
-            <div className="relative aspect-square w-full bg-dark-100 overflow-hidden">
-              <img 
-                src="/assets/founder(1).jpeg" 
-                alt="Rayhan Aziel Abbrar" 
-                className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-500" 
-              />
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-2 rounded-xl shadow-md border border-dark-100">
-                <Star className="w-5 h-5 text-primary" />
-              </div>
+      {/* Ecosystem Pillars */}
+      <section className="py-24 max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="card p-8 bg-white border border-dark-200 shadow-md rounded-3xl space-y-4 hover:border-primary/40 transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <Code2 className="w-6 h-6" />
             </div>
+            <h3 className="text-xl font-bold text-dark-900 font-display">Protocol Developers</h3>
+            <p className="text-dark-500 text-sm leading-relaxed">
+              Engineers designing transparent smart contract escrows on Base layer 2 to minimize gas fees and eliminate intermediate payout bottlenecks.
+            </p>
+          </div>
 
-            {/* Info */}
-            <div className="p-8 space-y-4">
-              <div className="text-center">
-                <h3 className="font-display text-2xl font-bold text-dark-900 group-hover:text-primary transition-colors">
-                  Rayhan Aziel Abbrar
-                </h3>
-                <p className="text-sm font-semibold text-secondary-600 mt-1">
-                  Founder & Chief Executive
-                </p>
-              </div>
-              <p className="text-sm text-dark-500 leading-relaxed font-sans text-center">
-                Visionary behind Explomate. Championing the integration of travel experiences and decentralized Web3 technologies to deliver local value and secure transaction escrow globally.
-              </p>
+          <div className="card p-8 bg-white border border-dark-200 shadow-md rounded-3xl space-y-4 hover:border-primary/40 transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+              <Users className="w-6 h-6" />
             </div>
+            <h3 className="text-xl font-bold text-dark-900 font-display">Verified Guides</h3>
+            <p className="text-dark-500 text-sm leading-relaxed">
+              Local ambassadors and adventure leaders who curate authentic experiences while receiving 90% direct payout split.
+            </p>
+          </div>
+
+          <div className="card p-8 bg-white border border-dark-200 shadow-md rounded-3xl space-y-4 hover:border-primary/40 transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+              <Compass className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-dark-900 font-display">Global Community</h3>
+            <p className="text-dark-500 text-sm leading-relaxed">
+              Explorers across the world who leave transparent reviews and foster peer-to-peer trust in local tourism.
+            </p>
           </div>
         </div>
       </section>

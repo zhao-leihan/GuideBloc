@@ -4,18 +4,7 @@ import { useEffect, useState } from "react";
 import { Hammer, Clock, Compass } from "lucide-react";
 
 export default function MaintenanceOverlay() {
-  const [isMaintenance, setIsMaintenance] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-  useEffect(() => {
-    // Check if hostname is not localhost (public web)
-    const hostname = window.location.hostname;
-    const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
-    
-    if (!isLocal) {
-      setIsMaintenance(true);
-    }
-  }, []);
+  return null;
 
   useEffect(() => {
     if (isMaintenance) {

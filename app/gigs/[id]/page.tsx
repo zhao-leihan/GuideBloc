@@ -35,10 +35,6 @@ export default function GigDetailPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showAlchemyPayModal, setShowAlchemyPayModal] = useState(false);
-  const [showMoonPayModal, setShowMoonPayModal] = useState(false);
-  const [moonpayWallet, setMoonpayWallet] = useState("0x70997970C51812dc3A010C7d01b50e0d17dc79C8");
-  const [showMoonpayIframe, setShowMoonpayIframe] = useState(false);
-  const [moonpayOrderId, setMoonpayOrderId] = useState("");
   const [cardNumber, setCardNumber] = useState("");
 
   // Alchemy Pay destination wallet
@@ -55,7 +51,6 @@ export default function GigDetailPage() {
       const addr = (session.user as any).walletAddress;
       if (addr) {
         setAlchemypayWallet(addr);
-        setMoonpayWallet(addr);
       }
     }
   }, [session]);
@@ -454,123 +449,6 @@ export default function GigDetailPage() {
       toast.success("Payment Successful! Escrow locked.");
     } catch (error: any) {
       toast.error(error.message || "Alchemy Pay transaction failed");
-    } finally {
-      setIsBooking(false);
-    }
-  };
-
-  const [isOpeningMoonpay, setIsOpeningMoonpay] = useState(false);
-
-  const handleOpenMoonpay = async () => {
-    if (!gig) return;
-    setIsOpeningMoonpay(true);
-    
-    // Open blank window immediately to bypass popup blockers
-    const checkoutWindow = window.open("about:blank", "_blank", "width=480,height=700");
-    if (checkoutWindow) {
-      checkoutWindow.document.write(`
-        <html>
-          <head>
-            <title>Loading MoonPay...</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0b0c10; color: #fff; text-align: center; }
-              .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #7A00FF; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
-          </head>
-          <body>
-            <div class="spinner"></div>
-            <p style="font-weight: bold; margin: 0 0 8px 0;">Generating Secure Checkout...</p>
-            <p style="font-size: 12px; color: rgba(255,255,255,0.6); margin: 0;">Please do not close this window.</p>
-          </body>
-        </html>
-      `);
-    }
-
-    toast.info("Generating secure MoonPay session...");
-    try {
-      const res = await fetch("/api/payment/moonpay-sign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          walletAddress: moonpayWallet,
-          amount: gig.priceUSD * groupSize
-        })
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to generate MoonPay session");
-      }
-      const data = await res.json();
-      if (data.url && checkoutWindow) {
-        checkoutWindow.location.href = data.url;
-      } else {
-        if (checkoutWindow) checkoutWindow.close();
-        throw new Error("No url returned from server");
-      }
-    } catch (err: any) {
-      if (checkoutWindow) checkoutWindow.close();
-      toast.error(err.message || "Could not open MoonPay checkout");
-    } finally {
-      setIsOpeningMoonpay(false);
-    }
-  };
-
-  const handleMoonpayConfirm = async () => {
-    if (!gig) return;
-    if (!moonpayOrderId.trim()) {
-      toast.error("Please enter your MoonPay Transaction ID to confirm payment.");
-      return;
-    }
-
-    setIsBooking(true);
-    toast.info("Verifying MoonPay Transaction Status...");
-    await new Promise((r) => setTimeout(r, 1000));
-
-    try {
-      // 1. Create pending booking in database
-      const createRes = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gigId: gig.id,
-          bookingDate,
-          bookingTime,
-          groupSize,
-          participants: passengerDetails,
-          cryptoToken: "USDC",
-        }),
-      });
-
-      if (!createRes.ok) {
-        throw new Error("Failed to create booking in database");
-      }
-
-      const dbBooking = await createRes.json();
-      const bookingId = dbBooking.id;
-
-      // 2. Update booking status to CONFIRMED (funded)
-      const patchRes = await fetch(`/api/bookings/${bookingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "CONFIRMED",
-          txHash: moonpayOrderId.trim(),
-          paymentNetwork: "base",
-        }),
-      });
-
-      if (!patchRes.ok) {
-        const errorData = await patchRes.json();
-        throw new Error(errorData.message || "MoonPay verification failed");
-      }
-
-      setTxHash(moonpayOrderId.trim());
-      setShowMoonPayModal(false);
-      setShowSuccessModal(true);
-      toast.success("MoonPay Payment Confirmed & Escrow Locked!");
-    } catch (error: any) {
-      toast.error(error.message || "MoonPay checkout failed");
     } finally {
       setIsBooking(false);
     }
@@ -1193,32 +1071,6 @@ export default function GigDetailPage() {
                   </button>
                 </div>
               </div>
-              
-              {/* Option 2: Fiat-to-Crypto (MoonPay) */}
-              <div className="space-y-2 pt-4 border-t border-dark-100">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">Fiat-to-Crypto On-Ramp</span>
-                </div>
-                <button 
-                  onClick={() => {
-                    setShowWalletModal(false);
-                    setShowMoonPayModal(true);
-                  }}
-                  className="w-full p-4 border border-dark-200 hover:border-primary/50 hover:bg-primary/5 rounded-2xl flex items-center justify-between transition-all group cursor-pointer text-left"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                      <ArrowRightLeft className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-dark-900 text-sm group-hover:text-primary transition-colors block">Buy Crypto via MoonPay</span>
-                      <span className="text-[11px] text-dark-500 block mt-0.5">Top-up Escrow directly with Debit/Credit Card</span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold bg-primary text-white px-2.5 py-0.5 rounded-full">Popular</span>
-                </button>
-              </div>
-              
             </div>
           </div>
         </div>
@@ -1248,71 +1100,6 @@ export default function GigDetailPage() {
               >
                 Choose Another Method
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MoonPay Sandbox Modal */}
-      {showMoonPayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/70 backdrop-blur-md p-4">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300">
-            <div className="bg-primary p-6 text-white text-center relative">
-              <button onClick={() => { setShowMoonPayModal(false); setShowMoonpayIframe(false); }} className="absolute top-4 right-4 text-white/70 hover:text-white">&times;</button>
-              <h2 className="text-2xl font-black tracking-tight mb-1">MoonPay Sandbox</h2>
-              <p className="text-white/80 text-sm">Fiat-to-Crypto Sandbox Checkout</p>
-            </div>
-            <div className="p-6 text-center space-y-4">
-              <div className="flex justify-between items-center bg-dark-50 p-3 rounded-xl text-xs">
-                <span className="text-dark-500">Amount due</span>
-                <span className="font-bold text-dark-900">${(gig.priceUSD * groupSize).toFixed(2)} USD</span>
-              </div>
-
-              {/* Button to open widget */}
-              <button
-                onClick={handleOpenMoonpay}
-                disabled={isOpeningMoonpay}
-                className="w-full bg-[#3c00b3] hover:bg-[#2b0080] text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-xs shadow-md shadow-primary/25 cursor-pointer text-center"
-              >
-                {isOpeningMoonpay ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRightLeft className="w-4 h-4" />} Open MoonPay Sandbox
-              </button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-dark-200"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-dark-450 font-semibold">Then Confirm Order</span>
-                </div>
-              </div>
-
-              <div className="space-y-1 text-left">
-                <label className="block text-[10px] font-bold text-dark-500 uppercase tracking-wider mb-1">MoonPay Transaction ID</label>
-                <input 
-                  type="text" 
-                  value={moonpayOrderId}
-                  onChange={e => setMoonpayOrderId(e.target.value)}
-                  placeholder="e.g. tr_abc123..."
-                  className="w-full p-3 border border-dark-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-xs text-dark-900 font-mono"
-                  required
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => { setShowMoonPayModal(false); setShowWalletModal(true); }}
-                  className="btn-outline flex-1 py-2.5 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleMoonpayConfirm}
-                  disabled={isBooking || !moonpayOrderId.trim()}
-                  className="btn-primary flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5"
-                >
-                  {isBooking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />} Confirm Escrow
-                </button>
-              </div>
             </div>
           </div>
         </div>

@@ -21,6 +21,10 @@ import {
   CreditCard,
   Compass,
   Sparkles,
+  ShieldCheck,
+  Lock,
+  UserCheck,
+  Coins,
 } from "lucide-react";
 import {
   LightningBoltIcon,
@@ -244,37 +248,78 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Safe Escrow Travel Protocol Section */}
       <motion.section 
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="py-20 bg-white"
+        className="py-24 bg-white relative overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-dark-900 mb-3">
-              Browse by Category
+        {/* Background decorative elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
+          <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary-50 rounded-full blur-3xl opacity-60" />
+          <div className="absolute bottom-10 -right-20 w-80 h-80 bg-blue-50 rounded-full blur-3xl opacity-60" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 border border-primary-200/60 text-primary-700 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-primary-600" />
+              <span>Decentralized Escrow Protection</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
+              Why Travelers & Guides Trust Explomate
             </h2>
-            <p className="text-dark-500 text-lg">Find the perfect experience for your adventure</p>
+            <p className="text-dark-500 text-base md:text-lg leading-relaxed">
+              We leverage Base network smart contract technology to ensure 100% payout security, zero upfront payment risk, and seamless peer-to-peer travel.
+            </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                href={`/explore?category=${cat.name.toLowerCase().replace(" & ", "-")}`}
-                className="card p-6 text-center hover:border-primary/50 group"
-              >
-                <span className="text-4xl mb-3 block text-primary">
-                  <cat.Icon className="w-8 h-8 mx-auto" />
-                </span>
-                <h3 className="font-display font-semibold text-dark-900 group-hover:text-primary transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-sm text-dark-400 mt-1">{cat.count} tours</p>
-              </Link>
-            ))}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Feature 1 */}
+            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Smart Contract Escrow</h3>
+              <p className="text-dark-500 text-sm leading-relaxed">
+                Tour funds remain safely locked in a smart contract and are only released to the guide once you complete your trip.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Zero Dispute Fraud</h3>
+              <p className="text-dark-500 text-sm leading-relaxed">
+                Cryptographic transaction verification prevents fake payment receipts, chargeback scams, and unauthorized cancellations.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                <UserCheck className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Vetted Local Guides</h3>
+              <p className="text-dark-500 text-sm leading-relaxed">
+                Every guide undergoes identity document verification (KTP/ID) and community reviews before taking bookings.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+                <Coins className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Low 10% Platform Fee</h3>
+              <p className="text-dark-500 text-sm leading-relaxed">
+                Guides keep 90% of their earnings with automatic Base stablecoin payouts directly to their Web3 EVM wallet.
+              </p>
+            </div>
           </div>
         </div>
       </motion.section>
@@ -483,28 +528,51 @@ export default function HomePage() {
         </div>
       </motion.section>
 
-      {/* CTA */}
+      {/* CTA Section - Premium Web3 Aesthetic */}
       <motion.section 
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="py-20 bg-gradient-to-r from-primary to-primary-600"
+        className="py-24 bg-dark-950 relative overflow-hidden"
       >
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Start Your Adventure?
-          </h2>
-          <p className="text-primary-100 text-lg mb-8">
-            Join thousands of travelers and guides on Explomate.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/register?role=tourist" className="bg-white text-primary font-semibold py-3.5 px-8 rounded-xl hover:shadow-lg transition-all">
-              I&apos;m a Tourist
-            </Link>
-            <Link href="/auth/register?role=guide" className="bg-dark-900 text-white font-semibold py-3.5 px-8 rounded-xl hover:shadow-lg transition-all">
-              I&apos;m a Guide
-            </Link>
+        {/* Glow Effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-primary-500/20 to-blue-500/20 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
+          <div className="p-8 md:p-14 rounded-[2.5rem] bg-gradient-to-b from-dark-900/90 to-dark-900/40 border border-white/10 backdrop-blur-2xl text-center shadow-2xl space-y-8 relative overflow-hidden">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary-300 text-xs font-semibold uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span>Join the Decentralized Travel Economy</span>
+            </div>
+
+            <div className="max-w-2xl mx-auto space-y-4">
+              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight font-display leading-tight">
+                Ready to Start Your <span className="bg-gradient-to-r from-primary-400 via-blue-300 to-white bg-clip-text text-transparent">Adventure?</span>
+              </h2>
+              <p className="text-dark-300 text-base md:text-lg leading-relaxed font-sans">
+                Join thousands of verified travelers and local guides on Explomate to experience authentic journeys secured by smart contract escrow.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <Link 
+                href="/auth/register?role=tourist" 
+                className="w-full sm:w-auto bg-primary hover:bg-primary-600 text-white font-bold py-4 px-9 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
+              >
+                <span>I&apos;m a Tourist</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
+              <Link 
+                href="/auth/register?role=guide" 
+                className="w-full sm:w-auto bg-white/10 hover:bg-white/15 text-white font-bold py-4 px-9 rounded-2xl border border-white/15 hover:border-white/30 backdrop-blur-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
+              >
+                <span>I&apos;m a Guide</span>
+                <Globe className="w-4 h-4 text-dark-300" />
+              </Link>
+            </div>
           </div>
         </div>
       </motion.section>
