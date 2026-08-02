@@ -64,6 +64,14 @@ export async function GET(req: Request) {
       if (maxPrice) where.priceUSD.lte = parseFloat(maxPrice);
     }
 
+    // Fetch distinct active countries from DB
+    const dbCountries = await prisma.gig.findMany({
+      where: { isActive: true },
+      select: { country: true },
+      distinct: ["country"],
+    });
+    const availableCountries = Array.from(new Set(dbCountries.map(g => g.country).filter(Boolean)));
+
     // Fetch all matching gigs
     const allGigs = await prisma.gig.findMany({
       where,
@@ -101,6 +109,7 @@ export async function GET(req: Request) {
       total,
       page,
       totalPages: Math.ceil(total / limit),
+      availableCountries,
     });
   } catch (error) {
     console.error("Gigs GET error:", error);
