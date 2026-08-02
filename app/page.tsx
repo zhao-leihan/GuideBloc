@@ -146,25 +146,25 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
 
 
-          {/* Title */}
+            {/* Title */}
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
               animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
               className="font-display text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6"
             >
-              Unlock Authentic Adventures
+              The Future of Travel is Here.
               <br />
-              with Vetted Local Guides
+              <span className="bg-gradient-to-r from-primary-300 via-blue-200 to-white bg-clip-text text-transparent">Zero Risk, 100% Guaranteed Payouts.</span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-              className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed"
+              className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans"
             >
-              Discover authentic experiences secured 100% by <b>Web3 Smart Contract Escrow</b>. Zero scams, transparent payments, and unforgettable memories.
+              Say goodbye to travel scams, hidden platform markups, and payment delays! Explomate locks your booking funds in next-generation <b>Smart Contract Escrow</b>—releasing payment to your guide only after your tour is complete.
             </motion.p>
 
           {/* AI Talk Box */}

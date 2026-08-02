@@ -41,8 +41,10 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [search, setSearch] = useState("");
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch conversations on load
   const fetchConversations = async (selectFirst = false) => {
@@ -170,6 +172,58 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeConversationId) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
+    setUploadingImage(true);
+    const toastId = toast.loading("Sending image...");
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = reader.result as string;
+
+        const res = await fetch(`/api/conversations/${activeConversationId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: "📷 Sent an image",
+            type: "IMAGE",
+            mediaUrl: base64Data,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setMessages((prev) => [...prev, data.message]);
+          fetchConversations(false);
+          toast.success("Image sent!", { id: toastId });
+        } else {
+          toast.error("Failed to send image", { id: toastId });
+        }
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("Image upload error:", err);
+      toast.error("Error uploading image", { id: toastId });
+      setUploadingImage(false);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || !activeConversationId) return;
@@ -260,7 +314,11 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
                     </span>
                   </div>
                   <p className="text-xs truncate text-dark-500">
-                    {conv.lastMessage ? conv.lastMessage.content : "Start chatting..."}
+                    {conv.lastMessage ? (
+                      (conv.lastMessage as any).type === "IMAGE" || (conv.lastMessage as any).mediaUrl
+                        ? "📷 Photo" 
+                        : conv.lastMessage.content
+                    ) : "Start chatting..."}
                   </p>
                 </div>
               </button>
@@ -327,6 +385,8 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
               messages.map((msg, idx) => {
                 const isMe = msg.senderId === currentUserId;
                 const showAvatar = !isMe && (idx === 0 || messages[idx - 1].senderId !== msg.senderId);
+                const isImageMsg = msg.type === "IMAGE" || !!(msg as any).mediaUrl;
+                const imageUrl = (msg as any).mediaUrl || msg.content;
 
                 return (
                   <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2`}>
@@ -346,7 +406,19 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
                           ? "bg-primary text-white rounded-br-sm" 
                           : "bg-white border border-dark-100 text-dark-900 rounded-bl-sm shadow-sm"
                       }`}>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        {isImageMsg && imageUrl && (
+                          <div className="mb-1.5 overflow-hidden rounded-xl">
+                            <img 
+                              src={imageUrl} 
+                              alt="Shared image" 
+                              className="max-h-64 w-auto object-cover rounded-xl border border-white/20 cursor-pointer hover:opacity-95 transition-opacity" 
+                              onClick={() => window.open(imageUrl, "_blank")}
+                            />
+                          </div>
+                        )}
+                        {msg.content && msg.content !== "📷 Sent an image" && (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        )}
                       </div>
                       <div className={`flex items-center gap-1 mt-1 text-[10px] text-dark-400 ${isMe ? "justify-end" : "justify-start"}`}>
                         {format(new Date(msg.createdAt), "HH:mm")}
@@ -361,16 +433,32 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
 
           {/* Input Area */}
           <div className="p-4 bg-white border-t border-dark-100">
+            {/* Hidden file input */}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept="image/*" 
+              onChange={handleImageUpload} 
+              className="hidden" 
+            />
             <form onSubmit={handleSendMessage} className="flex items-end gap-3">
-              <div className="flex gap-2 pb-2 text-dark-400">
-                <button type="button" className="p-2 hover:bg-dark-50 rounded-full transition-colors"><Paperclip className="w-4 h-4" /></button>
-                <button type="button" className="p-2 hover:bg-dark-50 rounded-full transition-colors"><ImageIcon className="w-4 h-4" /></button>
+              <div className="flex gap-1 pb-2 text-dark-400">
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  title="Send Image"
+                  className="p-2 hover:bg-dark-50 hover:text-primary rounded-full transition-colors cursor-pointer"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </button>
               </div>
               <div className="flex-1 bg-dark-50/50 border border-dark-200 rounded-2xl overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                 <textarea
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Type a message..."
+                  placeholder={uploadingImage ? "Uploading image..." : "Type a message..."}
+                  disabled={uploadingImage}
                   className="w-full max-h-32 min-h-[44px] bg-transparent border-none focus:ring-0 resize-none py-3 px-4 text-sm focus:outline-none"
                   rows={1}
                   onKeyDown={(e) => {
@@ -383,7 +471,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
               </div>
               <button 
                 type="submit"
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || uploadingImage}
                 className="w-11 h-11 flex-shrink-0 bg-primary hover:bg-primary-600 disabled:bg-dark-200 disabled:text-dark-400 text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"
               >
                 <Send className="w-5 h-5 ml-1" />

@@ -34,11 +34,8 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-semibold text-dark-900 text-sm truncate max-w-[120px]">{review.reviewer.name}</span>
-            <span className="text-[9px] font-bold text-dark-500 uppercase tracking-wider px-1.5 py-0.5 bg-dark-50 rounded-md border border-dark-100 flex-shrink-0">Tourist</span>
-            <span className="text-xs text-dark-400 font-medium mx-0.5 flex-shrink-0">reviewed</span>
-            <span className="font-semibold text-primary text-sm truncate max-w-[120px]">{review.guide?.name || "Tour Guide"}</span>
-            <span className="text-[9px] font-bold text-primary uppercase tracking-wider px-1.5 py-0.5 bg-primary/5 rounded-md border border-primary/10 flex-shrink-0">Guide</span>
+            <span className="font-semibold text-dark-900 text-sm">{review.reviewer.name}</span>
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20 flex-shrink-0">Verified Tourist</span>
           </div>
           <p className="text-[10px] text-dark-400 mt-1">{formatDate(review.createdAt)}</p>
         </div>

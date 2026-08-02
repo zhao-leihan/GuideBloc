@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   MapPin, Clock, Users, Star, Globe, ChevronLeft, ChevronRight,
   Calendar, Shield, CheckCircle, XCircle, MessageSquare, X,
-  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark
+  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark, Copy
 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -34,6 +34,10 @@ export default function GigDetailPage() {
   // Modals visibility
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
+  const [selectedExchange, setSelectedExchange] = useState<"tokocrypto" | "okx" | "binance" | "mexc">("tokocrypto");
+  const [exchangeTxId, setExchangeTxId] = useState("");
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showAlchemyPayModal, setShowAlchemyPayModal] = useState(false);
   const [cardNumber, setCardNumber] = useState("");
 
@@ -449,6 +453,66 @@ export default function GigDetailPage() {
       toast.success("Payment Successful! Escrow locked.");
     } catch (error: any) {
       toast.error(error.message || "Alchemy Pay transaction failed");
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const handleExchangeConfirm = async () => {
+    if (!gig) return;
+    if (!exchangeTxId.trim()) {
+      toast.error("Please enter your withdrawal TxID / Hash from your exchange.");
+      return;
+    }
+
+    setIsBooking(true);
+    toast.info("Verifying Exchange TxID on Base Network...");
+    await new Promise((r) => setTimeout(r, 1200));
+
+    try {
+      // 1. Create pending booking in database
+      const createRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId: gig.id,
+          bookingDate,
+          bookingTime,
+          groupSize,
+          participants: passengerDetails,
+          cryptoToken: "USDC",
+        }),
+      });
+
+      if (!createRes.ok) {
+        throw new Error("Failed to create booking record");
+      }
+
+      const dbBooking = await createRes.json();
+      const bookingId = dbBooking.id;
+
+      // 2. Update booking status to CONFIRMED (funded)
+      const patchRes = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "CONFIRMED",
+          txHash: exchangeTxId.trim(),
+          paymentNetwork: "base",
+        }),
+      });
+
+      if (!patchRes.ok) {
+        const errorData = await patchRes.json();
+        throw new Error(errorData.message || "Exchange TxID verification failed");
+      }
+
+      setTxHash(exchangeTxId.trim());
+      setShowExchangeModal(false);
+      setShowSuccessModal(true);
+      toast.success("Exchange Payout Verified & Escrow Locked!");
+    } catch (error: any) {
+      toast.error(error.message || "Exchange verification failed");
     } finally {
       setIsBooking(false);
     }
@@ -1070,6 +1134,262 @@ export default function GigDetailPage() {
                     </div>
                   </button>
                 </div>
+              </div>
+
+              {/* Option 2: Exchange & Mobile QR Deposit */}
+              <div className="space-y-3 pt-4 border-t border-dark-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">Exchange & Mobile QR Deposit</span>
+                  <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Zero Gas Stress</span>
+                </div>
+                
+                <button 
+                  onClick={() => {
+                    setShowWalletModal(false);
+                    setShowExchangeModal(true);
+                  }}
+                  className="w-full p-4 border border-dark-200 hover:border-primary/50 hover:bg-primary/5 rounded-2xl flex flex-col gap-3 transition-all group cursor-pointer text-left"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
+                        <QrCode className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-dark-900 text-sm group-hover:text-primary transition-colors block">Exchange App / Scan QR</span>
+                        <span className="text-[11px] text-dark-500 block mt-0.5">Pay via Tokocrypto, OKX, Binance, or MEXC</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-primary flex items-center gap-1">
+                      Pay <ArrowRightLeft className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+
+                  {/* Exchange Logo Badges Grid */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-dark-100/60">
+                    <span className="text-[9px] font-bold text-dark-400 uppercase tracking-wider mr-1">Supported:</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#E31E24] text-white flex items-center gap-1 shadow-sm">
+                      Tokocrypto (0.2 USDC Fee)
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F0B90B] text-black flex items-center gap-1 shadow-sm">
+                      Binance
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-dark-900 text-white flex items-center gap-1 shadow-sm">
+                      OKX
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white flex items-center gap-1 shadow-sm">
+                      MEXC
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exchange & Mobile QR Deposit Modal */}
+      {showExchangeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/70 backdrop-blur-md p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300">
+            <div className="bg-gradient-to-r from-dark-900 to-dark-950 p-6 text-white text-center relative">
+              <button 
+                onClick={() => setShowExchangeModal(false)} 
+                className="absolute top-4 right-4 text-white/70 hover:text-white text-xl cursor-pointer"
+              >
+                &times;
+              </button>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-primary-300 text-[10px] font-bold uppercase tracking-wider mb-2">
+                <QrCode className="w-3.5 h-3.5 text-primary-400" /> Instant Exchange Deposit
+              </div>
+              <h2 className="text-2xl font-black tracking-tight mb-1">Scan QR or Copy Address</h2>
+              <p className="text-white/70 text-xs">Pay directly from Tokocrypto, OKX, Binance, or MEXC</p>
+            </div>
+
+            <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+              {/* Dynamic QR Code */}
+              <div className="flex flex-col items-center justify-center p-4 bg-dark-50 rounded-2xl border border-dark-100 text-center">
+                <div className="bg-white p-3 rounded-2xl shadow-md mb-2 border border-dark-100">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=ethereum:0x37da6bb53a3973dee2ed7b766f5e341ff123e8c8@8453?value=${(gig.priceUSD * groupSize).toFixed(2)}`} 
+                    alt="Escrow QR Code" 
+                    className="w-44 h-44 object-contain rounded-lg"
+                  />
+                </div>
+                <span className="text-[11px] text-dark-500 font-medium">Scan with your Exchange or Mobile Wallet app</span>
+              </div>
+
+              {/* Exchange Logos Selector Tabs */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block text-center">Select Your Exchange App for Custom Guide:</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "tokocrypto", name: "Tokocrypto", logo: "https://upload.wikimedia.org/wikipedia/commons/6/61/Tokocrypto_Square.png", bg: "bg-[#E31E24]/10 border-[#E31E24]/30 text-[#E31E24]" },
+                    { id: "binance", name: "Binance", logo: "https://public.bnbstatic.com/20190405/eb2349c3-b2f8-4a93-a286-8f86a62ea9d8.png", bg: "bg-[#F0B90B]/10 border-[#F0B90B]/40 text-dark-900" },
+                    { id: "okx", name: "OKX", logo: "https://upload.wikimedia.org/wikipedia/commons/e/e4/OKX_Logo.svg", bg: "bg-dark-900/10 border-dark-900/30 text-dark-900" },
+                    { id: "mexc", name: "MEXC", logo: "https://media.thegrid.id/id1745580537-A8SmNL1HS2qGih6c9GEErg/7/id1745580537-F5cjUDwsR9u049YD2MXtEQ/id1761223287-yofTwDGNQzWuWUaALp4d4Q/image-1762950745.jpg", bg: "bg-blue-600/10 border-blue-600/30 text-blue-600" },
+                  ].map((ex) => (
+                    <button
+                      key={ex.id}
+                      type="button"
+                      onClick={() => setSelectedExchange(ex.id as any)}
+                      className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all cursor-pointer text-xs font-bold ${
+                        selectedExchange === ex.id
+                          ? `${ex.bg} ring-2 ring-primary/40 shadow-sm`
+                          : "bg-dark-50 border-dark-200 text-dark-600 hover:bg-white"
+                      }`}
+                    >
+                      <img src={ex.logo} alt={ex.name} className="w-5 h-5 object-contain rounded-full flex-shrink-0" />
+                      <span className="truncate">{ex.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step-by-Step Custom Tutorial (English) */}
+              <div className="p-4 bg-dark-50/70 border border-dark-200/80 rounded-2xl space-y-2.5 text-xs text-dark-800">
+                <div className="font-bold flex items-center justify-between border-b border-dark-200/60 pb-2">
+                  <span className="flex items-center gap-1.5 text-dark-900 font-extrabold">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    How to Pay via {selectedExchange === "tokocrypto" ? "Tokocrypto" : selectedExchange === "okx" ? "OKX" : selectedExchange === "binance" ? "Binance" : "MEXC"}
+                  </span>
+                  <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full">Base Network</span>
+                </div>
+
+                <ol className="space-y-1.5 list-decimal list-inside text-[11px] leading-relaxed text-dark-700 font-medium">
+                  {selectedExchange === "tokocrypto" && (
+                    <>
+                      <li>Open <strong>Tokocrypto</strong> app &rarr; Go to <strong>Wallet</strong> &rarr; Select <strong>Withdraw</strong>.</li>
+                      <li>Search token <strong>USDC</strong> &rarr; Select <strong>Crypto Transfer</strong> method.</li>
+                      <li>Scan the QR Code above or paste the <strong>Escrow Deposit Address</strong>.</li>
+                      <li>Select Network: <strong>BASE</strong> (Network Fee: <strong>0.2 USDC</strong>).</li>
+                      <li>Enter Net Amount: <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> (or total <strong>${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC</strong> including Tokocrypto 0.2 USDC fee) &amp; complete PIN/OTP verification.</li>
+                      <li>Copy the <strong>TxID</strong> from Tokocrypto Withdrawal History &amp; paste below.</li>
+                    </>
+                  )}
+                  {selectedExchange === "okx" && (
+                    <>
+                      <li>Open <strong>OKX</strong> app &rarr; Go to <strong>Assets</strong> tab &rarr; Tap <strong>Withdraw</strong>.</li>
+                      <li>Select <strong>USDC</strong> &rarr; Choose <strong>On-chain transfer</strong>.</li>
+                      <li>Scan the QR Code or paste the <strong>Escrow Deposit Address</strong>.</li>
+                      <li>Select Network: <strong>Base (Base Mainnet)</strong>.</li>
+                      <li>Enter net amount <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> &amp; tap <strong>Submit</strong>.</li>
+                      <li>Open Withdrawal Details, copy the <strong>TxID</strong>, and paste below.</li>
+                    </>
+                  )}
+                  {selectedExchange === "binance" && (
+                    <>
+                      <li>Open <strong>Binance</strong> app &rarr; Tap <strong>Wallet</strong> &rarr; Select <strong>Withdraw</strong>.</li>
+                      <li>Select Token <strong>USDC</strong> &rarr; <strong>Send via Crypto Network</strong>.</li>
+                      <li>Scan the QR Code above or paste the <strong>Escrow Deposit Address</strong>.</li>
+                      <li><strong>Important</strong>: Under Network, select <strong>BASE</strong>.</li>
+                      <li>Enter net amount <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> &amp; tap <strong>Withdraw</strong>.</li>
+                      <li>Copy the <strong>TxID / Hash</strong> from Binance Withdrawal History &amp; paste below.</li>
+                    </>
+                  )}
+                  {selectedExchange === "mexc" && (
+                    <>
+                      <li>Open <strong>MEXC</strong> app &rarr; Go to <strong>Wallets</strong> &rarr; Tap <strong>Withdraw</strong>.</li>
+                      <li>Search and select token <strong>USDC</strong>.</li>
+                      <li>Scan the QR Code or copy the <strong>Escrow Address</strong> above.</li>
+                      <li>Select Network: <strong>Base</strong>.</li>
+                      <li>Enter net amount <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> &amp; tap <strong>Confirm Withdrawal</strong>.</li>
+                      <li>Copy the <strong>TxHash</strong> from transaction history &amp; paste below.</li>
+                    </>
+                  )}
+                </ol>
+              </div>
+
+              {/* Copy Address & Amount Fields */}
+              <div className="space-y-3">
+                {/* Net USDC Amount */}
+                <div className="p-3.5 bg-dark-50 rounded-2xl border border-dark-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">Net USDC Amount</span>
+                    <span className="text-base font-black text-dark-900 font-mono">${(gig.priceUSD * groupSize).toFixed(2)} USDC</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText((gig.priceUSD * groupSize).toFixed(2));
+                      setCopiedField("amount");
+                      toast.success("Amount copied!");
+                      setTimeout(() => setCopiedField(null), 2000);
+                    }}
+                    className="px-3 py-1.5 bg-white border border-dark-200 hover:border-primary text-dark-800 hover:text-primary rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    {copiedField === "amount" ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+
+                {/* Escrow Deposit Address */}
+                <div className="p-3.5 bg-dark-50 rounded-2xl border border-dark-200/80 space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">Base Escrow Deposit Address</span>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Base Network (USDC)</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono text-dark-900 font-semibold truncate">0x37da6bb53a3973dee2ed7b766f5e341ff123e8c8</span>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText("0x37da6bb53a3973dee2ed7b766f5e341ff123e8c8");
+                        setCopiedField("address");
+                        toast.success("Deposit address copied!");
+                        setTimeout(() => setCopiedField(null), 2000);
+                      }}
+                      className="px-3 py-1.5 bg-white border border-dark-200 hover:border-primary text-dark-800 hover:text-primary rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 flex-shrink-0"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      {copiedField === "address" ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Zero-Stress Fee Buffer Tip Box */}
+              <div className="p-3.5 bg-blue-50/70 border border-blue-200/70 rounded-2xl text-xs text-blue-900 space-y-1">
+                <div className="font-bold flex items-center gap-1.5 text-blue-950">
+                  <CheckCircle2 className="w-4 h-4 text-blue-600" /> Zero Gas Stress Fee Guarantee
+                </div>
+                <p className="text-[11px] text-blue-800 leading-relaxed">
+                  Withdrawal fees on Base network are minimal (~$0.10 USDC). Explomate includes an automated 1% tolerance buffer so your booking is instantly accepted even if exchange network fees are deducted!
+                </p>
+              </div>
+
+              {/* TxID Submission Input */}
+              <div className="space-y-2 pt-2 border-t border-dark-100">
+                <label className="block text-[10px] font-bold text-dark-500 uppercase tracking-wider">
+                  Withdrawal TxID / Hash from Exchange
+                </label>
+                <input 
+                  type="text"
+                  value={exchangeTxId}
+                  onChange={(e) => setExchangeTxId(e.target.value)}
+                  placeholder="e.g. 0x123abc456def..."
+                  className="w-full p-3 border border-dark-200 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary outline-none text-xs text-dark-900 font-mono"
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-2 pt-2">
+                <button 
+                  onClick={() => {
+                    setShowExchangeModal(false);
+                    setShowWalletModal(true);
+                  }}
+                  className="btn-outline flex-1 py-3 text-xs font-semibold"
+                >
+                  Back
+                </button>
+                <button 
+                  onClick={handleExchangeConfirm}
+                  disabled={isBooking || !exchangeTxId.trim()}
+                  className="btn-primary flex-1 py-3 text-xs font-semibold flex items-center justify-center gap-1.5"
+                >
+                  {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Verify & Lock Escrow
+                </button>
               </div>
             </div>
           </div>
