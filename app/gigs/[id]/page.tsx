@@ -1168,16 +1168,20 @@ export default function GigDetailPage() {
                   {/* Exchange Logo Badges Grid */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-dark-100/60">
                     <span className="text-[9px] font-bold text-dark-400 uppercase tracking-wider mr-1">Supported:</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#E31E24] text-white flex items-center gap-1 shadow-sm">
-                      Tokocrypto (0.2 USDC Fee)
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-white border border-dark-200 text-dark-900 flex items-center gap-1.5 shadow-sm">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/6/61/Tokocrypto_Square.png" alt="Tokocrypto" className="w-3.5 h-3.5 object-contain rounded-full" />
+                      Tokocrypto
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F0B90B] text-black flex items-center gap-1 shadow-sm">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-white border border-dark-200 text-dark-900 flex items-center gap-1.5 shadow-sm">
+                      <img src="https://public.bnbstatic.com/20190405/eb2349c3-b2f8-4a93-a286-8f86a62ea9d8.png" alt="Binance" className="w-3.5 h-3.5 object-contain rounded-full" />
                       Binance
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-dark-900 text-white flex items-center gap-1 shadow-sm">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-white border border-dark-200 text-dark-900 flex items-center gap-1.5 shadow-sm">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/OKX_Logo.svg" alt="OKX" className="w-3.5 h-3.5 object-contain rounded-full" />
                       OKX
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white flex items-center gap-1 shadow-sm">
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-white border border-dark-200 text-dark-900 flex items-center gap-1.5 shadow-sm">
+                      <img src="https://media.thegrid.id/id1745580537-A8SmNL1HS2qGih6c9GEErg/7/id1745580537-F5cjUDwsR9u049YD2MXtEQ/id1761223287-yofTwDGNQzWuWUaALp4d4Q/image-1762950745.jpg" alt="MEXC" className="w-3.5 h-3.5 object-contain rounded-full" />
                       MEXC
                     </span>
                   </div>
@@ -1211,7 +1215,7 @@ export default function GigDetailPage() {
               <div className="flex flex-col items-center justify-center p-4 bg-dark-50 rounded-2xl border border-dark-100 text-center">
                 <div className="bg-white p-3 rounded-2xl shadow-md mb-2 border border-dark-100">
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=ethereum:0x37da6bb53a3973dee2ed7b766f5e341ff123e8c8@8453?value=${(gig.priceUSD * groupSize).toFixed(2)}`} 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=ethereum:0x37da6bb53a3973dee2ed7b766f5e341ff123e8c8@8453?value=${(gig.priceUSD * groupSize + 0.2).toFixed(2)}`} 
                     alt="Escrow QR Code" 
                     className="w-44 h-44 object-contain rounded-lg"
                   />
@@ -1263,7 +1267,7 @@ export default function GigDetailPage() {
                       <li>Search token <strong>USDC</strong> &rarr; Select <strong>Crypto Transfer</strong> method.</li>
                       <li>Scan the QR Code above or paste the <strong>Escrow Deposit Address</strong>.</li>
                       <li>Select Network: <strong>BASE</strong> (Network Fee: <strong>0.2 USDC</strong>).</li>
-                      <li>Enter Withdrawal Amount: <strong>${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC</strong> (includes 0.2 fee so escrow receives ${(gig.priceUSD * groupSize).toFixed(2)} USDC) &amp; complete PIN/OTP verification.</li>
+                      <li>Enter withdrawal amount: <strong>${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC</strong> (includes 0.2 fee so escrow receives ${(gig.priceUSD * groupSize).toFixed(2)} USDC) &amp; complete PIN/OTP verification.</li>
                       <li>Copy the <strong>TxID</strong> from Tokocrypto Withdrawal History &amp; paste below.</li>
                     </>
                   )}
@@ -1272,8 +1276,8 @@ export default function GigDetailPage() {
                       <li>Open <strong>OKX</strong> app &rarr; Go to <strong>Assets</strong> tab &rarr; Tap <strong>Withdraw</strong>.</li>
                       <li>Select <strong>USDC</strong> &rarr; Choose <strong>On-chain transfer</strong>.</li>
                       <li>Scan the QR Code or paste the <strong>Escrow Deposit Address</strong>.</li>
-                      <li>Select Network: <strong>Base (Base Mainnet)</strong>.</li>
-                      <li>Enter withdrawal amount <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> &amp; tap <strong>Submit</strong>.</li>
+                      <li>Select Network: <strong>Base (Base Mainnet)</strong> (Network Fee: <strong>0.2 USDC</strong>).</li>
+                      <li>Enter withdrawal amount: <strong>${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC</strong> &amp; tap <strong>Submit</strong>.</li>
                       <li>Open Withdrawal Details, copy the <strong>TxID</strong>, and paste below.</li>
                     </>
                   )}
@@ -1282,8 +1286,8 @@ export default function GigDetailPage() {
                       <li>Open <strong>Binance</strong> app &rarr; Tap <strong>Wallet</strong> &rarr; Select <strong>Withdraw</strong>.</li>
                       <li>Select Token <strong>USDC</strong> &rarr; <strong>Send via Crypto Network</strong>.</li>
                       <li>Scan the QR Code above or paste the <strong>Escrow Deposit Address</strong>.</li>
-                      <li><strong>Important</strong>: Under Network, select <strong>BASE</strong>.</li>
-                      <li>Enter withdrawal amount <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> &amp; tap <strong>Withdraw</strong>.</li>
+                      <li>Select Network: <strong>BASE</strong> (Network Fee: <strong>0.2 USDC</strong>).</li>
+                      <li>Enter withdrawal amount: <strong>${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC</strong> &amp; tap <strong>Withdraw</strong>.</li>
                       <li>Copy the <strong>TxID / Hash</strong> from Binance Withdrawal History &amp; paste below.</li>
                     </>
                   )}
@@ -1292,8 +1296,8 @@ export default function GigDetailPage() {
                       <li>Open <strong>MEXC</strong> app &rarr; Go to <strong>Wallets</strong> &rarr; Tap <strong>Withdraw</strong>.</li>
                       <li>Search and select token <strong>USDC</strong>.</li>
                       <li>Scan the QR Code or copy the <strong>Escrow Address</strong> above.</li>
-                      <li>Select Network: <strong>Base</strong>.</li>
-                      <li>Enter withdrawal amount <strong>${(gig.priceUSD * groupSize).toFixed(2)} USDC</strong> &amp; tap <strong>Confirm Withdrawal</strong>.</li>
+                      <li>Select Network: <strong>Base</strong> (Network Fee: <strong>0.2 USDC</strong>).</li>
+                      <li>Enter withdrawal amount: <strong>${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC</strong> &amp; tap <strong>Confirm Withdrawal</strong>.</li>
                       <li>Copy the <strong>TxHash</strong> from transaction history &amp; paste below.</li>
                     </>
                   )}
@@ -1306,26 +1310,19 @@ export default function GigDetailPage() {
                 <div className="p-3.5 bg-dark-50 rounded-2xl border border-dark-200/80 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-dark-450 uppercase tracking-wider block">
-                      {selectedExchange === "tokocrypto" ? "Total Transfer Amount (Incl. 0.2 Fee)" : "Total USDC Amount"}
+                      Total Transfer Amount (Incl. 0.2 Fee)
                     </span>
                     <span className="text-base font-black text-dark-900 font-mono">
-                      ${selectedExchange === "tokocrypto" 
-                        ? (gig.priceUSD * groupSize + 0.2).toFixed(2) 
-                        : (gig.priceUSD * groupSize).toFixed(2)} USDC
+                      ${(gig.priceUSD * groupSize + 0.2).toFixed(2)} USDC
                     </span>
-                    {selectedExchange === "tokocrypto" && (
-                      <span className="text-[10px] text-dark-500 block font-medium mt-0.5">
-                        (Escrow: ${(gig.priceUSD * groupSize).toFixed(2)} + $0.20 Tokocrypto Fee)
-                      </span>
-                    )}
+                    <span className="text-[10px] text-dark-500 block font-medium mt-0.5">
+                      (Escrow Price: ${(gig.priceUSD * groupSize).toFixed(2)} + $0.20 Network Fee)
+                    </span>
                   </div>
                   <button 
                     type="button"
                     onClick={() => {
-                      const amountToCopy = selectedExchange === "tokocrypto" 
-                        ? (gig.priceUSD * groupSize + 0.2).toFixed(2) 
-                        : (gig.priceUSD * groupSize).toFixed(2);
-                      navigator.clipboard.writeText(amountToCopy);
+                      navigator.clipboard.writeText((gig.priceUSD * groupSize + 0.2).toFixed(2));
                       setCopiedField("amount");
                       toast.success("Total Amount copied!");
                       setTimeout(() => setCopiedField(null), 2000);
