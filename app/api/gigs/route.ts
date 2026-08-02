@@ -10,6 +10,7 @@ export async function GET(req: Request) {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
     const country = searchParams.get("country") || "";
+    const region = searchParams.get("region") || "";
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
     const sortBy = searchParams.get("sortBy") || "ranking";
@@ -29,11 +30,33 @@ export async function GET(req: Request) {
         { title: { contains: search, mode: "insensitive" } },
         { location: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
+        { country: { contains: search, mode: "insensitive" } },
       ];
     }
 
     if (category) where.category = { equals: category, mode: "insensitive" };
-    if (country) where.country = { equals: country, mode: "insensitive" };
+    
+    if (country && country !== "All") {
+      where.country = { contains: country, mode: "insensitive" };
+    } else if (region && region !== "All") {
+      const regionCountriesMap: Record<string, string[]> = {
+        "Southeast Asia": ["Indonesia", "Thailand", "Vietnam", "Singapore", "Malaysia", "Philippines", "Bali"],
+        "East Asia": ["Japan", "South Korea", "China", "Taiwan", "Hong Kong", "Tokyo", "Seoul"],
+        "Europe": ["France", "Italy", "Spain", "United Kingdom", "Greece", "Switzerland", "Netherlands", "Germany", "Paris", "Rome"],
+        "Americas": ["United States", "Canada", "Mexico", "Brazil", "Peru", "Argentina", "New York"],
+        "Middle East & Africa": ["United Arab Emirates", "Egypt", "Saudi Arabia", "Turkey", "Morocco", "Dubai"],
+        "Oceania": ["Australia", "New Zealand", "Sydney"],
+      };
+      
+      const targetCountries = regionCountriesMap[region];
+      if (targetCountries && targetCountries.length > 0) {
+        where.OR = [
+          ...(where.OR || []),
+          ...targetCountries.map(c => ({ country: { contains: c, mode: "insensitive" } })),
+          ...targetCountries.map(c => ({ location: { contains: c, mode: "insensitive" } })),
+        ];
+      }
+    }
 
     if (minPrice || maxPrice) {
       where.priceUSD = {};
