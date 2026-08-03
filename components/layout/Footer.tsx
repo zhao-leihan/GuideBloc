@@ -9,7 +9,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
-              <img src="/assets/Navbar-logo.webp" alt="Explomate Logo" className="h-8 w-auto object-contain" />
+              <img 
+                src="/assets/navbar.png" 
+                alt="Explomate Logo" 
+                className="h-8 md:h-10 w-auto object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]" 
+              />
             </Link>
             <p className="text-sm text-dark-400 leading-relaxed">
               Explore the world with local guides. Pay securely with crypto.

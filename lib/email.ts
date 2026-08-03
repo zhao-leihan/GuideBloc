@@ -20,7 +20,7 @@ function getEmailLayout(title: string, contentHtml: string): string {
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
       <!-- Premium Gradient Banner Header Block -->
       <div style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); padding: 32px 24px; text-align: center;">
-        <img src="${baseUrl}/assets/navbar-logo.png" alt="Explomate Logo" style="height: 36px; display: block; margin: 0 auto 8px auto;" />
+        <img src="${baseUrl}/assets/navbar.png" alt="Explomate Logo" style="height: 38px; display: block; margin: 0 auto 8px auto;" />
         <div style="color: rgba(255, 255, 255, 0.85); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.1em;">
           ${title}
         </div>

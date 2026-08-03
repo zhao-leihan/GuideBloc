@@ -235,7 +235,7 @@ export default function TouristBookingsPage() {
 
             <!-- Left: Logo & Title -->
             <div>
-                <img src="/assets/Navbar-logo.webp" alt="Explomate" style="height: 32px; display: block; filter: brightness(0) invert(1);" />
+                <img src="/assets/navbar.png" alt="Explomate" style="height: 36px; display: block; filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));" />
                 <p style="margin: 6px 0 0 0; font-size: 9px; color: #93b5f0; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; opacity: 0.9;">Official Booking Receipt</p>
             </div>
 

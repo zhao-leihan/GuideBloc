@@ -74,7 +74,7 @@ function RegisterContent() {
         <div className="w-full max-w-md">
           <div className="card p-8">
             <div className="text-center mb-8">
-              <img src="/assets/logo.png" alt="Explomate Logo" className="w-16 h-16 object-contain mx-auto mb-4" />
+              <img src="/assets/logo.png" alt="Explomate Logo" className="w-24 h-24 object-contain mx-auto mb-4" />
               <h1 className="text-3xl font-bold text-dark-900">
                 {form.role === "GUIDE" ? "Register as a Tour Guide" : "Create your account"}
               </h1>

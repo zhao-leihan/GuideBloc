@@ -66,11 +66,11 @@ export default function Navbar() {
           : "top-5 w-[95%] max-w-6xl bg-white/5 border-white/5 shadow-none py-3.5"
       )}>
         {/* Logo */}
-        <Link href="/" className="flex items-center group">
+        <Link href="/" className="flex items-center group py-0.5">
           <img 
-            src="/assets/Navbar-logo.webp" 
+            src="/assets/navbaronly.png" 
             alt="Explomate Logo" 
-            className="h-7 md:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+            className="h-6 md:h-8 w-auto object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.4)] transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
 

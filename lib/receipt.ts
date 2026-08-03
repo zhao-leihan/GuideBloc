@@ -45,7 +45,7 @@ export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
   try {
     const fs = require("fs");
     const path = require("path");
-    const logoPath = path.join(process.cwd(), "public/assets/navbar-logo.png");
+    const logoPath = path.join(process.cwd(), "public/assets/navbar.png");
     if (fs.existsSync(logoPath)) {
       const logoBuffer = fs.readFileSync(logoPath);
       const logoBase64 = `data:image/png;base64,${logoBuffer.toString("base64")}`;

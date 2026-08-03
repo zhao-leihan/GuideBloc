@@ -40,8 +40,9 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse scale-150" />
               <motion.img 
-                src="/assets/Navbar-logo.webp" 
+                src="/assets/navbar.png" 
                 alt="Explomate Logo" 
+                className="h-14 md:h-18 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,255,255,0.6)]"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
