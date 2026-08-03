@@ -235,7 +235,7 @@ function ExploreContent() {
             )}
             {search && (
               <span className="text-xs bg-dark-200 text-dark-800 font-medium px-3 py-1 rounded-full flex items-center gap-1">
-                Keyword: "{search}" <X className="w-3 h-3 cursor-pointer" onClick={() => setSearch("")} />
+                Keyword: &quot;{search}&quot; <X className="w-3 h-3 cursor-pointer" onClick={() => setSearch("")} />
               </span>
             )}
             <button 
