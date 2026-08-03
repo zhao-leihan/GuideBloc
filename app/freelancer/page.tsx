@@ -228,7 +228,7 @@ export default function FreelancerPage() {
             <div className="order-1 lg:order-2">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Host Travelers Worldwide</h2>
               <p className="text-dark-300 text-lg leading-relaxed mb-6">
-                Travelers are searching for raw, genuine experiences. They don&apos;t want commercial bus tours—they want to discover a city through the eyes of a passionate resident.
+                Travelers are searching for raw, genuine experiences. They don&apos;t want commercial bus tours - they want to discover a city through the eyes of a passionate resident.
               </p>
               <div className="space-y-4">
                 {[

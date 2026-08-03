@@ -1,6 +1,6 @@
 # Explomate Platform - Full Feature & Code Architecture Report
 
-This report presents a comprehensive technical audit, full feature breakdown, database schema specification, smart contract design, algorithmic model, and complete code architecture for the **Explomate Platform** — a Web3 decentralized tourism marketplace and automated escrow system built on Ethereum Layer-2 (Base Network).
+This report presents a comprehensive technical audit, full feature breakdown, database schema specification, smart contract design, algorithmic model, and complete code architecture for the **Explomate Platform** - a Web3 decentralized tourism marketplace and automated escrow system built on Ethereum Layer-2 (Base Network).
 
 ---
 
@@ -58,16 +58,7 @@ graph TD
     PaymentAPI --> BaseEVM
 ```
 
-### Technology Stack Matrix
-- **Core Framework**: [Next.js 14](https://nextjs.org/) (App Router, Server Actions, API Routes) with TypeScript.
-- **Styling & UI**: [Tailwind CSS](https://tailwindcss.com/) with customized dark-mode HSL design system, responsive card grids, and smooth micro-animations.
-- **Database & ORM**: [Prisma ORM](file:///c:/Users/Rayhan/Music/explomate.ly/prisma/schema.prisma) with PostgreSQL database.
-- **Authentication**: NextAuth.js (supporting credentials, Google OAuth, and JWT session handling).
-- **Blockchain Smart Contracts**: Solidity `^0.8.20`, OpenZeppelin Contracts (`SafeERC20`, `ReentrancyGuard`, `Ownable`), compiled via Hardhat, deployed on Base Network L2.
-- **Web3 Integration**: Ethers.js v6 with browser wallet providers (MetaMask, Coinbase Wallet).
-- **Real-Time Communications**: Supabase JS SDK (WebSocket channels for instant chat messaging).
-- **Email & PDF Generation**: Resend API integration with programmatic PDF invoice generation via `jspdf`.
-- **Bot Defense**: Cloudflare Turnstile Captcha integrated into user authentication flows.
+### Technology Stack Matrix - **Core Framework**: [Next.js 14](https://nextjs.org/) (App Router, Server Actions, API Routes) with TypeScript. - **Styling & UI**: [Tailwind CSS](https://tailwindcss.com/) with customized dark-mode HSL design system, responsive card grids, and smooth micro-animations. - **Database & ORM**: [Prisma ORM](file:///c:/Users/Rayhan/Music/explomate.ly/prisma/schema.prisma) with PostgreSQL database. - **Authentication**: NextAuth.js (supporting credentials, Google OAuth, and JWT session handling). - **Blockchain Smart Contracts**: Solidity `^0.8.20`, OpenZeppelin Contracts (`SafeERC20`, `ReentrancyGuard`, `Ownable`), compiled via Hardhat, deployed on Base Network L2. - **Web3 Integration**: Ethers.js v6 with browser wallet providers (MetaMask, Coinbase Wallet). - **Real-Time Communications**: Supabase JS SDK (WebSocket channels for instant chat messaging). - **Email & PDF Generation**: Resend API integration with programmatic PDF invoice generation via `jspdf`. - **Bot Defense**: Cloudflare Turnstile Captcha integrated into user authentication flows.
 
 ---
 
@@ -118,12 +109,8 @@ mindmap
    $$\text{client\_price} = \frac{\text{guide\_price}}{0.95}$$
    $$\text{platform\_fee} = \text{client\_price} - \text{guide\_price}$$
    Guides see exactly what tourists pay and what Explomate retains before publishing.
-2. **Guide Gamification & XP System**: Guides earn XP and increase levels through positive reviews and completed bookings:
-   - Level calculation: $\text{Level} = \lfloor \frac{\text{XP}}{100} \rfloor + 1$.
-3. **Tiered Guide Subscriptions**:
-   - **FREE**: Standard listing, baseline search visibility.
-   - **PRO** ($10 USDC/month): Priority ranking boost (1.5x weight), featured badge, enhanced analytics.
-   - **ELITE** ($25 USDC/month): Maximum ranking boost (2.0x weight), premium placement, homepage priority.
+2. **Guide Gamification & XP System**: Guides earn XP and increase levels through positive reviews and completed bookings: - Level calculation: $\text{Level} = \lfloor \frac{\text{XP}}{100} \rfloor + 1$.
+3. **Tiered Guide Subscriptions**: - **FREE**: Standard listing, baseline search visibility. - **PRO** ($10 USDC/month): Priority ranking boost (1.5x weight), featured badge, enhanced analytics. - **ELITE** ($25 USDC/month): Maximum ranking boost (2.0x weight), premium placement, homepage priority.
 4. **Sponsored Gig Boosts**: Spend $5 USDC to feature a specific gig for 7 days (adds 1.3x multiplier to search rankings).
 5. **Earnings & Wallet Payouts**: Connect EVM wallet to receive automated payouts upon trip completion without manual payout wait times.
 
@@ -197,14 +184,7 @@ explomate.ly/
 └── report.md                   # System Audit & Architecture Report
 ```
 
-### Core Code Modules Directory Links
-- [ExplomateEscrow.sol](file:///c:/Users/Rayhan/Music/explomate.ly/contracts/ExplomateEscrow.sol): Decentralized Escrow & Commission Splitter contract.
-- [ranking.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/ranking.ts): Mathematical gig score calculator.
-- [email.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/email.ts): Email notifications via Resend API.
-- [receipt.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/receipt.ts): Transactional PDF generator.
-- [anomaly.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/anomaly.ts): Automated fraud detection scanner.
-- [auth.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/auth.ts): NextAuth security setup.
-- [schema.prisma](file:///c:/Users/Rayhan/Music/explomate.ly/prisma/schema.prisma): Database schema definition.
+### Core Code Modules Directory Links - [ExplomateEscrow.sol](file:///c:/Users/Rayhan/Music/explomate.ly/contracts/ExplomateEscrow.sol): Decentralized Escrow & Commission Splitter contract. - [ranking.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/ranking.ts): Mathematical gig score calculator. - [email.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/email.ts): Email notifications via Resend API. - [receipt.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/receipt.ts): Transactional PDF generator. - [anomaly.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/anomaly.ts): Automated fraud detection scanner. - [auth.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/auth.ts): NextAuth security setup. - [schema.prisma](file:///c:/Users/Rayhan/Music/explomate.ly/prisma/schema.prisma): Database schema definition.
 
 ---
 
@@ -268,9 +248,7 @@ stateDiagram-v2
 ```
 
 ### 6.1 Atomic Commission Split Mechanism
-When a booking of $100 USDC is completed and released:
-- **90% ($90 USDC)** is transferred directly to the local guide's EVM wallet.
-- **10% ($10 USDC)** platform commission is split atomically within `_splitCommission`:
+When a booking of $100 USDC is completed and released: - **90% ($90 USDC)** is transferred directly to the local guide's EVM wallet. - **10% ($10 USDC)** platform commission is split atomically within `_splitCommission`:
   1. **10% of Commission ($1.00)** $\rightarrow$ **Gas & Ops Vault** (`gasOpsVault`): Co-sponsoring transaction gas and node RPC costs.
   2. **50% of Commission ($5.00)** $\rightarrow$ **SaaS Growth Vault** (`saasGrowthVault`): Platform ecosystem growth and marketing.
   3. **40% of Commission ($4.00)** $\rightarrow$ **Holding Dividends Vault** (`holdingDividendsVault`): Reserve pool for token holders / platform staking.
@@ -335,10 +313,7 @@ Because quality signals (Rating + Reviews + Bookings) constitute **65%** of the 
 1. **Cloudflare Turnstile Captcha**: Shields authentication routes (`/api/auth/register`) against automated bot registration.
 2. **Account Block Lockout (`isBlocked`)**: Intercepted directly inside `NextAuth` callbacks. Blocked users are immediately revoked from issuing API calls or signing transactions.
 3. **Low-Rating Anomaly Scanner**: Background service ([anomaly.ts](file:///c:/Users/Rayhan/Music/explomate.ly/lib/anomaly.ts)) inspecting guides receiving low ratings ($\le 2$ stars) over consecutive bookings, automatically issuing warnings or locking accounts.
-4. **Smart Contract Security**:
-   - `ReentrancyGuard` prevents re-entrancy attack patterns on escrow withdrawals.
-   - `SafeERC20` guards against non-standard ERC-20 token transfer vulnerabilities.
-   - `Ownable` enforces multi-sig admin controls on vault updates and dispute overrides.
+4. **Smart Contract Security**: - `ReentrancyGuard` prevents re-entrancy attack patterns on escrow withdrawals. - `SafeERC20` guards against non-standard ERC-20 token transfer vulnerabilities. - `Ownable` enforces multi-sig admin controls on vault updates and dispute overrides.
 
 ---
 

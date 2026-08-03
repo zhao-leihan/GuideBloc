@@ -164,7 +164,7 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
               className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans"
             >
-              Say goodbye to travel scams, hidden platform markups, and payment delays! Explomate locks your booking funds in next-generation <b>Smart Contract Escrow</b>—releasing payment to your guide only after your tour is complete.
+              Say goodbye to travel scams, hidden platform markups, and payment delays! Explomate locks your booking funds in next-generation <b>Smart Contract Escrow</b> - releasing payment to your guide only after your tour is complete.
             </motion.p>
 
           {/* AI Talk Box */}

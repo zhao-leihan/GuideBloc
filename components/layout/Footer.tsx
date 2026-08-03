@@ -84,7 +84,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Explomate. All rights reserved.
           </p>
           <p className="text-sm text-dark-500">
-            Built with <HeartFilledIcon className="w-3.5 h-3.5 text-danger inline-block" /> — Where Adventure Meets Web3
+            Built with <HeartFilledIcon className="w-3.5 h-3.5 text-danger inline-block" /> - Where Adventure Meets Web3
           </p>
         </div>
       </div>

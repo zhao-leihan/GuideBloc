@@ -8,7 +8,7 @@ export default function TouristSubscriptionPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-dark-900">Subscription</h1>
-          <p className="text-dark-500">Tourist Premium — coming soon!</p>
+          <p className="text-dark-500">Tourist Premium - coming soon!</p>
         </div>
         <div className="card p-8 text-center">
           <RocketIcon className="w-12 h-12 mx-auto mb-4 text-primary" />
