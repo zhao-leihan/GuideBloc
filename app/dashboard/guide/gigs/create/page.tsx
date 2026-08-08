@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import toast from "react-hot-toast";
-import { Rocket, Info, Image as ImageIcon, MapPin, DollarSign, Clock, Users, X, FileText, Globe, Loader2, AlertCircle } from "lucide-react";
+import { Rocket, Info, Image as ImageIcon, MapPin, DollarSign, Clock, Users, X, FileText, Globe, Loader2, AlertCircle, Calendar } from "lucide-react";
 import { connectWallet } from "@/lib/crypto/payment";
 import { useRouter } from "next/navigation";
 import { CONFIG } from "@/lib/config";
@@ -44,8 +44,34 @@ export default function CreateGigPage() {
     country: "Indonesia",
     description: "",
   });
+  const ALL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const MORNING_TIMES = ["06:00 AM", "07:00 AM", "08:00 AM", "09:00 AM", "10:00 AM", "11:00 AM"];
+  const AFTERNOON_TIMES = ["12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"];
+  const NIGHT_TIMES = ["06:00 PM", "07:00 PM", "08:00 PM", "09:00 PM", "10:00 PM", "11:00 PM", "12:00 AM"];
+  const ALL_TIMES = [...MORNING_TIMES, ...AFTERNOON_TIMES, ...NIGHT_TIMES];
+
+  const [availableDays, setAvailableDays] = useState<string[]>(ALL_DAYS);
+  const [availableTimes, setAvailableTimes] = useState<string[]>(["08:00 AM", "01:00 PM", "06:00 PM"]);
+  const [customTimeInput, setCustomTimeInput] = useState("");
   const [benefitInput, setBenefitInput] = useState("");
   const [benefitsList, setBenefitsList] = useState<string[]>([]);
+
+  const handleAddCustomTime = () => {
+    if (!customTimeInput) return;
+    let [h, m] = customTimeInput.split(":").map(Number);
+    const modifier = h >= 12 ? "PM" : "AM";
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    const formatted = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")} ${modifier}`;
+
+    if (!availableTimes.includes(formatted)) {
+      setAvailableTimes([...availableTimes, formatted]);
+      setCustomTimeInput("");
+      toast.success(`Added custom departure time: ${formatted}`);
+    } else {
+      toast.error("This time slot is already added");
+    }
+  };
 
   const addBenefit = () => {
     if (benefitInput.trim()) {
@@ -126,6 +152,8 @@ export default function CreateGigPage() {
           guide_price: parseFloat(formData.price),
           images: images,
           benefits: benefitsList,
+          availableDays,
+          availableTimes,
         }),
       });
 
@@ -332,6 +360,171 @@ export default function CreateGigPage() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* AVAILABLE DAYS SELECTOR FOR GUIDE */}
+              <div className="space-y-2 pt-2 border-t border-dark-100">
+                <label className="block text-sm font-bold text-dark-800 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-primary" /> Available Tour Days *
+                </label>
+                <p className="text-xs text-dark-500">Select which days of the week you are available to host this tour:</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {ALL_DAYS.map((day) => {
+                    const isSelected = availableDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            if (availableDays.length > 1) {
+                              setAvailableDays(availableDays.filter(d => d !== day));
+                            }
+                          } else {
+                            setAvailableDays([...availableDays, day]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          isSelected
+                            ? "bg-primary text-white border-primary shadow-xs"
+                            : "bg-dark-50 text-dark-600 border-dark-200 hover:border-dark-350"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* AVAILABLE TIME SLOTS SELECTOR FOR GUIDE (CLEAN APPLE-STYLE UX) */}
+              <div className="space-y-2 pt-2 border-t border-dark-100">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-bold text-dark-800 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-primary" /> Departure Time Slots *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const durHours = parseFloat(formData.durationHours) || 4;
+                      const durationMins = durHours * 60;
+                      const selected: string[] = [];
+                      let lastEnd = -1;
+                      for (const time of ALL_TIMES) {
+                        const [t, mod] = time.split(" ");
+                        let [h, m] = t.split(":").map(Number);
+                        if (mod === "PM" && h < 12) h += 12;
+                        if (mod === "AM" && h === 12) h = 0;
+                        const start = h * 60 + m;
+                        if (lastEnd === -1 || start >= lastEnd) {
+                          selected.push(time);
+                          lastEnd = start + durationMins;
+                        }
+                      }
+                      setAvailableTimes(selected);
+                    }}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Auto-space slots
+                  </button>
+                </div>
+                <p className="text-xs text-dark-500">Select start times for tourists to choose from (click to toggle or add custom):</p>
+
+                {/* SLEEK SINGLE PILL GRID WITH INLINE CUSTOM TIME PICKER */}
+                <div className="flex flex-wrap gap-2 pt-1 items-center">
+                  {availableTimes.map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => {
+                        if (availableTimes.length > 1) {
+                          setAvailableTimes(availableTimes.filter(t => t !== time));
+                        } else {
+                          toast.error("You must keep at least 1 time slot");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all border bg-primary text-white border-primary shadow-xs flex items-center gap-1"
+                    >
+                      {time}
+                      <X className="w-3 h-3 hover:opacity-80" />
+                    </button>
+                  ))}
+
+                  {ALL_TIMES.filter(t => !availableTimes.includes(t)).map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => setAvailableTimes([...availableTimes, time])}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all border bg-dark-50 text-dark-600 border-dark-200 hover:border-dark-350"
+                    >
+                      {time}
+                    </button>
+                  ))}
+
+                  {/* INLINE CUSTOM TIME PICKER */}
+                  <div className="flex items-center gap-1 bg-dark-50 border border-dark-200 rounded-xl px-2 py-1">
+                    <input
+                      type="time"
+                      value={customTimeInput}
+                      onChange={(e) => setCustomTimeInput(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-dark-800 outline-none w-16"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomTime}
+                      className="px-2 py-0.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary-dark transition-all"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* OVERLAP WARNING BADGE */}
+                {(() => {
+                  const durHours = parseFloat(formData.durationHours) || 4;
+                  const durMins = durHours * 60;
+                  const parseMins = (tStr: string) => {
+                    const [t, mod] = tStr.split(" ");
+                    let [h, m] = t.split(":").map(Number);
+                    if (mod === "PM" && h < 12) h += 12;
+                    if (mod === "AM" && h === 12) h = 0;
+                    return h * 60 + m;
+                  };
+
+                  const sorted = [...availableTimes].sort((a, b) => parseMins(a) - parseMins(b));
+                  const overlaps: { t1: string; t2: string; end1Str: string }[] = [];
+
+                  for (let i = 0; i < sorted.length; i++) {
+                    const s1 = parseMins(sorted[i]);
+                    const e1 = s1 + durMins;
+                    for (let j = i + 1; j < sorted.length; j++) {
+                      const s2 = parseMins(sorted[j]);
+                      if (s2 < e1) {
+                        const endH = Math.floor(e1 / 60) % 24;
+                        const endM = e1 % 60;
+                        const mod = endH >= 12 ? "PM" : "AM";
+                        const displayH = endH > 12 ? endH - 12 : endH === 0 ? 12 : endH;
+                        const end1Str = `${String(displayH).padStart(2, "0")}:${String(endM).padStart(2, "0")} ${mod}`;
+                        overlaps.push({ t1: sorted[i], t2: sorted[j], end1Str });
+                      }
+                    }
+                  }
+
+                  if (overlaps.length > 0) {
+                    return (
+                      <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-900 text-xs space-y-1 mt-2">
+                        <div className="font-bold text-amber-700 flex items-center gap-1.5">
+                          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                          <span>Schedule Overlap Notice ({durHours}-Hour Tour)</span>
+                        </div>
+                        <p className="text-[11px] text-amber-800 leading-relaxed">
+                          A <strong>{durHours}-hour tour</strong> starting at <strong>{overlaps[0].t1}</strong> finishes at <strong>{overlaps[0].end1Str}</strong>. The <strong>{overlaps[0].t2}</strong> departure slot overlaps while you are still hosting the previous group!
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               <div>

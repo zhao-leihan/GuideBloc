@@ -10,6 +10,10 @@ const ERC20_ABI = [
   "function balanceOf(address account) external view returns (uint256)"
 ];
 
+/**
+ * Admin Wallet On-Chain Status Query.
+ * Fetches real-time live balances from Base L2 blockchain matching Exodus Wallet / Treasury Address.
+ */
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,36 +26,35 @@ export async function GET(req: Request) {
 
     const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
     const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    let rpcUrl = "http://127.0.0.1:8545";
     
+    let rpcUrl = "https://mainnet.base.org";
     if (network === "base") {
       rpcUrl = isBaseMainnet 
         ? "https://mainnet.base.org" 
-        : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
+        : (isBaseSepolia ? "https://sepolia.base.org" : "https://mainnet.base.org");
     } else if (network === "celo") {
       rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
     } else if (network === "polygon") {
-      rpcUrl = "http://127.0.0.1:8545";
+      rpcUrl = "https://polygon-rpc.com";
     }
 
-    let privateKey = process.env.DEPLOYER_PRIVATE_KEY;
-    if (rpcUrl === "http://127.0.0.1:8545") {
-      privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // Default Hardhat Account #0
-    }
-
-    if (!privateKey) {
-      return NextResponse.json({ message: "Custodian Private Key not configured" }, { status: 500 });
-    }
+    // Exodus Wallet / Treasury Address configured in environment
+    const treasuryAddress = process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE";
+    const escrowAddress = process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
 
     const provider = new ethers.JsonRpcProvider(rpcUrl);
-    const wallet = new ethers.Wallet(privateKey, provider);
-    const address = wallet.address;
+    const address = treasuryAddress;
 
-    // Fetch native balance (ETH / MATIC / CELO)
-    const nativeBal = await provider.getBalance(address);
-    const formattedNative = ethers.formatEther(nativeBal);
+    // 1. Fetch Native Gas Balance (ETH / MATIC / CELO) on Base L2
+    let formattedNative = "0.0000";
+    try {
+      const nativeBal = await provider.getBalance(address);
+      formattedNative = ethers.formatEther(nativeBal);
+    } catch (e) {
+      console.warn("Failed to fetch native balance:", e);
+    }
 
-    // Fetch USDT & USDC balance
+    // 2. Fetch USDC & USDT Balance on Base L2 (matching Exodus Wallet)
     let usdcBalance = "0.00";
     let usdtBalance = "0.00";
 
@@ -75,6 +78,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       address,
+      escrowAddress,
       usdcBalance,
       usdtBalance,
       nativeBalance: formattedNative,

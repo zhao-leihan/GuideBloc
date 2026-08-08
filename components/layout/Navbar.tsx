@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, User, Wallet, LogOut, LayoutDashboard, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -60,10 +61,10 @@ export default function Navbar() {
   return (
     <>
       <nav className={cn(
-        "fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 rounded-full border flex items-center justify-between px-6",
+        "fixed left-1/2 -translate-x-1/2 z-50 transition-all duration-500 rounded-full border flex items-center justify-between px-6 backdrop-blur-md",
         (scrolled || shouldShowSpacer) 
-          ? "top-3 w-[92%] max-w-5xl bg-dark-950/85 border-white/10 shadow-2xl py-2" 
-          : "top-5 w-[95%] max-w-6xl bg-white/5 border-white/5 shadow-none py-3.5"
+          ? "top-3 w-[92%] max-w-5xl bg-dark-950/95 border-white/15 shadow-2xl py-2" 
+          : "top-5 w-[95%] max-w-6xl bg-dark-950/40 border-white/10 shadow-none py-3.5"
       )}>
         {/* Logo */}
         <Link href="/" className="flex items-center group py-0.5">
@@ -97,6 +98,7 @@ export default function Navbar() {
 
         {/* Right Action Menu */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
           {session ? (
             <>
               <Link

@@ -225,31 +225,30 @@ export default function TouristBookingsPage() {
       <div style="position: relative; width: 600px; min-height: 820px; background: #ffffff; font-family: 'Inter', 'Segoe UI', Roboto, -apple-system, sans-serif; color: #0f172a; border-radius: 20px; border: 1px solid #e9edf4; overflow: hidden; box-sizing: border-box; box-shadow: 0 20px 60px rgba(0,0,0,0.08);">
 
     <!-- ===== HEADER ===== -->
-    <div style="background: linear-gradient(145deg, #0b1e4a, #1a3a7a, #2563eb); padding: 28px 30px 22px 30px; position: relative; overflow: hidden;">
+    <div style="background: url('/assets/background.jpg') center/cover no-repeat, linear-gradient(145deg, #0f172a, #1e1b4b); padding: 24px 30px; position: relative; overflow: hidden; border-bottom: 2px solid rgba(255,255,255,0.1);">
 
-        <!-- Subtle decorative pattern overlay -->
-        <div style="position: absolute; top: -60px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.03); pointer-events: none;"></div>
-        <div style="position: absolute; bottom: -80px; left: -30px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.02); pointer-events: none;"></div>
+        <!-- Subtle dark overlay for contrast -->
+        <div style="position: absolute; inset: 0; background: rgba(15, 23, 42, 0.4); pointer-events: none;"></div>
 
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1;">
 
             <!-- Left: Logo & Title -->
-            <div>
-                <img src="/assets/navbar.png" alt="Explomate" style="height: 36px; display: block; filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));" />
-                <p style="margin: 6px 0 0 0; font-size: 9px; color: #93b5f0; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; opacity: 0.9;">Official Booking Receipt</p>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="/assets/logo.png" alt="Explomate Logo" style="height: 38px; width: 38px; object-fit: contain;" />
+                <div>
+                    <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">EXPLOMATE</h2>
+                    <p style="margin: 2px 0 0 0; font-size: 8.5px; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600;">Official Booking Receipt</p>
+                </div>
             </div>
 
             <!-- Right: Stamp -->
-            <div style="margin-top: -6px;">
-                <div style="border: 3px double ${stampColor}; color: ${stampColor}; padding: 5px 14px; font-size: 11px; font-weight: 900; font-family: 'Courier New', Courier, monospace; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 8px; transform: rotate(-6deg); background: rgba(255,255,255,0.96); box-shadow: 0 0 0 2px ${stampColor}, 0 4px 12px rgba(0,0,0,0.10); display: inline-block; text-align: center; line-height: 1.3;">
+            <div>
+                <div style="border: 3px double ${stampColor}; color: ${stampColor}; padding: 5px 14px; font-size: 11px; font-weight: 900; font-family: 'Courier New', Courier, monospace; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 8px; transform: rotate(-4deg); background: rgba(255,255,255,0.96); box-shadow: 0 0 0 2px ${stampColor}, 0 4px 12px rgba(0,0,0,0.15); display: inline-block; text-align: center; line-height: 1.3;">
                     ${stampText}
                 </div>
             </div>
 
         </div>
-
-        <!-- Decorative divider line -->
-        <div style="position: relative; z-index: 1; margin-top: 16px; border-bottom: 1px solid rgba(255,255,255,0.10);"></div>
     </div>
 
     <!-- ===== MAIN CONTENT ===== -->
@@ -259,14 +258,15 @@ export default function TouristBookingsPage() {
         <div style="display: table; width: 100%; font-size: 11.5px; margin-bottom: 22px; border-collapse: separate; border-spacing: 0;">
 
             <!-- Column 1: Booker -->
-            <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 18px; box-sizing: border-box;">
+            <div style="display: table-cell; width: 50%; vertical-align: top; padding-right: 14px; box-sizing: border-box;">
 
                 <div style="background: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #eef2f6;">
                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                        <span style="font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">👤 Booker</span>
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <span style="font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">Booker Information</span>
                         <span style="flex: 1; border-bottom: 1px dashed #dce1e9;"></span>
                     </div>
-                    <div style="display: grid; grid-template-columns: 80px 1fr; gap: 2px 6px; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 85px 1fr; gap: 4px 6px; font-size: 11px;">
                         <span style="color: #64748b;">Lead</span>
                         <span style="font-weight: 600; color: #0f172a;">${booking.tourist?.title ? booking.tourist.title + '. ' : ''}${booking.tourist?.name || 'Customer'}</span>
                         <span style="color: #64748b;">Email</span>
@@ -278,23 +278,23 @@ export default function TouristBookingsPage() {
 
             </div>
 
-            <!-- Column 2: Tour Details -->
-            <div style="display: table-cell; width: 50%; vertical-align: top; padding-left: 18px; box-sizing: border-box;">
+            <!-- Column 2: Tour & Payment Details -->
+            <div style="display: table-cell; width: 50%; vertical-align: top; padding-left: 14px; box-sizing: border-box;">
 
                 <div style="background: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #eef2f6;">
                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                        <span style="font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">📋 Tour</span>
+                        <span style="font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">Tour & Payment Details</span>
                         <span style="flex: 1; border-bottom: 1px dashed #dce1e9;"></span>
                     </div>
-                    <div style="display: grid; grid-template-columns: 80px 1fr; gap: 2px 6px; font-size: 11px;">
+                    <div style="display: grid; grid-template-columns: 95px 1fr; gap: 4px 6px; font-size: 11px;">
                         <span style="color: #64748b;">Booking ID</span>
                         <span style="font-weight: 600; color: #0f172a; font-family: 'SF Mono', 'Courier New', monospace; font-size: 10px;">${booking.id}</span>
-                        <span style="color: #64748b;">Tour</span>
-                        <span style="font-weight: 600; color: #0f172a;">${booking.tourName}</span>
+                        <span style="color: #64748b;">Method</span>
+                        <span style="font-weight: 700; color: #4f46e5;">Crypto Escrow (USDC/USDT)</span>
+                        <span style="color: #64748b;">Network</span>
+                        <span style="font-weight: 600; color: #0f172a;">Base L2 Network</span>
                         <span style="color: #64748b;">Date</span>
                         <span style="font-weight: 600; color: #0f172a;">${booking.date} ${booking.bookingTime ? '· ' + booking.bookingTime : ''}</span>
-                        <span style="color: #64748b;">Location</span>
-                        <span style="font-weight: 600; color: #0f172a;">${booking.location}</span>
                     </div>
                 </div>
 
@@ -305,7 +305,7 @@ export default function TouristBookingsPage() {
         <div style="margin-bottom: 22px;">
 
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <span style="font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">🧳 Travelers</span>
+                <span style="font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.06em;">Travelers Manifest</span>
                 <span style="flex: 1; border-bottom: 1px solid #eef2f6;"></span>
                 <span style="font-size: 9px; font-weight: 500; color: #94a3b8; background: #f1f5f9; padding: 2px 10px; border-radius: 20px;">${allTravelers.length} pax</span>
             </div>
@@ -340,10 +340,10 @@ export default function TouristBookingsPage() {
 
             <div>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #1e3a6f; text-transform: uppercase; letter-spacing: 0.06em;">💰 Total Paid</span>
-                    <span style="font-size: 8px; font-weight: 500; color: #3b82f6; background: rgba(59,130,246,0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">Escrow</span>
+                    <span style="font-size: 11px; font-weight: 700; color: #1e3a6f; text-transform: uppercase; letter-spacing: 0.06em;">Total Amount Paid</span>
+                    <span style="font-size: 8px; font-weight: 500; color: #3b82f6; background: rgba(59,130,246,0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">Escrow Locked</span>
                 </div>
-                <span style="font-size: 8.5px; color: #4b7bc9; opacity: 0.85;">Secured via Smart Contract</span>
+                <span style="font-size: 8.5px; color: #4b7bc9; opacity: 0.85;">Secured via Smart Escrow Contract</span>
             </div>
 
             <div style="text-align: right;">
@@ -355,7 +355,7 @@ export default function TouristBookingsPage() {
         <!-- ===== WEB3 TX HASH ===== -->
         <div style="background: #fafcff; border: 1px solid #e9edf4; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
 
-            <div style="flex-shrink: 0; background: #eef2f6; border-radius: 6px; padding: 4px 8px; font-size: 8px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em;">🔗 Tx</div>
+            <div style="flex-shrink: 0; background: #eef2f6; border-radius: 6px; padding: 4px 8px; font-size: 8px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em;">TxHash</div>
 
             <div style="flex: 1; overflow: hidden;">
                 <p style="margin: 0; font-family: 'SF Mono', 'Courier New', monospace; word-break: break-all; color: #1e293b; font-size: 8.5px; letter-spacing: 0.2px; opacity: 0.8;">${booking.txHash}</p>
@@ -367,14 +367,17 @@ export default function TouristBookingsPage() {
 
     </div>
 
-    <!-- ===== FOOTER ===== -->
-    <div style="position: relative; margin-top: 6px; padding: 14px 28px 16px 28px; border-top: 1px solid #eef2f6; background: #fafcff; display: flex; justify-content: space-between; align-items: center;">
+    <!-- ===== FOOTER WITH BACKGROUND IMAGE ===== -->
+    <div style="background: url('/assets/background.jpg') center/cover no-repeat, #0f172a; padding: 14px 28px; position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center;">
+        
+        <!-- Subtle dark overlay for legibility -->
+        <div style="position: absolute; inset: 0; background: rgba(15, 23, 42, 0.5); pointer-events: none;"></div>
 
-        <span style="font-weight: 500; color: #94a3b8; font-size: 8.5px; letter-spacing: 0.04em;">
+        <span style="font-weight: 500; color: #f8fafc; font-size: 8.5px; letter-spacing: 0.04em; position: relative; z-index: 1;">
             © 2026 Explomate.ly · All rights reserved
         </span>
 
-        <span style="font-weight: 500; color: #94a3b8; font-size: 8px; letter-spacing: 0.04em; background: #f1f5f9; padding: 3px 12px; border-radius: 20px;">
+        <span style="font-weight: 600; color: #ffffff; font-size: 8px; letter-spacing: 0.04em; background: rgba(255,255,255,0.2); padding: 3px 12px; border-radius: 20px; backdrop-filter: blur(4px); position: relative; z-index: 1;">
             Secured by Smart Escrow
         </span>
 

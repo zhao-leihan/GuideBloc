@@ -147,6 +147,12 @@ export async function POST(req: Request) {
         platform_fee,
         priceUSD: client_price, // fallback for legacy code
         guideId: user.id,
+        availableDays: Array.isArray(data.availableDays) && data.availableDays.length > 0 
+          ? data.availableDays 
+          : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        availableTimes: Array.isArray(data.availableTimes) && data.availableTimes.length > 0 
+          ? data.availableTimes 
+          : ["08:00 AM", "10:00 AM", "01:00 PM", "04:00 PM"],
       },
     });
 

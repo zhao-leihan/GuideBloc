@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Link from "next/link";
 import {
   DollarSign, Calendar, TrendingUp, PlusCircle,
-  Users, Star, BarChart3, Clock, AlertCircle, Trophy, Award
+  Users, Star, BarChart3, Clock, AlertCircle, Trophy, Award, Sparkles
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Leaderboard from "@/components/gamification/Leaderboard";
@@ -99,8 +99,8 @@ export default function GuideOverviewPage() {
               <div className="space-y-1">
                 <h4 className="font-bold text-dark-900 text-sm flex items-center gap-1.5">
                   Tour Guide Level Achievement
-                  <span className="inline-flex items-center gap-0.5 bg-secondary/10 text-secondary text-[10px] px-2 py-0.5 rounded-full font-bold">
-                    ✨ Boost Active
+                  <span className="inline-flex items-center gap-1 bg-secondary/10 text-secondary text-[10px] px-2 py-0.5 rounded-full font-bold">
+                    <Sparkles className="w-3 h-3 text-secondary inline-block" /> Boost Active
                   </span>
                 </h4>
                 <p className="text-xs text-dark-500">Earn XP by completing tours. Higher levels boost listing search priority!</p>
@@ -123,11 +123,11 @@ export default function GuideOverviewPage() {
         )}
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 p-1 bg-dark-100 rounded-xl max-w-[420px] shadow-inner">
+        <div className="flex items-center gap-2 p-1 bg-dark-100 dark:bg-dark-900 dark:border dark:border-dark-800 rounded-xl max-w-[420px] shadow-inner">
           <button
             onClick={() => setActiveTab("overview")}
             className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "overview" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+              activeTab === "overview" ? "bg-white text-dark-900 dark:bg-primary dark:text-white shadow-sm" : "text-dark-500 hover:text-dark-900 dark:text-dark-400 dark:hover:text-white"
             }`}
           >
             Performance
@@ -135,7 +135,7 @@ export default function GuideOverviewPage() {
           <button
             onClick={() => setActiveTab("inbox")}
             className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "inbox" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+              activeTab === "inbox" ? "bg-white text-dark-900 dark:bg-primary dark:text-white shadow-sm" : "text-dark-500 hover:text-dark-900 dark:text-dark-400 dark:hover:text-white"
             }`}
           >
             System Mail
@@ -143,7 +143,7 @@ export default function GuideOverviewPage() {
           <button
             onClick={() => setActiveTab("leaderboard")}
             className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "leaderboard" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+              activeTab === "leaderboard" ? "bg-white text-dark-900 dark:bg-primary dark:text-white shadow-sm" : "text-dark-500 hover:text-dark-900 dark:text-dark-400 dark:hover:text-white"
             }`}
           >
             Leaderboard

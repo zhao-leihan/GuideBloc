@@ -104,6 +104,8 @@ model Gig {
   excluded     String[]
   benefits     String[]
   meetingPoint String?
+  availableDays String[] @default(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+  availableTimes String[] @default(["08:00 AM", "10:00 AM", "01:00 PM", "04:00 PM"])
   isActive     Boolean  @default(true)
   guideId      String
   createdAt    DateTime @default(now())
@@ -128,9 +130,12 @@ model Booking {
   guide_price   Float?
   client_price  Float?
   platform_fee  Float?
+  paidAmountUSD   Float?
+  expiresAt       DateTime?
+  paymentMemo     String?
   cryptoToken     CryptoToken
   status          BookingStatus @default(PENDING)
-  txHash          String?
+  txHash          String?       @unique
   paymentNetwork  String?
   specialRequests String?
   bookingTime     String?
@@ -151,9 +156,37 @@ enum BookingStatus {
   PENDING
   AWAITING_PAYMENT
   CONFIRMED
+  PAID
+  UNDERPAID
   COMPLETED
   CANCELLED
   DISPUTED
+  EXPIRED
+}
+
+model PaymentAuditLog {
+  id           String   @id @default(cuid())
+  bookingId    String?
+  txHash       String?
+  source       String   // WEBHOOK, MANUAL_TXHASH, CRON_EXPIRY
+  status       String   // SUCCESS, FAILED, UNDERPAID, EXPIRED, REJECTED
+  rawPayload   Json?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  @@map("payment_audit_logs")
+}
+
+model OverpaymentRecord {
+  id             String   @id @default(cuid())
+  bookingId      String
+  userId         String
+  excessAmountUSD Float
+  txHash         String
+  isRefunded     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@map("overpayment_records")
 }
 
 enum CryptoToken {

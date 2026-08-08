@@ -192,8 +192,8 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                       className={cn(
                         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
                         isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-dark-600 hover:bg-dark-100 hover:text-dark-900"
+                          ? "bg-primary/10 text-primary dark:bg-primary dark:text-white font-bold shadow-xs"
+                          : "text-dark-600 hover:bg-dark-100 hover:text-dark-900 dark:text-dark-400 dark:hover:bg-dark-800 dark:hover:text-white"
                       )}
                     >
                       <Icon className="w-4 h-4" />

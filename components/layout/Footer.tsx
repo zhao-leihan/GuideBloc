@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeartFilledIcon } from "@radix-ui/react-icons";
+import { Mail, User } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -66,15 +67,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Support & Emergency */}
           <div>
-            <h4 className="font-display font-semibold text-white mb-4">Support</h4>
+            <h4 className="font-display font-semibold text-white mb-4">Support & Emergency</h4>
             <ul className="space-y-2.5">
               <li><Link href="/help-center" className="text-sm hover:text-primary transition-colors">Help Center</Link></li>
-              <li><Link href="/safety" className="text-sm hover:text-primary transition-colors">Safety</Link></li>
+              <li><a href="mailto:admin@explomate.com" className="text-sm hover:text-primary transition-colors text-cyan-400 font-medium flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-cyan-400 inline-block" /> admin@explomate.com</a></li>
+              <li><a href="mailto:rayhan@explomate.com" className="text-sm hover:text-primary transition-colors text-cyan-400 font-medium flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-cyan-400 inline-block" /> rayhan@explomate.com</a></li>
+              <li><Link href="/safety" className="text-sm hover:text-primary transition-colors">Safety & Escrow</Link></li>
               <li><Link href="/terms-of-service" className="text-sm hover:text-primary transition-colors">Terms of Service</Link></li>
               <li><Link href="/privacy-policy" className="text-sm hover:text-primary transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/cookie-policy" className="text-sm hover:text-primary transition-colors">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>

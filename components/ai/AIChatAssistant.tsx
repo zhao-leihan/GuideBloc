@@ -280,10 +280,12 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                   <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="font-display font-semibold text-white text-sm">Kira</h4>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  <h4 className="font-display font-semibold text-white text-sm">Kira · AI Concierge</h4>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                     <span className="text-[10px] text-dark-400 font-medium uppercase tracking-wide">Online</span>
+                    <span className="text-dark-600">·</span>
+                    <a href="mailto:admin@explomate.com" className="text-[10px] text-cyan-400 hover:underline font-semibold">Human Support</a>
                   </div>
                 </div>
               </div>

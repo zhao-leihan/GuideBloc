@@ -34,7 +34,7 @@ export default function GigCard({ gig }: GigCardProps) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-3 left-3">
-          <span className="badge bg-white/90 text-dark-700 text-xs shadow-sm flex items-center gap-1">
+          <span className="badge bg-white/90 dark:bg-dark-900/90 dark:text-white dark:border-dark-700 text-dark-700 text-xs shadow-sm flex items-center gap-1">
             <CategoryIcon category={gig.category} className="w-3.5 h-3.5" /> {gig.category}
           </span>
         </div>
@@ -49,14 +49,16 @@ export default function GigCard({ gig }: GigCardProps) {
       <div className="p-5">
         {/* Guide */}
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="relative w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
             {gig.guide.avatar ? (
               <img src={gig.guide.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
             ) : (
               <span className="text-xs text-primary font-bold">{gig.guide.name[0]}</span>
             )}
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[7px] font-bold border border-white" title="Verified Local Guide">✓</span>
           </div>
-          <span className="text-xs text-dark-500">{gig.guide.name}</span>
+          <span className="text-xs text-dark-700 font-semibold">{gig.guide.name}</span>
+          <span className="text-[9px] bg-emerald-500/10 text-emerald-700 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/20">Verified</span>
         </div>
 
         {/* Title */}

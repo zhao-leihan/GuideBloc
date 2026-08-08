@@ -1,4 +1,6 @@
 import nodemailer from "nodemailer";
+import fs from "fs";
+import path from "path";
 
 interface EmailPayload {
   to: string;
@@ -7,20 +9,20 @@ interface EmailPayload {
   attachments?: {
     filename: string;
     content: any;
-    contentType: string;
+    contentType?: string;
   }[];
 }
 
 /**
  * Helper to wrap email bodies in a premium, responsive gradient banner layout.
+ * Uses CID (Content-ID) inline attachment "cid:explomate_logo" so Gmail & mobile mail clients load navbar.png 100% reliably.
  */
 function getEmailLayout(title: string, contentHtml: string): string {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
   return `
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
       <!-- Premium Gradient Banner Header Block -->
       <div style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); padding: 32px 24px; text-align: center;">
-        <img src="${baseUrl}/assets/navbar.png" alt="Explomate Logo" style="height: 38px; display: block; margin: 0 auto 8px auto;" />
+        <img src="cid:explomate_logo" alt="Explomate Logo" style="height: 42px; width: auto; max-width: 220px; display: block; margin: 0 auto 8px auto;" />
         <div style="color: rgba(255, 255, 255, 0.85); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.1em;">
           ${title}
         </div>
@@ -42,18 +44,37 @@ function getEmailLayout(title: string, contentHtml: string): string {
 
 /**
  * Core transactional email dispatcher.
- * Uses Resend API if configured, otherwise falls back to mockup console logging.
+ * Uses Resend API if configured, attaching navbar.png as an inline CID image.
  */
 export async function sendTransactionalEmail(payload: EmailPayload): Promise<boolean> {
   try {
     const apiKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.EMAIL_FROM || "onboarding@resend.dev";
+    const fromEmail = (process.env.EMAIL_FROM && !process.env.EMAIL_FROM.includes("explomate.com")) 
+      ? process.env.EMAIL_FROM 
+      : "onboarding@resend.dev";
 
     if (apiKey) {
       console.log(`[Email] Sending real email to ${payload.to} via Resend.com API...`);
       
-      // Convert buffers or arrays into base64 for Resend.com API compatibility
-      const mappedAttachments = payload.attachments?.map((a) => {
+      // Load navbar.png for inline CID embedding in email header
+      let logoBase64 = "";
+      try {
+        const logoPath = path.join(process.cwd(), "public/assets/navbar.png");
+        if (fs.existsSync(logoPath)) {
+          logoBase64 = fs.readFileSync(logoPath).toString("base64");
+        }
+      } catch (err) {
+        console.error("[Email Error] Failed to read navbar.png for CID attachment:", err);
+      }
+
+      const inlineLogoAttachment = logoBase64 ? [{
+        filename: "navbar.png",
+        content: logoBase64,
+        content_id: "explomate_logo"
+      }] : [];
+
+      // Convert external attachments into base64 for Resend API
+      const userAttachments = payload.attachments?.map((a) => {
         let base64Content = "";
         if (Buffer.isBuffer(a.content)) {
           base64Content = a.content.toString("base64");
@@ -66,7 +87,9 @@ export async function sendTransactionalEmail(payload: EmailPayload): Promise<boo
           filename: a.filename,
           content: base64Content,
         };
-      });
+      }) || [];
+
+      const finalAttachments = [...inlineLogoAttachment, ...userAttachments];
 
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -79,7 +102,7 @@ export async function sendTransactionalEmail(payload: EmailPayload): Promise<boo
           to: payload.to,
           subject: payload.subject,
           html: payload.html,
-          ...(mappedAttachments && { attachments: mappedAttachments }),
+          attachments: finalAttachments,
         }),
       });
 
@@ -93,9 +116,6 @@ export async function sendTransactionalEmail(payload: EmailPayload): Promise<boo
       return true;
     } else {
       console.log(`[Email Boilerplate] Simulating sending email to ${payload.to} with subject "${payload.subject}"`);
-      if (payload.attachments && payload.attachments.length > 0) {
-        console.log(`[Email Boilerplate] Simulated attachments:`, payload.attachments.map(a => a.filename));
-      }
       return true;
     }
   } catch (error) {

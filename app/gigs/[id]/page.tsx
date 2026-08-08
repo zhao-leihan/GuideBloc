@@ -6,12 +6,13 @@ import Link from "next/link";
 import {
   MapPin, Clock, Users, Star, Globe, ChevronLeft, ChevronRight,
   Calendar, Shield, CheckCircle, XCircle, MessageSquare, X,
-  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark, Copy
+  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark, Copy, AlertTriangle, Sparkles
 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { formatCurrency, formatDate, getCountryFlag, getCategoryIcon, cn } from "@/lib/utils";
 import ReviewCard from "@/components/reviews/ReviewCard";
+import GuideCalendarPicker from "@/components/booking/GuideCalendarPicker";
 import { initiatePayment } from "@/lib/crypto/payment";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -101,6 +102,12 @@ export default function GigDetailPage() {
     }
     if (!bookingDate) {
       toast.error("Please select a date first");
+      return;
+    }
+
+    const dayName = new Date(bookingDate).toLocaleDateString("en-US", { weekday: "long" });
+    if (gig?.availableDays && gig.availableDays.length > 0 && !gig.availableDays.includes(dayName)) {
+      toast.error(`The guide is not available on ${dayName}s. Please select from: ${gig.availableDays.join(", ")}`);
       return;
     }
 
@@ -658,18 +665,25 @@ export default function GigDetailPage() {
             {/* Guide Info */}
             <div className="card p-6">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl text-primary font-bold">
+                <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl text-primary font-bold">
                   {gig.guide.avatar ? (
                     <img src={gig.guide.avatar} alt="" className="w-14 h-14 rounded-full object-cover" />
                   ) : (
                     gig.guide.name[0]
                   )}
+                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-xs" title="Verified Local Guide">✓</span>
                 </div>
                 <div className="flex-1">
-                  <Link href={`/guides/${gig.guide.id}`} className="font-display font-semibold text-dark-900 hover:text-primary transition-colors">
-                    {gig.guide.name}
-                  </Link>
-                  <p className="text-sm text-dark-500">Local Guide · {gig.guide.country} {getCountryFlag(gig.guide.country)}</p>
+                  <div className="flex items-center gap-2">
+                    <Link href={`/guides/${gig.guide.id}`} className="font-display font-bold text-dark-900 text-lg hover:text-primary transition-colors">
+                      {gig.guide.name}
+                    </Link>
+                    <span className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      Verified Guide
+                    </span>
+                  </div>
+                  <p className="text-sm text-dark-500 mt-0.5">Verified Local Guide · Background Checked · {gig.guide.country} {getCountryFlag(gig.guide.country)}</p>
                 </div>
                 <Link
                   href={`/guides/${gig.guide.id}`}
@@ -739,7 +753,7 @@ export default function GigDetailPage() {
             {gig.benefits?.length > 0 && (
               <div className="border-t border-dark-100 pt-6">
                 <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2">
-                  <span className="text-secondary font-bold">✨</span> Tour Perks & Benefits
+                  <Sparkles className="w-4 h-4 text-secondary inline-block" /> Tour Perks & Benefits
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {gig.benefits.map((benefit: string) => (
@@ -791,32 +805,33 @@ export default function GigDetailPage() {
                 <span className="text-dark-400">per person</span>
               </div>
 
+              {/* INTERACTIVE GUIDE CALENDAR PICKER (UNAVAILABLE DAYS TOTALLY DISABLED) */}
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1">Date</label>
-                  <input
-                    type="date"
-                    value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                    className="input"
-                    min={new Date().toISOString().split("T")[0]}
+                  <label className="block text-sm font-bold text-dark-800 mb-1">Select Tour Date *</label>
+                  <GuideCalendarPicker
+                    selectedDate={bookingDate}
+                    onSelectDate={(dateStr) => setBookingDate(dateStr)}
+                    availableDays={gig.availableDays}
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1">Time</label>
+                  <label className="block text-sm font-medium text-dark-700 mb-1">Departure Time</label>
                   <select
                     value={bookingTime}
                     onChange={(e) => setBookingTime(e.target.value)}
-                    className="input"
+                    className="input font-semibold"
                   >
-                    <option value="08:00">08:00 AM</option>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="14:00">02:00 PM</option>
-                    <option value="16:00">04:00 PM</option>
-                    <option value="18:00">06:00 PM</option>
+                    {(gig.availableTimes && gig.availableTimes.length > 0 
+                      ? gig.availableTimes 
+                      : ["08:00 AM", "10:00 AM", "01:00 PM", "04:00 PM"]
+                    ).map((t: string) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-dark-700 mb-1">Group Size</label>
                   <select
@@ -858,13 +873,26 @@ export default function GigDetailPage() {
                   </div>
                 )}
                 
-                <button 
-                  onClick={handleOpenPassengerModal}
-                  disabled={isBooking || loading || !gig?.guide?.walletAddress}
-                  className={`btn-primary w-full py-4 text-lg font-bold shadow-lg ${(isBooking || loading || !gig?.guide?.walletAddress) ? 'opacity-50 cursor-not-allowed shadow-none' : 'shadow-primary/20 cursor-pointer'}`}
-                >
-                  {isBooking ? "Processing Payment..." : "Book & Pay"}
-                </button>
+                {(() => {
+                  const isDayOff = bookingDate ? (() => {
+                    const [y, m, d] = bookingDate.split("-").map(Number);
+                    const dayName = new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long" });
+                    return gig.availableDays && gig.availableDays.length > 0 && !gig.availableDays.includes(dayName);
+                  })() : false;
+
+                  const isBtnDisabled = isBooking || loading || !gig?.guide?.walletAddress || isDayOff;
+
+                  return (
+                    <button 
+                      onClick={handleOpenPassengerModal}
+                      disabled={isBtnDisabled}
+                      className={`btn-primary w-full py-4 text-lg font-bold shadow-lg ${isBtnDisabled ? 'opacity-50 cursor-not-allowed shadow-none bg-dark-400 border-dark-400' : 'shadow-primary/20 cursor-pointer'}`}
+                    >
+                      {isBooking ? "Processing Payment..." : isDayOff ? "Guide is OFF on Selected Date" : "Book & Pay"}
+                    </button>
+                  );
+                })()}
+
                 {txHash && (
                   <div className="text-xs text-secondary break-all bg-secondary/10 p-2 rounded">
                     Tx Hash: {txHash}

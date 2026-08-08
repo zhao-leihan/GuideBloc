@@ -118,8 +118,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
                 if (isNewMessage && c.id !== activeId) {
                   const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav");
                   audio.play().catch(() => {});
-                  toast(`Pesan baru dari ${c.otherParticipant.name}: "${c.lastMessage.content.slice(0, 40)}${c.lastMessage.content.length > 40 ? '...' : ''}"`, {
-                    icon: "💬",
+                  toast(`New message from ${c.otherParticipant.name}: "${c.lastMessage.content.slice(0, 40)}${c.lastMessage.content.length > 40 ? '...' : ''}"`, {
                     duration: 4000,
                   });
                 }
@@ -150,8 +149,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
                   const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav");
                   audio.play().catch(() => {});
                   incoming.forEach(m => {
-                    toast(`Pesan baru dari ${m.sender.name}: "${m.content.slice(0, 40)}${m.content.length > 40 ? '...' : ''}"`, {
-                      icon: "💬",
+                    toast(`New message from ${m.sender.name}: "${m.content.slice(0, 40)}${m.content.length > 40 ? '...' : ''}"`, {
                       duration: 4000,
                     });
                   });
@@ -198,7 +196,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            content: "📷 Sent an image",
+            content: "Photo shared",
             type: "IMAGE",
             mediaUrl: base64Data,
           }),
@@ -316,7 +314,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
                   <p className="text-xs truncate text-dark-500">
                     {conv.lastMessage ? (
                       (conv.lastMessage as any).type === "IMAGE" || (conv.lastMessage as any).mediaUrl
-                        ? "📷 Photo" 
+                        ? "Photo" 
                         : conv.lastMessage.content
                     ) : "Start chatting..."}
                   </p>
@@ -416,7 +414,7 @@ export default function ChatInterface({ currentUserId }: { currentUserId: string
                             />
                           </div>
                         )}
-                        {msg.content && msg.content !== "📷 Sent an image" && (
+                        {msg.content && msg.content !== "Photo shared" && msg.content !== "📷 Sent an image" && (
                           <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                         )}
                       </div>
