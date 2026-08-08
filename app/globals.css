@@ -124,7 +124,7 @@
 }
 
 /* ==========================================================================
-   STRICT SINGLE-COLOR DARK MODE SYSTEM (#0B0F17 FOR EVERYTHING)
+   CLEAN & STRICT DARK MODE SYSTEM (#0B0F17 BACKGROUND, PURE WHITE TEXT & ICONS)
    ========================================================================== */
 html.dark,
 html.dark body,
@@ -158,10 +158,10 @@ html.dark .card-dark,
 html.dark aside .card,
 html.dark .sticky {
   background-color: #0b0f17 !important;
-  color: #f1f5f9 !important;
+  color: #ffffff !important;
 }
 
-/* Cards & Inputs use crisp subtle borders to delineate shape on single dark background */
+/* Cards & Inputs use crisp subtle borders on #0b0f17 background */
 html.dark .card,
 html.dark .card-dark,
 html.dark aside .card {
@@ -169,55 +169,66 @@ html.dark aside .card {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Text Inversion */
+/* FORCE ALL TEXT, HEADINGS, LABELS, AI TEXT, AND ARROWS TO PURE WHITE #FFFFFF */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark p,
+html.dark span,
+html.dark label,
+html.dark a,
+html.dark div,
 html.dark .text-dark-950,
 html.dark .text-dark-900,
 html.dark .text-dark-800,
-html.dark .text-dark-700 {
+html.dark .text-dark-700,
+html.dark .text-dark-600 {
   color: #ffffff !important;
 }
 
-html.dark .text-dark-600,
-html.dark .text-dark-500 {
+html.dark .text-dark-500,
+html.dark .text-dark-400 {
   color: #94a3b8 !important;
 }
 
-html.dark .text-dark-400 {
-  color: #64748b !important;
-}
-
-/* High-Contrast Accents */
-html.dark .text-primary {
-  color: #60a5fa !important;
-}
-
-html.dark .text-secondary {
-  color: #fbbf24 !important;
-}
-
-html.dark .bg-primary\/10 {
-  background-color: rgba(37, 99, 235, 0.25) !important;
-  color: #60a5fa !important;
-}
-
-html.dark .bg-secondary\/10 {
-  background-color: rgba(245, 158, 11, 0.2) !important;
-  color: #fbbf24 !important;
-}
-
-/* Form Inputs & Selects - Single Dark Background */
+/* Form Inputs, Search Bar & AI Assistant Input Text */
 html.dark .input,
 html.dark input,
 html.dark textarea,
 html.dark select {
   background-color: #0b0f17 !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
   color: #ffffff !important;
+}
+
+/* KEEP TRANSPARENT INPUTS (LIKE HERO AI BAR) 100% TRANSPARENT */
+html.dark input.bg-transparent,
+html.dark input[class*="bg-transparent"] {
+  background-color: transparent !important;
 }
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #64748b !important;
+  color: #94a3b8 !important;
+}
+
+/* Light Badge Pills in Dark Mode (Escrow, Category, Status Pills) */
+html.dark .bg-primary-50,
+html.dark .bg-blue-50,
+html.dark .bg-accent-50,
+html.dark .bg-indigo-50,
+html.dark .badge-primary {
+  background-color: rgba(37, 99, 235, 0.2) !important;
+  color: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.4) !important;
+}
+
+html.dark .bg-primary-50 *,
+html.dark .bg-blue-50 * {
+  color: #ffffff !important;
 }
 
 html.dark option {
@@ -225,21 +236,14 @@ html.dark option {
   color: #ffffff !important;
 }
 
-/* SVG Waves strictly match #0b0f17 */
-html.dark svg path {
-  fill: #0b0f17 !important;
-  color: #0b0f17 !important;
+/* Primary Blue Buttons Retain Vibrant Blue with Crisp White Text */
+html.dark .btn-primary,
+html.dark .bg-primary {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
 }
 
-/* Neutralize Blur Fog in Dark Mode */
-html.dark .blur-3xl,
-html.dark .blur-2xl {
-  display: none !important;
-}
-
-/* ==========================================================================
-   STRICT PURE WHITE LOGOS & ICONS IN DARK MODE (#FFFFFF)
-   ========================================================================== */
+/* Icon Containers in Dark Mode */
 html.dark .w-14.h-14,
 html.dark .w-12.h-12,
 html.dark .w-16.h-16,
@@ -247,33 +251,36 @@ html.dark .w-10.h-10,
 html.dark .w-8.h-8,
 html.dark .bg-primary\/10,
 html.dark .bg-blue-500\/10,
-html.dark .bg-blue-500\/20,
 html.dark .bg-emerald-500\/10,
-html.dark .bg-emerald-500\/20,
-html.dark .bg-amber-500\/10,
-html.dark .bg-amber-500\/20 {
-  background-color: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+html.dark .bg-amber-500\/10 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
-/* FORCE EVERY LOGO, ICON, & SVG IN DARK MODE TO BE PURE WHITE #FFFFFF */
-html.dark .w-14.h-14 svg,
-html.dark .w-12.h-12 svg,
-html.dark .w-16.h-16 svg,
-html.dark .w-10.h-10 svg,
-html.dark .w-8.h-8 svg,
+/* ALL LUCIDE ICONS, ARROWS & SVGS IN DARK MODE -> PURE WHITE #FFFFFF */
+html.dark svg,
+html.dark svg line,
+html.dark svg polyline,
+html.dark svg circle,
+html.dark svg rect,
 html.dark .card svg,
 html.dark .badge svg,
-html.dark .bg-amber-500\/10 svg,
-html.dark .bg-emerald-500\/10 svg,
-html.dark .bg-blue-500\/10 svg,
-html.dark .text-blue-600,
-html.dark .text-blue-500,
-html.dark .text-emerald-600,
-html.dark .text-amber-600 {
+html.dark button svg {
   color: #ffffff !important;
-  stroke: #ffffff !important;
 }
+
+/* SVG Wave Dividers Match #0b0f17 */
+html.dark .relative > svg path,
+html.dark div.overflow-hidden > svg path {
+  fill: #0b0f17 !important;
+}
+
+/* Neutralize Background Blur Glows */
+html.dark .blur-3xl,
+html.dark .blur-2xl {
+  display: none !important;
+}
+
 
 
 

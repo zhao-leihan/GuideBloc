@@ -193,13 +193,16 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Toggle Button */}
-        <button
-          className="md:hidden p-2 rounded-full hover:bg-white/10 text-white transition-colors"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </button>
+        {/* Mobile Action & Toggle Button */}
+        <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
+          <button
+            className="p-2 rounded-full hover:bg-white/10 text-white transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+        </div>
 
         {/* Mobile Nav Menu */}
         <AnimatePresence>

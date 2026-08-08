@@ -264,8 +264,8 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 border border-primary-200/60 text-primary-700 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-primary-600" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 dark:bg-primary/20 dark:border-primary/40 dark:text-white border border-primary-200/60 text-primary-700 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-primary-600 dark:text-white" />
               <span>Decentralized Escrow Protection</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display">

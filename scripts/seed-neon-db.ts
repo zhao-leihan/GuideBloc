@@ -4,10 +4,14 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding Neon DB Cloud Database (Users Only, No Monas Gig)...");
+  console.log("Seeding Neon DB Cloud Database (Wiping sample gigs)...");
   const hashedPassword = await bcrypt.hash("@Rayhan3723", 10);
 
-  // 1. Admin: Zhao Han
+  // 1. Wipe all dummy/sample gigs from Neon DB
+  const deletedGigs = await prisma.gig.deleteMany({});
+  console.log(`Wiped ${deletedGigs.count} sample gig(s) from Neon DB.`);
+
+  // 2. Admin: Zhao Han
   const admin = await prisma.user.upsert({
     where: { email: "zhaohan@explormate.com" },
     update: {
@@ -27,7 +31,7 @@ async function main() {
   });
   console.log("Admin seeded:", admin.email);
 
-  // 2. Tourist: Rayhan Abbrar
+  // 3. Tourist: Rayhan Abbrar
   const tourist = await prisma.user.upsert({
     where: { email: "rayhanabbrar233@gmail.com" },
     update: {
@@ -45,7 +49,7 @@ async function main() {
   });
   console.log("Tourist seeded:", tourist.email);
 
-  // 3. Guide: Gracia
+  // 4. Guide: Gracia
   const guide = await prisma.user.upsert({
     where: { email: "clashroyalg404@gmail.com" },
     update: {
@@ -67,17 +71,7 @@ async function main() {
   });
   console.log("Guide seeded:", guide.email);
 
-  // 4. Remove Monas sample gigs completely
-  const deleted = await prisma.gig.deleteMany({
-    where: {
-      title: { contains: "Monas" }
-    }
-  });
-  if (deleted.count > 0) {
-    console.log(`Removed ${deleted.count} Monas sample gig(s) from database.`);
-  }
-
-  console.log("Neon DB Seeding Complete (Clean users ready)!");
+  console.log("Neon DB Seeding Complete (Clean state ready)!");
 }
 
 main()
