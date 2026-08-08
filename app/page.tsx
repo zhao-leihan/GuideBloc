@@ -243,7 +243,7 @@ export default function HomePage() {
         {/* SVG Curved Wave Divider */}
         <div className="absolute bottom-[-1px] left-0 right-0 w-full overflow-hidden leading-[0]">
           <svg className="relative block w-full h-[60px] md:h-[80px]" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.33,90,26.9,165.73,46.56,252.1,69.28,321.39,56.44Z" className="fill-white dark:fill-[#0b0f17]"></path>
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.33,90,26.9,165.73,46.56,252.1,69.28,321.39,56.44Z" fill="#FFFFFF" className="fill-white dark:fill-[#0b0f17]"></path>
           </svg>
         </div>
       </section>
@@ -264,9 +264,9 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 dark:bg-primary/20 dark:border-primary/40 dark:text-white border border-primary-200/60 text-primary-700 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-primary-600 dark:text-white" />
-              <span>Decentralized Escrow Protection</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 dark:bg-primary/20 dark:border-primary/40 border border-primary-200/60 text-xs font-bold uppercase tracking-wider escrow-badge-text">
+              <ShieldCheck className="w-4 h-4 escrow-badge-text" style={{ color: "#000000" }} />
+              <span className="font-bold escrow-badge-text" style={{ color: "#000000" }}>Decentralized Escrow Protection</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
               Why Travelers & Guides Trust Explomate
