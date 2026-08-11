@@ -218,26 +218,6 @@ export default function HomePage() {
               <Users className="w-4 h-4" /> Become a Tour Guide
             </Link>
           </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, delay: 0.9, ease: "easeOut" }}
-            className="flex items-center justify-center gap-8 md:gap-16"
-          >
-            {[
-              { value: "150+", label: "Tour Guides" },
-              { value: "12+", label: "Countries" },
-              { value: "1,200+", label: "Happy Tourists" },
-              { value: "$45K+", label: "Paid in Crypto" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
-                <p className="text-sm text-white">{stat.label}</p>
-              </div>
-            ))}
-          </motion.div>
         </div>
 
         {/* SVG Curved Wave Divider */}
