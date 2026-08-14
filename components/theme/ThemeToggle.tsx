@@ -17,9 +17,9 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
       } else {
         document.documentElement.classList.remove("dark");
       }
-    } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
+    } else {
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 

@@ -1,8 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, CheckCircle2, AlertCircle, ExternalLink, QrCode, ArrowLeft, ShieldCheck, Copy, AlertTriangle, Building2, Send, Clock, RotateCcw, Headset, Instagram, Mail, ShieldAlert } from "lucide-react";
+import { 
+  X, Loader2, CheckCircle2, AlertCircle, ArrowLeft, 
+  ShieldCheck, Copy, AlertTriangle, QrCode, RotateCcw, 
+  ChevronRight, RefreshCw, Check, Sparkles
+} from "lucide-react";
 import toast from "react-hot-toast";
+import { 
+  fetchConnectedAccountsDetails, 
+  WalletAccountDetails, 
+  SupportedWalletType, 
+  SupportedNetwork,
+  isMobileBrowser, 
+  openMobileWalletDeepLink,
+  getTokenAddress,
+  getEscrowAddress
+} from "@/lib/crypto/payment";
+import { ethers } from "ethers";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -15,17 +30,134 @@ interface PaymentModalProps {
   onConfirm?: (txHash: string) => void;
 }
 
+// Exact USDC & USDT Token Logos from Footer.tsx
+const USDCLogo = (
+  <img 
+    src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" 
+    alt="USDC" 
+    className="w-5 h-5 object-contain flex-shrink-0" 
+  />
+);
+
+const USDTLogo = (
+  <img 
+    src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" 
+    alt="USDT" 
+    className="w-5 h-5 object-contain flex-shrink-0" 
+  />
+);
+
+// Official Avalanche C-Chain & Base L2 Network Logos
+const AvaxLogo = (
+  <img 
+    src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" 
+    alt="AVAX" 
+    className="w-4 h-4 object-contain flex-shrink-0" 
+  />
+);
+
+const BaseLogo = (
+  <img 
+    src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" 
+    alt="Base" 
+    className="w-4 h-4 object-contain flex-shrink-0 bg-white rounded-full p-0.5" 
+  />
+);
+
+// High-Definition Official Web3 Wallet Logos
+const WalletLogos: Record<string, React.ReactNode> = {
+  metamask: (
+    <img 
+      src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
+      alt="MetaMask" 
+      className="w-7 h-7 flex-shrink-0 object-contain" 
+    />
+  ),
+  coinbase: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#0052FF"/>
+      <rect x="9" y="9" width="14" height="14" rx="3" fill="white"/>
+      <rect x="12" y="12" width="8" height="8" rx="1.5" fill="#0052FF"/>
+    </svg>
+  ),
+  trust: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#0500FF"/>
+      <path d="M16 6L7 11V17C7 22.5 10.8 27.6 16 29C21.2 27.6 25 22.5 25 17V11L16 6Z" fill="#3375BB"/>
+      <path d="M16 8L9 11.9V16.8C9 21.1 12 25 16 26.1V8Z" fill="white"/>
+    </svg>
+  ),
+  rainbow: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#1C1C1E"/>
+      <path d="M7 23C7 18.0294 11.0294 14 16 14C20.9706 14 25 18.0294 25 23" stroke="#FF453A" strokeWidth="3.5" strokeLinecap="round"/>
+      <path d="M10 23C10 19.6863 12.6863 17 16 17C19.3137 17 22 19.6863 22 23" stroke="#FF9F0A" strokeWidth="3.5" strokeLinecap="round"/>
+      <path d="M13 23C13 21.3431 14.3431 20 16 20C17.6569 20 19 21.3431 19 23" stroke="#30D158" strokeWidth="3.5" strokeLinecap="round"/>
+    </svg>
+  ),
+  okx: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="16" fill="#000000"/>
+      <rect x="7" y="7" width="6" height="6" fill="white"/>
+      <rect x="19" y="7" width="6" height="6" fill="white"/>
+      <rect x="13" y="13" width="6" height="6" fill="white"/>
+      <rect x="7" y="19" width="6" height="6" fill="white"/>
+      <rect x="19" y="19" width="6" height="6" fill="white"/>
+    </svg>
+  ),
+  phantom: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#AB9FF2"/>
+      <path d="M22.5 16.5C22.5 12.9101 19.5899 10 16 10C12.4101 10 9.5 12.9101 9.5 16.5C9.5 20.0899 12.4101 23 16 23C16.8 23 17.5 22.8 18.2 22.5L20 24L21.5 22.5L20 21C21.5 19.8 22.5 18.2 22.5 16.5Z" fill="white"/>
+      <circle cx="13.5" cy="15.5" r="1.5" fill="#AB9FF2"/>
+      <circle cx="18.5" cy="15.5" r="1.5" fill="#AB9FF2"/>
+    </svg>
+  ),
+  zerion: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#2962FF"/>
+      <path d="M8 10H24L14 18H24V22H8L18 14H8V10Z" fill="white"/>
+    </svg>
+  ),
+};
+
+const WALLET_OPTIONS: {
+  id: SupportedWalletType;
+  name: string;
+  desc: string;
+  badge?: string;
+}[] = [
+  { id: "metamask", name: "MetaMask", desc: "Popular Web3 Extension & Mobile App", badge: "Popular" },
+  { id: "coinbase", name: "Coinbase Wallet", desc: "Self-Custody Web3 & Mobile Wallet", badge: "Recommended" },
+  { id: "trust", name: "Trust Wallet", desc: "Multi-Chain Crypto Mobile App" },
+  { id: "rainbow", name: "Rainbow Wallet", desc: "Fun, Fast & Simple EVM Wallet" },
+  { id: "okx", name: "OKX Wallet", desc: "Multi-Chain Web3 & Exchange Wallet" },
+  { id: "phantom", name: "Phantom (EVM)", desc: "Multi-Chain Solana & EVM Wallet" },
+  { id: "zerion", name: "Zerion Wallet", desc: "Smart Web3 Portfolio & DeFi Wallet" },
+];
+
 export default function PaymentModal({
   isOpen,
   onClose,
   amount,
-  token = "USDC",
+  token: initialToken = "USDC",
   gigTitle,
   bookingDate,
   bookingId = "BK_" + Math.floor(100000 + Math.random() * 900000),
   onConfirm,
 }: PaymentModalProps) {
-  const [step, setStep] = useState<"select_method" | "qr_scan" | "exchange_transfer" | "verify_txhash" | "processing" | "success" | "error">("select_method");
+  const [selectedNetwork, setSelectedNetwork] = useState<SupportedNetwork>("avalanche");
+  const [selectedToken, setSelectedToken] = useState<"USDT" | "USDC">(initialToken);
+  const [step, setStep] = useState<
+    "select_wallet" | "select_account" | "qr_scan" | "verify_txhash" | "processing" | "success" | "error"
+  >("select_wallet");
+
+  const [selectedWalletType, setSelectedWalletType] = useState<SupportedWalletType>("metamask");
+  const [connecting, setConnecting] = useState(false);
+  const [connectedAccounts, setConnectedAccounts] = useState<WalletAccountDetails[]>([]);
+  const [selectedAccountAddress, setSelectedAccountAddress] = useState<string>("");
+  const [browserProvider, setBrowserProvider] = useState<ethers.BrowserProvider | null>(null);
+
   const [inputTxHash, setInputTxHash] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -34,21 +166,135 @@ export default function PaymentModal({
 
   if (!isOpen) return null;
 
-  const treasuryAddress = "0x079D9c349741C27565ee04e31E4174F640F512aE"; // Exodus / Treasury Vault
-  const escrowAddress = "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";   // Explomate Escrow Contract
-
-  // Generate Unique Decimal Tag (e.g. $100.0123)
+  const escrowAddress = getEscrowAddress(selectedNetwork);
   const uniqueDecimalTag = (amount + 0.0123).toFixed(4);
-
-  // EIP-681 Standard QR URI for Base L2 Network
-  const eip681Uri = `ethereum:${escrowAddress}@8453/transfer?address=${treasuryAddress}&uint256=${Math.round(amount * 1e6)}`;
+  const chainIdNum = selectedNetwork === "avalanche" ? 43113 : 8453;
+  const eip681Uri = `ethereum:${escrowAddress}@${chainIdNum}/transfer?address=${escrowAddress}&uint256=${Math.round(amount * 1e6)}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(eip681Uri)}`;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard!`);
+    toast.success(`${label} copied!`);
   };
 
+  // Connect to wallet, trigger permissions account prompt & fetch USDC/USDT balance
+  const handleConnectWalletType = async (
+    walletType: SupportedWalletType, 
+    tokenOverride?: "USDT" | "USDC",
+    networkOverride?: SupportedNetwork
+  ) => {
+    const activeToken = tokenOverride || selectedToken;
+    const activeNetwork = networkOverride || selectedNetwork;
+    setSelectedWalletType(walletType);
+    setConnecting(true);
+    setError(null);
+    const toastId = toast.loading(`Connecting to ${walletType} on ${activeNetwork.toUpperCase()}...`);
+
+    try {
+      const res = await fetchConnectedAccountsDetails(activeNetwork, amount, walletType, activeToken);
+      toast.dismiss(toastId);
+
+      setConnectedAccounts(res.accounts);
+      setSelectedAccountAddress(res.selectedAddress || res.accounts[0]?.address || "");
+      setBrowserProvider(res.provider);
+      setStep("select_account");
+      toast.success(`Connected to ${walletType}!`);
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      console.error(err);
+      
+      if (isMobileBrowser()) {
+        const redirected = openMobileWalletDeepLink(walletType);
+        if (redirected) {
+          toast.loading(`Opening ${walletType} Mobile App...`);
+          return;
+        }
+      }
+      toast.error(err.message || `Failed to connect to ${walletType}`);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  // Switch network dynamically
+  const handleSwitchNetwork = async (newNetwork: SupportedNetwork) => {
+    setSelectedNetwork(newNetwork);
+    if (step === "select_account" && selectedWalletType) {
+      await handleConnectWalletType(selectedWalletType, selectedToken, newNetwork);
+    }
+  };
+
+  // Switch token between USDC and USDT dynamically
+  const handleSwitchToken = async (newToken: "USDT" | "USDC") => {
+    setSelectedToken(newToken);
+    if (step === "select_account" && selectedWalletType) {
+      await handleConnectWalletType(selectedWalletType, newToken, selectedNetwork);
+    }
+  };
+
+  // Execute On-Chain Web3 Escrow Payment using Selected Account
+  const handleExecutePayment = async () => {
+    if (!browserProvider || !selectedAccountAddress) {
+      toast.error("Please select a Web3 account first");
+      return;
+    }
+
+    const currentAcc = connectedAccounts.find(a => a.address.toLowerCase() === selectedAccountAddress.toLowerCase());
+    if (currentAcc && currentAcc.usdcBalance < amount) {
+      toast.error(`Insufficient ${selectedToken} balance (${currentAcc.formattedUsdc} ${selectedToken}). Required: ${amount.toFixed(2)} ${selectedToken}.`);
+      return;
+    }
+
+    setStep("processing");
+    setVerifyStage(1);
+    const toastId = toast.loading(`Confirming ${selectedToken} transaction on ${selectedNetwork.toUpperCase()}...`);
+
+    try {
+      const signer = await browserProvider.getSigner(selectedAccountAddress);
+      const tokenAddress = getTokenAddress(selectedToken, selectedNetwork);
+      
+      const erc20Abi = [
+        "function transfer(address to, uint256 amount) external returns (bool)"
+      ];
+
+      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+      const amountUnits = ethers.parseUnits(amount.toString(), 6); // 6 decimals for USDC & USDT
+
+      setVerifyStage(2);
+      toast.loading(`Broadcasting ${selectedNetwork.toUpperCase()} ${selectedToken} transaction...`, { id: toastId });
+      const tx = await tokenContract.transfer(escrowAddress, amountUnits);
+
+      toast.loading(`Awaiting ${selectedNetwork.toUpperCase()} block confirmation...`, { id: toastId });
+      const receipt = await tx.wait();
+
+      setVerifyStage(3);
+      setTxHash(receipt.hash);
+
+      // Verify on backend
+      await fetch("/api/payments/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          txHash: receipt.hash,
+          token: selectedToken,
+          network: selectedNetwork
+        })
+      });
+
+      toast.dismiss(toastId);
+      setStep("success");
+      onConfirm?.(receipt.hash);
+      toast.success(`${selectedToken} payment confirmed on ${selectedNetwork.toUpperCase()} & locked in Escrow!`);
+    } catch (payErr: any) {
+      toast.dismiss(toastId);
+      console.error("Web3 payment error:", payErr);
+      setError(payErr.reason || payErr.message || "Web3 transaction was rejected or failed.");
+      setStep("error");
+    }
+  };
+
+  // Manual TxHash verification handler
   const handleVerifyManualTxHash = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputTxHash.trim() || inputTxHash.length < 10) {
@@ -59,10 +305,9 @@ export default function PaymentModal({
     setVerifying(true);
     setError(null);
     setVerifyStage(1);
-    const toastId = toast.loading("Connecting to Base L2 RPC Node...");
+    const toastId = toast.loading(`Connecting to ${selectedNetwork.toUpperCase()} RPC Node...`);
 
     try {
-      // Simulate Progress Indicator Stage 2
       setTimeout(() => setVerifyStage(2), 1200);
 
       const res = await fetch("/api/payments/verify", {
@@ -70,7 +315,9 @@ export default function PaymentModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
-          txHash: inputTxHash.trim()
+          txHash: inputTxHash.trim(),
+          token: selectedToken,
+          network: selectedNetwork
         })
       });
 
@@ -82,7 +329,7 @@ export default function PaymentModal({
         setTxHash(inputTxHash.trim());
         setStep("success");
         onConfirm?.(inputTxHash.trim());
-        toast.success("Payment verified on-chain! Official PDF receipt sent.");
+        toast.success("Payment verified on-chain!");
       } else {
         setError(data.message || "On-chain verification failed.");
         setStep("error");
@@ -97,362 +344,393 @@ export default function PaymentModal({
     }
   };
 
+  const selectedAccObj = connectedAccounts.find(a => a.address.toLowerCase() === selectedAccountAddress.toLowerCase());
+
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-dark-100 transition-all duration-300 my-8">
+    <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white rounded-3xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 transition-all duration-300">
         
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-dark-100 bg-dark-950 text-white">
-          <div className="flex items-center gap-2">
-            {step !== "select_method" && step !== "success" && step !== "processing" && (
-              <button 
-                onClick={() => {
-                  setError(null);
-                  setStep("select_method");
-                }}
-                className="text-dark-300 hover:text-white mr-1 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            )}
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                Explomate Web3 Checkout
-              </h3>
-              <p className="text-[10px] text-dark-400 font-mono">Booking ID: {bookingId}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-dark-400 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* CRITICAL WARNING BANNER */}
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-          <p className="text-xs font-semibold text-amber-900 leading-tight">
-            <strong>MANDATORY:</strong> Select <strong className="underline decoration-amber-500 font-bold">BASE L2 Network (Chain ID 8453)</strong>. DO NOT send via Ethereum Mainnet or funds will be lost!
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-5">
+        {/* Dynamic Explomate Royal Blue Header Banner (No Red) */}
+        <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 dark:from-blue-700 dark:via-indigo-800 dark:to-blue-900 p-5 sm:p-6 text-white overflow-hidden flex-shrink-0">
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
           
-          {/* Order Summary & Escrow Protection Badge */}
-          {step !== "processing" && step !== "success" && (
-            <div className="space-y-3">
-              <div className="bg-dark-50 rounded-2xl p-4 border border-dark-150">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <p className="text-[10px] uppercase font-bold tracking-wider text-dark-400">Tour Package</p>
-                    <p className="font-bold text-dark-900 text-sm leading-tight mt-0.5">{gigTitle}</p>
-                    <p className="text-xs text-dark-500 mt-1">{bookingDate}</p>
-                  </div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              {step !== "select_wallet" && step !== "success" && step !== "processing" && (
+                <button 
+                  onClick={() => {
+                    setError(null);
+                    setStep("select_wallet");
+                  }}
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+              )}
+
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <Sparkles className="w-3 h-3 text-cyan-200" /> Double Chain Web3 Escrow
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-dark-200">
-                  <span className="text-dark-600 text-xs font-medium">Total Amount Due</span>
-                  <span className="text-xl font-black text-primary">
-                    ${amount.toFixed(2)} {token}
+                <h3 className="text-base sm:text-lg font-black tracking-tight text-white leading-snug">
+                  Web3 Escrow Payment
+                </h3>
+              </div>
+            </div>
+
+            <button 
+              onClick={onClose} 
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Double Chain & Token Switcher Controls */}
+          <div className="mt-4 p-3 sm:p-3.5 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-2xl border border-white/25 space-y-3 relative z-10">
+            
+            {/* Row 1: Network Selection Pill Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-100">Select Network:</span>
+              <div className="bg-black/25 p-1 rounded-xl flex items-center gap-1 border border-white/20">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchNetwork("avalanche")}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    selectedNetwork === "avalanche" ? "bg-white text-blue-700 shadow-md" : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  {AvaxLogo} Avalanche C-Chain
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchNetwork("base")}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    selectedNetwork === "base" ? "bg-white text-blue-700 shadow-md" : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  {BaseLogo} Base L2
+                </button>
+              </div>
+            </div>
+
+            {/* Row 2: Token Switcher & Amount */}
+            <div className="pt-2 border-t border-white/15 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-[10px] uppercase font-bold tracking-wider text-cyan-100">Total Amount Due</p>
+                <p className="font-extrabold text-white text-xs truncate max-w-[140px] sm:max-w-[220px] mt-0.5">{gigTitle}</p>
+              </div>
+              
+              <div className="flex items-center gap-2.5">
+                <div className="bg-black/25 p-1 rounded-xl flex items-center gap-1 border border-white/20">
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchToken("USDC")}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedToken === "USDC" ? "bg-white text-slate-900 shadow-md" : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    {USDCLogo} USDC
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchToken("USDT")}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedToken === "USDT" ? "bg-white text-slate-900 shadow-md" : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    {USDTLogo} USDT
+                  </button>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight block leading-none">
+                    ${amount.toFixed(2)}
                   </span>
                 </div>
               </div>
+            </div>
 
-              {/* 🛡️ REFUND & CANCELLATION GUARANTEE POLICY CARD */}
-              <div className="bg-emerald-500/5 rounded-2xl p-3.5 border border-emerald-500/20 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-emerald-800 font-bold">
-                  <RotateCcw className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  100% Escrow Protection & Refund Guarantee
-                </div>
-                <ul className="space-y-1 text-dark-600 text-[11px] leading-relaxed">
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>Funds Locked in Smart Contract:</strong> Money is held securely and not released to guide until tour completion.</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>100% Full Refund Guarantee:</strong> If the guide cancels or fails to arrive, 100% of your funds are returned.</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span><strong>Free 24h Cancellation:</strong> Cancel free of charge up to 24 hours before the scheduled tour time.</span>
-                  </li>
-                </ul>
+          </div>
+        </div>
+
+        {/* Modal Body with Single Clean Scrollbar & Responsive Laptop Grid */}
+        <div className="p-5 sm:p-6 space-y-5 bg-white dark:bg-[#0f172a] overflow-y-auto flex-1">
+
+          {/* Escrow Guarantee Pill */}
+          {step !== "processing" && step !== "success" && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl p-3 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-emerald-900 dark:text-emerald-300 leading-tight">100% Escrow Protected ({selectedNetwork.toUpperCase()} - {selectedToken})</p>
+                <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Funds locked safely in Smart Contract until tour completes.</p>
               </div>
             </div>
           )}
 
-          {/* 1. SELECT PAYMENT METHOD */}
-          {step === "select_method" && (
+          {/* STEP 1: SELECT WEB3 WALLET */}
+          {step === "select_wallet" && (
             <div className="space-y-3">
-              <p className="text-xs text-dark-500 font-semibold mb-3">Select Web3 Payment Method:</p>
-              
-              {/* Scenario A: Scan QR Code */}
-              <button
-                onClick={() => setStep("qr_scan")}
-                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-2xl hover:border-primary hover:bg-primary/5 transition-all text-left group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <QrCode className="w-6 h-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-dark-900 text-sm">Scan QR Code (MetaMask / E-Wallet)</span>
-                    <span className="text-[9px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">Scenario A</span>
-                  </div>
-                  <span className="text-xs text-dark-400 block mt-0.5">Scan via MetaMask Mobile, Rainbow, or WalletConnect</span>
-                </div>
-              </button>
-
-              {/* Scenario B: Exchange / Direct Transfer */}
-              <button
-                onClick={() => setStep("exchange_transfer")}
-                className="w-full flex items-center gap-4 p-4 border border-dark-200 rounded-2xl hover:border-secondary hover:bg-secondary/5 transition-all text-left group"
-              >
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <Building2 className="w-6 h-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-dark-900 text-sm">Transfer via Exchange / Direct Tx</span>
-                    <span className="text-[9px] bg-secondary/10 text-secondary font-bold px-2 py-0.5 rounded-full">Scenario B</span>
-                  </div>
-                  <span className="text-xs text-dark-400 block mt-0.5">Indodax, Tokocrypto, Binance, OKX, or Other Wallet</span>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* SCENARIO A: QR CODE SCAN DISPLAY */}
-          {step === "qr_scan" && (
-            <div className="text-center space-y-4 animate-in fade-in duration-200">
-              <p className="text-xs text-dark-600 font-medium">
-                Scan the QR Code below using <strong>MetaMask Mobile</strong> or <strong>Rainbow</strong> on your phone:
-              </p>
-              
-              <div className="p-4 bg-white rounded-2xl border-2 border-dark-200 inline-block shadow-md">
-                <img src={qrCodeUrl} alt="Base L2 EIP-681 QR Code" className="w-48 h-48 mx-auto object-contain rounded-lg" />
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">Select Web3 Wallet:</span>
+                <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-extrabold bg-blue-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded-full border border-blue-200 dark:border-cyan-800">
+                  {selectedNetwork.toUpperCase()} • {selectedToken}
+                </span>
               </div>
 
-              <div className="p-3 bg-dark-50 rounded-xl border border-dark-150 text-left text-xs space-y-1 font-mono">
-                <div className="flex justify-between items-center">
-                  <span className="text-dark-500 font-sans">Network:</span>
-                  <span className="font-bold text-dark-900">Base L2 (Chain ID 8453)</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-dark-500 font-sans">Contract Vault:</span>
-                  <span className="font-bold text-primary truncate max-w-[180px]">{escrowAddress}</span>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-dark-400 italic">
-                Once confirmed on mobile, our webhook automatically verifies and emails your receipt.
-              </p>
-
-              <button
-                onClick={() => setStep("verify_txhash")}
-                className="btn-outline w-full py-2.5 text-xs font-bold rounded-xl"
-              >
-                Already Transferred? Enter TxHash Manually ➔
-              </button>
-            </div>
-          )}
-
-          {/* SCENARIO B: EXCHANGE & DIRECT TRANSFER INSTRUCTIONS */}
-          {step === "exchange_transfer" && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              {/* Supported Exchange Logos */}
-              <div className="p-3 bg-dark-50 rounded-xl border border-dark-150 flex items-center justify-between text-xs">
-                <span className="font-semibold text-dark-600">Supported Exchanges:</span>
-                <div className="flex items-center gap-2 font-bold text-dark-800 text-[11px]">
-                  <span className="bg-white px-2 py-1 rounded border shadow-2xs">Indodax</span>
-                  <span className="bg-white px-2 py-1 rounded border shadow-2xs">Tokocrypto</span>
-                  <span className="bg-white px-2 py-1 rounded border shadow-2xs">Binance</span>
-                </div>
-              </div>
-
-              {/* METHOD A: UNIQUE DECIMAL TAG */}
-              <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-primary uppercase">Method A: Send Unique Amount</span>
-                  <span className="text-[10px] bg-primary text-white font-bold px-2 py-0.5 rounded-full">Auto-Matched</span>
-                </div>
-                <p className="text-xs text-dark-600 leading-relaxed">
-                  If your Exchange supports decimal precision, transfer the exact unique amount below:
-                </p>
-                <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-primary/30 font-mono">
-                  <span className="text-base font-black text-primary">${uniqueDecimalTag} USDC</span>
+              {/* Wallet Options Grid (Single column on HP, 2 Columns on Laptop) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {WALLET_OPTIONS.map((w) => (
                   <button
-                    onClick={() => copyToClipboard(uniqueDecimalTag, "Unique Amount")}
-                    className="p-1.5 hover:bg-dark-100 rounded-lg text-dark-500 hover:text-dark-900"
+                    key={w.id}
+                    disabled={connecting}
+                    onClick={() => handleConnectWalletType(w.id)}
+                    className="w-full flex items-center gap-3 p-3 sm:p-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-blue-500 dark:hover:border-cyan-500 hover:bg-blue-50/50 dark:hover:bg-cyan-950/40 transition-all text-left group cursor-pointer bg-slate-50 dark:bg-slate-900/60"
                   >
-                    <Copy className="w-4 h-4" />
+                    {WalletLogos[w.id]}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{w.name}</span>
+                        {w.badge && (
+                          <span className="text-[8px] bg-blue-50 dark:bg-cyan-500/10 text-blue-600 dark:text-cyan-400 font-bold px-1.5 py-0.5 rounded-full border border-blue-200 dark:border-cyan-500/20">{w.badge}</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">{w.desc}</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-500 dark:group-hover:text-cyan-500 transition-colors flex-shrink-0" />
                   </button>
-                </div>
+                ))}
               </div>
 
-              {/* VAULT TARGET ADDRESS */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-dark-700 block">Target Deposit Vault Address:</label>
-                <div className="flex items-center justify-between bg-dark-50 p-2.5 rounded-xl border border-dark-200 font-mono text-xs">
-                  <span className="truncate text-dark-900 font-bold">{treasuryAddress}</span>
-                  <button
-                    onClick={() => copyToClipboard(treasuryAddress, "Vault Address")}
-                    className="p-1.5 hover:bg-dark-200 rounded-lg text-dark-600 hover:text-dark-900"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-2">
+              {/* Auxiliary Quick Actions */}
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  onClick={() => setStep("qr_scan")}
+                  className="flex-1 p-3 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-900/60"
+                >
+                  <QrCode className="w-4 h-4 text-blue-600 dark:text-cyan-400" /> {selectedNetwork.toUpperCase()} QR
+                </button>
                 <button
                   onClick={() => setStep("verify_txhash")}
-                  className="btn-primary w-full py-3 text-xs font-bold rounded-xl flex items-center justify-center gap-2"
+                  className="flex-1 p-3 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-900/60"
                 >
-                  <Send className="w-4 h-4" />
-                  Enter TxHash for On-Chain Verification
+                  Paste TxHash
                 </button>
               </div>
             </div>
           )}
 
-          {/* VERIFY TXHASH FORM WITH LIVE PROGRESS INDICATOR */}
-          {step === "verify_txhash" && (
-            <form onSubmit={handleVerifyManualTxHash} className="space-y-4 animate-in fade-in duration-200">
-              
-              {/* ⏱️ REAL-TIME PAYMENT PROGRESS INDICATOR */}
-              {verifying && (
-                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 space-y-3 animate-pulse">
-                  <div className="flex justify-between items-center text-xs font-bold text-primary">
-                    <span>Blockchain Verification Progress</span>
-                    <span>Stage {verifyStage} of 3</span>
-                  </div>
-                  <div className="w-full bg-dark-200 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-primary h-full transition-all duration-500 ease-out" 
-                      style={{ width: `${(verifyStage / 3) * 100}%` }}
-                    />
-                  </div>
-                  <div className="text-[11px] text-dark-600 font-medium space-y-1">
-                    {verifyStage === 1 && <p className="flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 text-primary animate-spin inline-block" /> Connecting to Base L2 RPC Node...</p>}
-                    {verifyStage === 2 && <p className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse inline-block" /> Awaiting blockchain confirmation (~2 min confirmation window)...</p>}
-                    {verifyStage === 3 && <p className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 inline-block" /> Transaction verified on-chain & Escrow locked!</p>}
-                  </div>
+          {/* STEP 2: ACCOUNT CHOOSER & BALANCE PREVIEW */}
+          {step === "select_account" && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">Select Account for Booking:</span>
+                <button
+                  onClick={() => handleConnectWalletType(selectedWalletType)}
+                  className="text-[11px] text-blue-600 dark:text-cyan-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className="w-3 h-3" /> Switch/Choose in Wallet
+                </button>
+              </div>
+
+              {/* Account Cards List */}
+              <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+                {connectedAccounts.map((acc, index) => {
+                  const isSelected = acc.address.toLowerCase() === selectedAccountAddress.toLowerCase();
+                  return (
+                    <div
+                      key={acc.address}
+                      onClick={() => setSelectedAccountAddress(acc.address)}
+                      className={`p-4 border rounded-2xl transition-all cursor-pointer ${
+                        isSelected 
+                          ? "border-blue-500 dark:border-cyan-500 bg-blue-500/10 dark:bg-cyan-500/15 ring-2 ring-blue-500/30" 
+                          : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-blue-500 bg-blue-600 text-white" : "border-slate-300 dark:border-slate-700"}`}>
+                            {isSelected && <Check className="w-3 h-3" />}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 dark:text-white text-xs block">
+                              Account {index + 1}
+                            </span>
+                            <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                              {acc.address.slice(0, 8)}...{acc.address.slice(-6)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            copyToClipboard(acc.address, `Account ${index + 1} Address`);
+                          }}
+                          className="text-slate-400 hover:text-blue-500 dark:hover:text-cyan-400 p-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Balance Details Pill Bar */}
+                      <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            {selectedToken === "USDC" ? USDCLogo : USDTLogo}
+                            <div>
+                              <span className="text-[10px] text-slate-400 uppercase font-bold block">{selectedToken} ({selectedNetwork.toUpperCase()})</span>
+                              <span className="font-extrabold text-slate-900 dark:text-white font-mono">{acc.formattedUsdc}</span>
+                            </div>
+                          </div>
+                          <div className="pl-2 border-l border-slate-200 dark:border-slate-800">
+                            <span className="text-[10px] text-slate-400 uppercase font-bold block">Gas ({selectedNetwork === "avalanche" ? "AVAX" : "ETH"})</span>
+                            <span className="font-semibold text-slate-600 dark:text-slate-300 font-mono">{acc.ethBalance}</span>
+                          </div>
+                        </div>
+
+                        {acc.hasEnoughBalance ? (
+                          <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3" /> Sufficient
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold bg-amber500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-500/20">
+                            <AlertCircle className="w-3 h-3" /> Low Balance
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Insufficient Balance Alert */}
+              {selectedAccObj && !selectedAccObj.hasEnoughBalance && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-900 dark:text-amber-300 font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span>Selected account has <strong>{selectedAccObj.formattedUsdc} {selectedToken}</strong>. Booking total is <strong>{amount.toFixed(2)} {selectedToken}</strong>. Please switch account or top up {selectedToken}.</span>
                 </div>
               )}
 
-              <div>
-                <label className="text-xs font-bold text-dark-800 block mb-1">
-                  Enter Transaction Hash (TxHash / TxID):
-                </label>
-                <p className="text-[11px] text-dark-500 mb-2 leading-relaxed">
-                  Copy the 66-character TxHash (starting with <code>0x...</code>) from your Exchange withdrawal or wallet history:
+              <button
+                disabled={!selectedAccObj || !selectedAccObj.hasEnoughBalance}
+                onClick={handleExecutePayment}
+                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-600 dark:to-indigo-600 text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 disabled:opacity-50 cursor-pointer transition-all"
+              >
+                <ShieldCheck className="w-4 h-4" /> Confirm & Pay ${amount.toFixed(2)} {selectedToken} ({selectedNetwork.toUpperCase()}) ➔
+              </button>
+            </div>
+          )}
+
+          {/* SCAN BASE QR CODE STEP */}
+          {step === "qr_scan" && (
+            <div className="space-y-4 animate-in fade-in duration-200 text-center">
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center">
+                <div className="bg-white p-3 rounded-2xl shadow-md border border-slate-200 mb-2">
+                  <img src={qrCodeUrl} alt="Escrow QR Code" className="w-44 h-44 object-contain rounded-lg" />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Scan via Mobile Web3 App (MetaMask, Coinbase, Trust, Rainbow)
                 </p>
-                <input
-                  type="text"
-                  required
-                  placeholder="0x8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a"
-                  value={inputTxHash}
-                  onChange={(e) => setInputTxHash(e.target.value)}
-                  className="input-field font-mono text-xs w-full p-3 border-dark-300 focus:border-primary"
-                />
               </div>
+
+              <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 text-left flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">{selectedNetwork.toUpperCase()} Escrow Address</span>
+                  <span className="text-xs font-mono font-semibold text-slate-900 dark:text-white truncate block">{escrowAddress}</span>
+                </div>
+                <button onClick={() => copyToClipboard(escrowAddress, "Escrow Address")} className="text-blue-600 dark:text-cyan-400 hover:underline text-xs font-bold p-1">
+                  Copy
+                </button>
+              </div>
+
+              <button onClick={() => setStep("verify_txhash")} className="w-full py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+                Done Payment? Enter TxHash Manually ➔
+              </button>
+            </div>
+          )}
+
+          {/* VERIFY MANUAL TXHASH STEP */}
+          {step === "verify_txhash" && (
+            <form onSubmit={handleVerifyManualTxHash} className="space-y-4 animate-in fade-in duration-200">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-900 dark:text-white block">Enter {selectedNetwork.toUpperCase()} Transaction Hash (TxHash):</label>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Paste the 66-character <code>0x...</code> hash from your Web3 wallet transaction receipt.</p>
+              </div>
+
+              <input
+                type="text"
+                value={inputTxHash}
+                onChange={(e) => setInputTxHash(e.target.value)}
+                placeholder="e.g. 0x123abc456def789..."
+                className="w-full p-3.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-xl focus:border-blue-500 outline-none text-xs font-mono text-slate-900 dark:text-white"
+              />
 
               <button
                 type="submit"
-                disabled={verifying}
-                className="btn-primary w-full py-3 text-xs font-bold rounded-xl flex items-center justify-center gap-2"
+                disabled={verifying || !inputTxHash.trim()}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20"
               >
-                {verifying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Verifying on Base L2 Blockchain...
-                  </>
-                ) : (
-                  <>
-                    Verify Payment Now
-                  </>
-                )}
+                {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Verify On-Chain Payment ➔
               </button>
             </form>
           )}
 
+          {/* PROCESSING STEP */}
+          {step === "processing" && (
+            <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+              <Loader2 className="w-10 h-10 text-blue-600 dark:text-cyan-400 animate-spin" />
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white text-base">Processing Web3 Escrow Transaction</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Connecting to {selectedNetwork.toUpperCase()} RPC Node & Confirming Block ({selectedToken})...</p>
+              </div>
+            </div>
+          )}
+
           {/* SUCCESS STEP */}
           {step === "success" && (
-            <div className="text-center py-4 space-y-3">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+            <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95 duration-300">
+              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h4 className="text-lg font-extrabold text-dark-900">Payment Successfully Verified!</h4>
-              <p className="text-xs text-dark-500 leading-relaxed">
-                Your payment of <strong>${amount.toFixed(2)} USDC</strong> is secured and locked in the Base L2 Escrow Smart Contract. Official PDF receipt sent to your email.
-              </p>
+              <div>
+                <h4 className="font-black text-slate-900 dark:text-white text-xl">Payment Successfully Verified!</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Your {selectedToken} funds are safely locked in {selectedNetwork.toUpperCase()} Escrow Smart Contract.</p>
+              </div>
               {txHash && (
                 <a
-                  href={`https://basescan.org/tx/${txHash}`}
+                  href={selectedNetwork === "avalanche" ? `https://testnet.snowtrace.io/tx/${txHash}` : `https://basescan.org/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
+                  className="text-xs text-blue-600 dark:text-cyan-400 hover:underline font-mono flex items-center gap-1 font-semibold"
                 >
-                  View Transaction on Basescan Explorer <ExternalLink className="w-3.5 h-3.5" />
+                  View on {selectedNetwork === "avalanche" ? "SnowTrace Block Explorer" : "BaseScan Explorer"} ↗
                 </a>
               )}
-              <button onClick={onClose} className="btn-primary w-full py-3 mt-3 font-bold">
-                Done & Close
+              <button onClick={onClose} className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl cursor-pointer">
+                Done & View Booking Details ➔
               </button>
             </div>
           )}
 
           {/* ERROR STEP */}
           {step === "error" && (
-            <div className="text-center py-4 space-y-3">
-              <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                <AlertCircle className="w-8 h-8 text-rose-600" />
+            <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in duration-200">
+              <div className="w-14 h-14 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-8 h-8" />
               </div>
-              <h4 className="text-lg font-bold text-dark-900">Verification Failed</h4>
-              <p className="text-xs text-rose-600 font-medium px-4">{error}</p>
-              <button
-                onClick={() => setStep("select_method")}
-                className="btn-primary w-full py-3 mt-3 font-bold"
-              >
-                Try Another Method
+              <div>
+                <h4 className="font-bold text-slate-900 dark:text-white text-base">Payment Verification Failed</h4>
+                <p className="text-xs text-rose-500 mt-1 max-w-xs mx-auto font-medium">{error}</p>
+              </div>
+              <button onClick={() => setStep("select_wallet")} className="w-full py-3 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-bold rounded-xl cursor-pointer">
+                Try Again ➔
               </button>
             </div>
           )}
-
-          {/* 🆘 EMERGENCY HUMAN SUPPORT CHANNELS */}
-          <div className="pt-4 border-t border-dark-150">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-dark-400 text-center mb-2">
-              NEED EMERGENCY ASSISTANCE / HUMAN ESCALATION?
-            </p>
-            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-              <a
-                href="https://instagram.com/explomate.id"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-pink-500/10 hover:bg-pink-500/20 text-pink-700 rounded-xl font-bold flex flex-col items-center gap-1 transition-colors"
-              >
-                <Instagram className="w-4 h-4 text-pink-600" />
-                <span>IG @explomate.id</span>
-              </a>
-              <a
-                href="mailto:admin@explomate.com"
-                className="p-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 rounded-xl font-bold flex flex-col items-center gap-1 transition-colors"
-              >
-                <Mail className="w-4 h-4 text-indigo-600" />
-                <span>admin@explomate.com</span>
-              </a>
-              <a
-                href="mailto:rayhan@explomate.com"
-                className="p-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-800 rounded-xl font-bold flex flex-col items-center gap-1 transition-colors"
-              >
-                <Headset className="w-4 h-4 text-cyan-600" />
-                <span>rayhan@explomate.com</span>
-              </a>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>

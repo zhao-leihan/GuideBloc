@@ -26,6 +26,16 @@ const config: HardhatUserConfig = {
       chainId: 137,
       accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
     },
+    avalanche_fuji: {
+      url: "https://api.avax-test.network/ext/bc/C/rpc",
+      chainId: 43113,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+    },
+    avalanche: {
+      url: "https://api.avax.network/ext/bc/C/rpc",
+      chainId: 43114,
+      accounts: process.env.DEPLOYER_PRIVATE_KEY !== undefined ? [process.env.DEPLOYER_PRIVATE_KEY] : [],
+    },
     base: {
       url: "https://mainnet.base.org",
       chainId: 8453,

@@ -94,26 +94,71 @@ export default function CreateGigPage() {
         return;
       }
 
-      filesArray.forEach((file) => {
+      filesArray.forEach(async (file) => {
         if (!file.type.startsWith("image/")) {
           toast.error(`${file.name} is not an image file`);
           return;
         }
         
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} exceeds the 5MB size limit`);
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds the 10MB size limit`);
           return;
         }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof reader.result === "string") {
-            setImages((prev) => [...prev, reader.result as string]);
-          }
-        };
-        reader.readAsDataURL(file);
+        try {
+          const compressed = await compressImage(file);
+          setImages((prev) => [...prev, compressed]);
+        } catch (err) {
+          console.error("Image compression error:", err);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (typeof reader.result === "string") {
+              setImages((prev) => [...prev, reader.result as string]);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
       });
     }
+  };
+
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.75));
+        } else {
+          reject(new Error("Canvas context failed"));
+        }
+      };
+      img.onerror = (err) => reject(err);
+      img.src = url;
+    });
   };
 
   const removeImage = (index: number) => {
@@ -165,7 +210,7 @@ export default function CreateGigPage() {
       const newGig = await res.json();
       toast.success("Gig created successfully!", { id: "create-gig" });
 
-      // 2. If boosted, pay boost fee and register boost
+      // 2. If boosted, try to connect wallet and pay boost fee
       if (boostAlgorithm) {
         try {
           toast.loading(`Connecting wallet & switching to Base for ${CONFIG.FEATURED_GIG_PRICE} USDC boost...`, { id: "boost-gig" });
@@ -179,7 +224,7 @@ export default function CreateGigPage() {
           ];
 
           const contract = new ethers.Contract(USDC_BASE_ADDRESS, USDC_TRANSFER_ABI, signer);
-          const amount = ethers.parseUnits(CONFIG.FEATURED_GIG_PRICE.toString(), 6); // USDC uses 6 decimals
+          const amount = ethers.parseUnits(CONFIG.FEATURED_GIG_PRICE.toString(), 6);
 
           toast.loading(`Please confirm payment of ${CONFIG.FEATURED_GIG_PRICE} USDC in your wallet...`, { id: "boost-gig" });
           const tx = await contract.transfer(CONFIG.TREASURY_WALLET_ADDRESS, amount);
@@ -198,19 +243,18 @@ export default function CreateGigPage() {
           if (boostRes.ok) {
             toast.success("Gig successfully created and boosted to Featured! 🚀", { id: "boost-gig" });
           } else {
-            const boostErr = await boostRes.json();
-            toast.error(boostErr.message || "Gig created, but failed to register boost. You can try boosting from My Gigs list.", { id: "boost-gig" });
+            toast.error("Gig created, but boost registration pending. You can boost it from My Gigs list.", { id: "boost-gig" });
           }
         } catch (payErr: any) {
-          console.error("Boost payment failed:", payErr);
-          toast.error("Gig created successfully, but boost payment failed. You can boost it later from My Gigs.", { id: "boost-gig" });
+          console.warn("Boost payment skipped/failed:", payErr);
+          toast.success("Gig created successfully! (Boost payment can be completed from My Gigs list)", { id: "boost-gig" });
         }
       }
 
       router.push("/dashboard/guide/gigs");
       
     } catch (error: any) {
-      console.error(error);
+      console.error("Create gig error:", error);
       toast.error(error.message || "Failed to create gig", { id: "create-gig" });
     } finally {
       setIsCreating(false);

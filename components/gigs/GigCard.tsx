@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Star, Clock, Users, MapPin } from "lucide-react";
@@ -24,6 +25,43 @@ interface GigCardProps {
 }
 
 export default function GigCard({ gig }: GigCardProps) {
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+
+  useEffect(() => {
+    const updateThemeState = () => {
+      const hasDarkClass = document.documentElement.classList.contains("dark");
+      setIsDarkTheme(hasDarkClass);
+    };
+
+    updateThemeState();
+
+    const observer = new MutationObserver(updateThemeState);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ["class"] 
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const getBadgeStyle = () => {
+    if (isDarkTheme) {
+      return {
+        backgroundColor: "#1e293b",
+        color: "#38bdf8",
+        border: "1px solid rgba(56, 189, 248, 0.4)",
+        fontWeight: 700
+      };
+    } else {
+      return {
+        backgroundColor: "#e8effe",
+        color: "#1d4ed8",
+        border: "1px solid #bfdbfe",
+        fontWeight: 700
+      };
+    }
+  };
+
   return (
     <Link href={`/gigs/${gig.id}`} className="card group">
       {/* Image */}
@@ -34,12 +72,12 @@ export default function GigCard({ gig }: GigCardProps) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-3 left-3">
-          <span className="badge bg-white/90 dark:bg-dark-900/90 dark:text-white dark:border-dark-700 text-dark-700 text-xs shadow-sm flex items-center gap-1">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm" style={getBadgeStyle()}>
             <CategoryIcon category={gig.category} className="w-3.5 h-3.5" /> {gig.category}
           </span>
         </div>
         <div className="absolute top-3 right-3">
-          <span className="badge bg-secondary/90 text-white text-xs shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm" style={getBadgeStyle()}>
             ≈ {gig.priceUSD.toFixed(0)} USDT
           </span>
         </div>

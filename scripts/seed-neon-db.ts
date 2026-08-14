@@ -7,9 +7,13 @@ async function main() {
   console.log("Seeding Neon DB Cloud Database (Wiping sample gigs)...");
   const hashedPassword = await bcrypt.hash("@Rayhan3723", 10);
 
-  // 1. Wipe all dummy/sample gigs from Neon DB
+  // 1. Wipe all test bookings, reviews, messages, conversations, and sample gigs from Neon DB
+  await prisma.booking.deleteMany({});
+  await prisma.review.deleteMany({});
+  await prisma.message.deleteMany({});
+  await prisma.conversation.deleteMany({});
   const deletedGigs = await prisma.gig.deleteMany({});
-  console.log(`Wiped ${deletedGigs.count} sample gig(s) from Neon DB.`);
+  console.log(`Cleared all test bookings, reviews, messages & ${deletedGigs.count} sample gig(s) from Neon DB.`);
 
   // 2. Admin: Zhao Han
   const admin = await prisma.user.upsert({

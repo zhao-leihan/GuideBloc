@@ -70,6 +70,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Gig not found" }, { status: 404 });
     }
 
+    // Prevent Tour Guides from booking ANY tours (Guides are restricted to View-Only mode for bookings)
+    if (user.role === "GUIDE" || user.guideStatus === "APPROVED" || gig.guideId === user.id || (user.email && gig.guideId === user.email)) {
+      return NextResponse.json(
+        { message: "Tour Guides cannot book tours. Booking features are exclusively reserved for Tourists." },
+        { status: 403 }
+      );
+    }
+
     const client_price = gig.client_price || gig.priceUSD;
     const guide_price = gig.guide_price || (client_price * 0.90);
     const platform_fee = gig.platform_fee || (client_price - guide_price);

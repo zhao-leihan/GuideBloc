@@ -55,21 +55,14 @@
     @apply w-full px-4 py-3 rounded-xl border border-dark-700 bg-dark-800 text-white placeholder:text-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary shadow-sm transition-all duration-300;
   }
 
-  /* Clean Badge Pills */
-  .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase;
-  }
-
-  .badge-primary {
-    @apply bg-primary-50 text-primary border border-primary-100;
-  }
-
+  /* Clean & Vibrant Badge Pills - Exact match with Gambar 2 */
+  .badge,
+  .badge-primary,
   .badge-secondary {
-    @apply bg-secondary-50 text-secondary-700 border border-secondary-100;
-  }
-
-  .badge-accent {
-    @apply bg-accent-50 text-accent-600 border border-accent-100;
+    background-color: #e8effe !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #bfdbfe !important;
+    font-weight: 700 !important;
   }
 
   /* Luxury Glassmorphism */
@@ -224,17 +217,6 @@ html.dark textarea::placeholder {
 html.dark .escrow-badge-text,
 html.dark .escrow-badge-text * {
   color: #ffffff !important;
-}
-
-/* Light Badge Pills in Dark Mode (Escrow, Category, Status Pills) */
-html.dark .bg-primary-50,
-html.dark .bg-blue-50,
-html.dark .bg-accent-50,
-html.dark .bg-indigo-50,
-html.dark .badge-primary {
-  background-color: rgba(37, 99, 235, 0.2) !important;
-  color: #ffffff !important;
-  border-color: rgba(37, 99, 235, 0.4) !important;
 }
 
 html.dark option {

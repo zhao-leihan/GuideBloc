@@ -47,16 +47,30 @@ const ESCROW_ABI = [
   "function getBooking(bytes32 bookingId) external view returns (tuple(address tourist, address guide, address token, uint256 amount, uint8 status))",
 ];
 
+export type SupportedNetwork = "avalanche" | "base" | "celo" | "polygon";
+
 export interface PaymentParams {
   bookingId: string;
   amountUSD: number;
   token: "USDT" | "USDC";
-  network: "celo" | "polygon" | "base";
+  network: SupportedNetwork;
   guideWalletAddress: string;
   walletType?: "metamask" | "coinbase" | "solflare";
 }
 
-export function getTokenAddress(token: "USDT" | "USDC", network: "celo" | "polygon" | "base"): string {
+export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwork = "avalanche"): string {
+  if (network === "avalanche") {
+    const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+    if (token === "USDC") {
+      return isAvaxMainnet 
+        ? "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" 
+        : "0xB819bE9925EcBefe8b7eAebe51f42360673ffC86"; // Fuji Testnet USDC (Minted MockUSDC)
+    } else {
+      return isAvaxMainnet
+        ? "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7" 
+        : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Fuji Testnet USDT
+    }
+  }
   if (network === "celo") {
     return USDC_CELO;
   }
@@ -81,7 +95,10 @@ export function getTokenAddress(token: "USDT" | "USDC", network: "celo" | "polyg
   return token === "USDT" ? USDT_POLYGON : USDC_POLYGON;
 }
 
-export function getEscrowAddress(network: "celo" | "polygon" | "base"): string {
+export function getEscrowAddress(network: SupportedNetwork = "avalanche"): string {
+  if (network === "avalanche") {
+    return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
+  }
   if (network === "base") {
     const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
     const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
@@ -89,15 +106,84 @@ export function getEscrowAddress(network: "celo" | "polygon" | "base"): string {
     if (!isBaseMainnet && !isBaseSepolia) {
       return localAddresses.escrow || "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
     }
-    return process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE || process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
+
+    return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
   }
-  return network === "celo" ? ESCROW_CELO : ESCROW_POLYGON;
+  if (network === "celo") return ESCROW_CELO;
+  return ESCROW_POLYGON;
+}
+
+export type SupportedWalletType = 
+  | "metamask" 
+  | "coinbase" 
+  | "trust" 
+  | "rainbow" 
+  | "okx" 
+  | "phantom" 
+  | "zerion" 
+  | "solflare"
+  | "walletconnect";
+
+export interface WalletAccountDetails {
+  address: string;
+  ethBalance: string;
+  usdcBalance: number;
+  formattedUsdc: string;
+  hasEnoughBalance: boolean;
+}
+
+export function isMobileBrowser(): boolean {
+  if (typeof window === "undefined") return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+export function openMobileWalletDeepLink(walletType: SupportedWalletType): boolean {
+  if (typeof window === "undefined") return false;
+  
+  // If window.ethereum or in-app browser is active, stay inside dApp
+  if ((window as any).ethereum && !(window as any).ethereum?.isMetaMask && !walletType) {
+    return false;
+  }
+
+  const currentUrl = window.location.href;
+  const hostPath = window.location.host + window.location.pathname + window.location.search;
+  
+  let deepLink = "";
+  switch (walletType) {
+    case "metamask":
+      deepLink = `https://metamask.app.link/dapp/${hostPath}`;
+      break;
+    case "coinbase":
+      deepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(currentUrl)}`;
+      break;
+    case "trust":
+      deepLink = `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(currentUrl)}`;
+      break;
+    case "rainbow":
+      deepLink = `https://rainbow.me/dapp?url=${encodeURIComponent(currentUrl)}`;
+      break;
+    case "phantom":
+      deepLink = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
+      break;
+    case "okx":
+      deepLink = `okx://wallet/dapp/details?dappUrl=${encodeURIComponent(currentUrl)}`;
+      break;
+    case "zerion":
+      deepLink = `https://wallet.zerion.io/dapp/${hostPath}`;
+      break;
+  }
+
+  if (deepLink) {
+    window.location.href = deepLink;
+    return true;
+  }
+  return false;
 }
 
 export async function connectWallet(
-  network: "celo" | "polygon" | "base" = "base",
-  walletType?: "metamask" | "coinbase" | "solflare"
-): Promise<{ address: string; provider: ethers.BrowserProvider }> {
+  network: SupportedNetwork = "avalanche",
+  walletType?: SupportedWalletType
+): Promise<{ address: string; provider: ethers.BrowserProvider; rawProvider: any }> {
   if (typeof window === "undefined") {
     throw new Error("Window is not defined. Cannot connect wallet.");
   }
@@ -106,34 +192,26 @@ export async function connectWallet(
 
   // 1. Try EIP-6963 Multi-Injected Provider Discovery (Bypasses window.ethereum hijack completely)
   if (walletType) {
-    // Helper to match a provider detail to the requested walletType
     const match = (detail: EIP6963ProviderDetail) => {
       const rdns = detail.info.rdns.toLowerCase();
       const name = detail.info.name.toLowerCase();
-      if (walletType === "metamask") {
-        return rdns === "io.metamask" || rdns.includes("metamask") || name.includes("metamask");
-      }
-      if (walletType === "coinbase") {
-        return rdns === "com.coinbase.wallet" || rdns.includes("coinbase") || name.includes("coinbase");
-      }
-      if (walletType === "solflare") {
-        return rdns.includes("solflare") || name.includes("solflare");
-      }
+      if (walletType === "metamask") return rdns === "io.metamask" || rdns.includes("metamask") || name.includes("metamask");
+      if (walletType === "coinbase") return rdns === "com.coinbase.wallet" || rdns.includes("coinbase") || name.includes("coinbase");
+      if (walletType === "trust") return rdns.includes("trust") || name.includes("trust");
+      if (walletType === "rainbow") return rdns.includes("rainbow") || name.includes("rainbow");
+      if (walletType === "okx") return rdns.includes("okx") || name.includes("okx");
+      if (walletType === "phantom") return rdns.includes("phantom") || name.includes("phantom");
+      if (walletType === "zerion") return rdns.includes("zerion") || name.includes("zerion");
       return false;
     };
 
-    // First check already announced providers
     announcedProviders.forEach((detail) => {
-      if (match(detail)) {
-        rawProvider = detail.provider;
-      }
+      if (match(detail)) rawProvider = detail.provider;
     });
 
-    // If not found in already announced providers, request and listen for a short window (250ms)
     if (!rawProvider) {
       rawProvider = await new Promise((resolve) => {
         let resolved = false;
-
         const handler = (event: any) => {
           const detail = event.detail as EIP6963ProviderDetail;
           if (detail && detail.info && detail.info.rdns) {
@@ -162,97 +240,133 @@ export async function connectWallet(
 
   // 2. Fallback to standard provider checks if EIP-6963 didn't find the provider
   if (!rawProvider) {
+    const eth = (window as any).ethereum;
     if (walletType === "metamask") {
-      const eth = (window as any).ethereum;
       if (eth) {
-        if (eth.providerMap) {
-          rawProvider = eth.providerMap.get("MetaMask");
-        }
-        if (!rawProvider && eth.providers) {
-          rawProvider = eth.providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet && !p.isCoinbase);
-        }
-        if (!rawProvider && eth.isMetaMask) {
-          const isCoinbase = eth.isCoinbaseWallet || eth.isCoinbase || eth.providers?.some((p: any) => p.isCoinbaseWallet);
-          if (!isCoinbase) {
-            rawProvider = eth;
-          }
-        }
+        if (eth.providerMap) rawProvider = eth.providerMap.get("MetaMask");
+        if (!rawProvider && eth.providers) rawProvider = eth.providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet);
+        if (!rawProvider && eth.isMetaMask) rawProvider = eth;
       }
     } else if (walletType === "coinbase") {
       rawProvider = (window as any).coinbaseWalletExtension;
-      const eth = (window as any).ethereum;
       if (!rawProvider && eth) {
-        if (eth.providerMap) {
-          rawProvider = eth.providerMap.get("CoinbaseWallet") || eth.providerMap.get("Coinbase");
-        }
-        if (!rawProvider && eth.providers) {
-          rawProvider = eth.providers.find((p: any) => p.isCoinbaseWallet || p.isCoinbase);
-        }
-        if (!rawProvider && (eth.isCoinbaseWallet || eth.isCoinbase)) {
-          rawProvider = eth;
-        }
+        if (eth.providerMap) rawProvider = eth.providerMap.get("CoinbaseWallet") || eth.providerMap.get("Coinbase");
+        if (!rawProvider && eth.providers) rawProvider = eth.providers.find((p: any) => p.isCoinbaseWallet);
+        if (!rawProvider && (eth.isCoinbaseWallet || eth.isCoinbase)) rawProvider = eth;
       }
-    } else if (walletType === "solflare") {
-      rawProvider = (window as any).solflare?.providers?.ethereum || (window as any).solflare;
-      const eth = (window as any).ethereum;
+    } else if (walletType === "trust") {
+      rawProvider = (window as any).trustwallet || (window as any).trustWallet;
       if (!rawProvider && eth) {
-        if (eth.providers) {
-          rawProvider = eth.providers.find((p: any) => p.isSolflare);
-        }
-        if (!rawProvider && eth.isSolflare) {
-          rawProvider = eth;
-        }
+        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isTrust || p.isTrustWallet);
+        if (!rawProvider && (eth.isTrust || eth.isTrustWallet)) rawProvider = eth;
+      }
+    } else if (walletType === "rainbow") {
+      if (eth) {
+        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isRainbow);
+        if (!rawProvider && eth.isRainbow) rawProvider = eth;
+      }
+    } else if (walletType === "okx") {
+      rawProvider = (window as any).okxwallet;
+      if (!rawProvider && eth) {
+        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isOkxWallet || p.isOKExWallet);
+        if (!rawProvider && (eth.isOkxWallet || eth.isOKExWallet)) rawProvider = eth;
+      }
+    } else if (walletType === "phantom") {
+      rawProvider = (window as any).phantom?.ethereum;
+      if (!rawProvider && eth) {
+        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isPhantom);
+        if (!rawProvider && eth.isPhantom) rawProvider = eth;
+      }
+    } else if (walletType === "zerion") {
+      rawProvider = (window as any).zerionWallet || (window as any).zerion;
+      if (!rawProvider && eth) {
+        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isZerion);
+        if (!rawProvider && eth.isZerion) rawProvider = eth;
       }
     }
   }
 
-  // Fallback to window.ethereum ONLY if no specific wallet type was requested
   if (!rawProvider && !walletType) {
     rawProvider = (window as any).ethereum;
   }
 
+  // If wallet extension is missing and user is on mobile browser, launch deep link!
   if (!rawProvider) {
+    if (walletType && isMobileBrowser()) {
+      const redirected = openMobileWalletDeepLink(walletType);
+      if (redirected) {
+        throw new Error(`Opening ${walletType} app on mobile...`);
+      }
+    }
     const walletName = walletType
       ? walletType.charAt(0).toUpperCase() + walletType.slice(1)
       : "Crypto";
-    throw new Error(`${walletName} wallet extension is not installed or active.`);
+    throw new Error(`${walletName} wallet is not installed. If you are on mobile, please open this site inside the wallet's built-in browser.`);
+  }
+
+  // Explicitly request permissions to show account selection dialog
+  try {
+    if (typeof rawProvider.request === "function") {
+      await rawProvider.request({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+      });
+    }
+  } catch (permError) {
+    console.log("wallet_requestPermissions skipped or dismissed:", permError);
   }
 
   const provider = new ethers.BrowserProvider(rawProvider);
   const accounts = await provider.send("eth_requestAccounts", []);
 
+  if (!accounts || accounts.length === 0) {
+    throw new Error("No connected Web3 accounts found.");
+  }
+
+  const isAvax = network === "avalanche";
+  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
   const isCelo = network === "celo";
   const isBase = network === "base";
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
   
-  const chainIdHex = isCelo 
-    ? "0xaa36a7" 
-    : isBase 
-      ? (isBaseMainnet ? "0x2105" : (isBaseSepolia ? "0x14a34" : "0x7a69")) // 8453 vs 84532 vs 31337
-      : "0x7a69"; 
+  const chainIdHex = isAvax
+    ? (isAvaxMainnet ? "0xa86a" : "0xa869") // 43114 vs 43113
+    : isCelo 
+      ? "0xaa36a7" 
+      : isBase 
+        ? (isBaseMainnet ? "0x2105" : (isBaseSepolia ? "0x14a34" : "0x7a69"))
+        : "0x7a69"; 
       
-  const chainName = isCelo 
-    ? "Celo Sepolia Testnet" 
-    : isBase 
-      ? (isBaseMainnet ? "Base Mainnet" : (isBaseSepolia ? "Base Sepolia Testnet" : "Base Localhost")) 
-      : "Hardhat Localhost";
+  const chainName = isAvax
+    ? (isAvaxMainnet ? "Avalanche C-Chain" : "Avalanche Fuji Testnet")
+    : isCelo 
+      ? "Celo Sepolia Testnet" 
+      : isBase 
+        ? (isBaseMainnet ? "Base Mainnet" : (isBaseSepolia ? "Base Sepolia Testnet" : "Base Localhost")) 
+        : "Hardhat Localhost";
       
-  const rpcUrl = isCelo 
-    ? "https://forno.celo-sepolia.celo-testnet.org" 
-    : isBase 
-      ? (isBaseMainnet ? "https://mainnet.base.org" : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545")) 
-      : "http://127.0.0.1:8545";
+  const rpcUrl = isAvax
+    ? (isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc")
+    : isCelo 
+      ? "https://forno.celo-sepolia.celo-testnet.org" 
+      : isBase 
+        ? (isBaseMainnet ? "https://mainnet.base.org" : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545")) 
+        : "http://127.0.0.1:8545";
       
-  const nativeCurrency = isCelo
-    ? { name: "CELO", symbol: "CELO", decimals: 18 }
-    : { name: "ETH", symbol: "ETH", decimals: 18 };
+  const nativeCurrency = isAvax
+    ? { name: "AVAX", symbol: "AVAX", decimals: 18 }
+    : isCelo
+      ? { name: "CELO", symbol: "CELO", decimals: 18 }
+      : { name: "ETH", symbol: "ETH", decimals: 18 };
     
-  const blockExplorer = isCelo 
-    ? "https://celo-sepolia.blockscout.com" 
-    : isBase 
-      ? (isBaseMainnet ? "https://basescan.org" : "https://sepolia.basescan.org") 
-      : "http://localhost:8545";
+  const blockExplorer = isAvax
+    ? (isAvaxMainnet ? "https://snowtrace.io" : "https://testnet.snowtrace.io")
+    : isCelo 
+      ? "https://celo-sepolia.blockscout.com" 
+      : isBase 
+        ? (isBaseMainnet ? "https://basescan.org" : "https://sepolia.basescan.org") 
+        : "http://localhost:8545";
 
   try {
     await provider.send("wallet_switchEthereumChain", [{ chainId: chainIdHex }]);
@@ -268,7 +382,68 @@ export async function connectWallet(
     }
   }
 
-  return { address: accounts[0], provider };
+  return { address: accounts[0], provider, rawProvider };
+}
+
+export async function fetchConnectedAccountsDetails(
+  network: SupportedNetwork = "avalanche",
+  targetAmountUSD: number = 0,
+  walletType?: SupportedWalletType,
+  selectedToken: "USDT" | "USDC" = "USDC"
+): Promise<{ accounts: WalletAccountDetails[]; selectedAddress: string; provider: ethers.BrowserProvider }> {
+  const { address, provider, rawProvider } = await connectWallet(network, walletType);
+
+  let accountAddresses: string[] = [address];
+  try {
+    if (typeof rawProvider.request === "function") {
+      const allAccs = await rawProvider.request({ method: "eth_accounts" });
+      if (Array.isArray(allAccs) && allAccs.length > 0) {
+        accountAddresses = Array.from(new Set(allAccs));
+      }
+    }
+  } catch (err) {
+    console.warn("eth_accounts fetch failed, using primary account:", err);
+  }
+
+  const tokenAddress = getTokenAddress(selectedToken, network);
+  const usdcContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+
+  const accountDetailsList: WalletAccountDetails[] = await Promise.all(
+    accountAddresses.map(async (acc) => {
+      let ethBalStr = "0.00";
+      let usdcNum = 0;
+      let formattedUsdc = "0.00";
+
+      try {
+        const ethBal = await provider.getBalance(acc);
+        ethBalStr = parseFloat(ethers.formatEther(ethBal)).toFixed(4);
+      } catch (e) {
+        console.warn(`Failed to fetch ETH balance for ${acc}`, e);
+      }
+
+      try {
+        const usdcBal = await usdcContract.balanceOf(acc);
+        usdcNum = parseFloat(ethers.formatUnits(usdcBal, 6));
+        formattedUsdc = usdcNum.toFixed(2);
+      } catch (e) {
+        console.warn(`Failed to fetch USDC balance for ${acc}`, e);
+      }
+
+      return {
+        address: acc,
+        ethBalance: ethBalStr,
+        usdcBalance: usdcNum,
+        formattedUsdc,
+        hasEnoughBalance: usdcNum >= targetAmountUSD,
+      };
+    })
+  );
+
+  return {
+    accounts: accountDetailsList,
+    selectedAddress: address,
+    provider,
+  };
 }
 
 export async function getTokenBalance(token: "USDT" | "USDC", address: string, network: "celo" | "polygon" | "base" = "base"): Promise<string> {
