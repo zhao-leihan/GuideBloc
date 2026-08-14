@@ -1,21 +1,19 @@
 <div align="center">
 
-  <img src="public/assets/logo.png" alt="Explomate Logo" width="180" />
+  <img src="https://www.explomate.com/assets/navbaronly.png" alt="Explomate Logo" width="220" />
 
   # 🌍 Explomate.ly
   ### Decentralized Web3 Travel Marketplace & Local Guide Network
 
   [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
-  [![Network](https://img.shields.io/badge/Chains-Avalanche%20%7C%20Base-E84142?style=for-the-badge&logo=avalanche)](https://avax.network)
+  [![Network](https://img.shields.io/badge/Chain-Avalanche%20C--Chain-E84142?style=for-the-badge&logo=avalanche)](https://avax.network)
   [![Database](https://img.shields.io/badge/Database-Neon%20Cloud%20PostgreSQL-00E599?style=for-the-badge&logo=postgresql)](https://neon.tech)
   [![License](https://img.shields.io/badge/License-Proprietary%20All%20Rights%20Reserved-blue?style=for-the-badge)](#-license)
 
   <p align="center">
-    <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" width="24" height="24" alt="Avalanche" />
+    <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" width="26" height="26" alt="Avalanche" />
     &nbsp;&nbsp;&nbsp;&nbsp;
-    <img src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" width="24" height="24" alt="Base L2" />
-    &nbsp;&nbsp;&nbsp;&nbsp;
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" width="24" height="24" alt="USDC" />
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" width="26" height="26" alt="USDC" />
   </p>
 
 </div>
