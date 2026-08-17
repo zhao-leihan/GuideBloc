@@ -58,9 +58,9 @@ const AvaxLogo = (
 
 const BaseLogo = (
   <img 
-    src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" 
+    src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" 
     alt="Base" 
-    className="w-4 h-4 object-contain flex-shrink-0 bg-white rounded-full p-0.5" 
+    className="w-4 h-4 object-contain inline-block" 
   />
 );
 

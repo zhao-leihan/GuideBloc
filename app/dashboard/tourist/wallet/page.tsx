@@ -185,7 +185,7 @@ export default function TouristWalletPage() {
                     network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
                   }`}
                 >
-                  <img src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" alt="Base" className="w-3.5 h-3.5 object-contain" />
+                  <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-3.5 h-3.5 object-contain" />
                   Base L2
                 </button>
               </div>
@@ -332,7 +332,7 @@ export default function TouristWalletPage() {
                       network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
                     }`}
                   >
-                    <img src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" alt="Base" className="w-3.5 h-3.5 object-contain" />
+                    <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-3.5 h-3.5 object-contain" />
                     Base L2
                   </button>
                 </div>
