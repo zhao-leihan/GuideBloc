@@ -5,6 +5,7 @@ import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2 } 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
+import DotsLoader from "@/components/ui/DotsLoader";
 import toast from "react-hot-toast";
 
 const statusColors: Record<string, string> = {
@@ -231,7 +232,7 @@ export default function TouristWalletPage() {
                 <h4 className="font-display font-semibold text-dark-900 mb-3">Transaction History</h4>
                 {loadingHistory ? (
                   <div className="flex items-center justify-center p-8 bg-dark-50 rounded-xl">
-                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    <DotsLoader size="md" />
                   </div>
                 ) : history.length === 0 ? (
                   <div className="p-8 text-center text-sm text-dark-400 bg-dark-50 rounded-xl border border-dashed border-dark-200">
@@ -359,7 +360,7 @@ export default function TouristWalletPage() {
                   className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group"
                 >
                   {connecting && walletType === "metamask" ? (
-                    <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                    <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
                   ) : (
                     <div className="w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                       <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/MetaMask_Fox.svg/960px-MetaMask_Fox.svg.png" alt="MetaMask Logo" className="w-12 h-12 object-contain" />
@@ -376,7 +377,7 @@ export default function TouristWalletPage() {
                   className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group"
                 >
                   {connecting && walletType === "coinbase" ? (
-                    <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                    <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
                   ) : (
                     <div className="w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                       <img src="https://s3-symbol-logo.tradingview.com/coinbase--600.png" alt="Coinbase Wallet Logo" className="w-12 h-12 object-contain rounded-xl" />
@@ -393,7 +394,7 @@ export default function TouristWalletPage() {
                   className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group"
                 >
                   {connecting && walletType === "solflare" ? (
-                    <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                    <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
                   ) : (
                     <div className="w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                       <img src="https://www.solflare.com/wp-content/uploads/2024/11/App-Icon.svg" alt="Solflare Wallet Logo" className="w-12 h-12 object-contain" />

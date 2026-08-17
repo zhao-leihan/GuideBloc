@@ -6,6 +6,7 @@ import { Save, Loader2, Shield, Trash2, Plus, CheckCircle2 } from "lucide-react"
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import DotsLoader from "@/components/ui/DotsLoader";
 import { COUNTRIES } from "@/lib/countries";
  
 export default function GuideProfilePage() {
@@ -346,7 +347,7 @@ export default function GuideProfilePage() {
               {verificationStatus === "PENDING" && (
                 <div className="p-8 text-center space-y-4 border border-dark-100 rounded-2xl bg-dark-50/20">
                   <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
-                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <DotsLoader size="lg" />
                   </div>
                   <div>
                     <h4 className="font-bold text-dark-900 text-sm">Verification Pending Approval</h4>

@@ -7,6 +7,7 @@ import {
   ChevronRight, RefreshCw, Check, Sparkles
 } from "lucide-react";
 import toast from "react-hot-toast";
+import DotsLoader from "@/components/ui/DotsLoader";
 import { 
   fetchConnectedAccountsDetails, 
   WalletAccountDetails, 
@@ -682,7 +683,7 @@ export default function PaymentModal({
           {/* PROCESSING STEP */}
           {step === "processing" && (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-              <Loader2 className="w-10 h-10 text-blue-600 dark:text-cyan-400 animate-spin" />
+              <DotsLoader size="lg" />
               <div>
                 <h4 className="font-bold text-slate-900 dark:text-white text-base">Processing Web3 Escrow Transaction</h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Connecting to {selectedNetwork.toUpperCase()} RPC Node & Confirming Block ({selectedToken})...</p>
