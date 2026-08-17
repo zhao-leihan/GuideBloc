@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, X, Loader2 } from "lucide-react";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -324,7 +324,7 @@ function ExploreContent() {
 
 export default function ExplorePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-dark-950"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>}>
       <ExploreContent />
     </Suspense>
   );

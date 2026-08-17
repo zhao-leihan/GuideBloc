@@ -345,8 +345,8 @@ export default function GuideProfilePage() {
 
               {verificationStatus === "PENDING" && (
                 <div className="p-8 text-center space-y-4 border border-dark-100 rounded-2xl bg-dark-50/20">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto animate-spin">
-                    <Loader2 className="w-6 h-6" />
+                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto">
+                    <Loader2 className="w-6 h-6 animate-spin" />
                   </div>
                   <div>
                     <h4 className="font-bold text-dark-900 text-sm">Verification Pending Approval</h4>

@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Mail, Lock, User, Eye, EyeOff, MapPin } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, MapPin, Loader2 } from "lucide-react";
 import { GlobeIcon, Crosshair2Icon } from "@radix-ui/react-icons";
 import Navbar from "@/components/layout/Navbar";
 import toast from "react-hot-toast";
@@ -246,7 +246,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-dark-950"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>}>
       <RegisterContent />
     </Suspense>
   );

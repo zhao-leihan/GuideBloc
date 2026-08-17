@@ -169,24 +169,30 @@ export default function TouristWalletPage() {
               </div>
 
               {/* Network Selector Toggle */}
-              <div className="flex items-center gap-2 p-1 bg-dark-100 dark:bg-dark-800 rounded-xl max-w-[320px]">
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-dark-800 rounded-2xl border border-slate-200 dark:border-dark-700/80 max-w-[340px]">
                 <button
-                  onClick={() => setNetwork("avalanche" as any)}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    (network as string) === "avalanche" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
+                  type="button"
+                  onClick={() => setNetwork("avalanche")}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                    network === "avalanche"
+                      ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
+                      : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
                   }`}
                 >
-                  <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-3.5 h-3.5 object-contain" />
-                  Avalanche C-Chain
+                  <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain flex-shrink-0" />
+                  <span>Avalanche C-Chain</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => setNetwork("base")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                    network === "base"
+                      ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
+                      : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
                   }`}
                 >
-                  <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-3.5 h-3.5 object-contain" />
-                  Base L2
+                  <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-4 h-4 object-contain flex-shrink-0" />
+                  <span>Base L2</span>
                 </button>
               </div>
 
@@ -315,25 +321,31 @@ export default function TouristWalletPage() {
 
               {/* Network Selection Toggle */}
               <div className="flex items-center justify-center gap-4 mb-8">
-                <span className="text-sm font-medium text-dark-700 dark:text-dark-300">Network:</span>
-                <div className="flex p-1 bg-dark-100 dark:bg-dark-800 rounded-xl">
+                <span className="text-sm font-bold text-slate-700 dark:text-dark-200">Network:</span>
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-dark-800 rounded-2xl border border-slate-200 dark:border-dark-700/80">
                   <button
-                    onClick={() => setNetwork("avalanche" as any)}
-                    className={`py-1.5 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      (network as string) === "avalanche" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
+                    type="button"
+                    onClick={() => setNetwork("avalanche")}
+                    className={`py-2 px-4 rounded-xl text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                      network === "avalanche"
+                        ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
+                        : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
                     }`}
                   >
-                    <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-3.5 h-3.5 object-contain" />
-                    Avalanche C-Chain
+                    <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain flex-shrink-0" />
+                    <span>Avalanche C-Chain</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => setNetwork("base")}
-                    className={`py-1.5 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
+                    className={`py-2 px-4 rounded-xl text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                      network === "base"
+                        ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
+                        : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
                     }`}
                   >
-                    <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-3.5 h-3.5 object-contain" />
-                    Base L2
+                    <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-4 h-4 object-contain flex-shrink-0" />
+                    <span>Base L2</span>
                   </button>
                 </div>
               </div>
