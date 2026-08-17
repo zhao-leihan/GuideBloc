@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2 } from "lucide-react";
+import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";

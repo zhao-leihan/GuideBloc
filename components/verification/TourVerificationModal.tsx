@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   ShieldCheck, MapPin, QrCode, CheckCircle2, Lock, Sparkles, X, 
-  Loader2, AlertShield, ArrowRight, ShieldAlert, Smartphone, Check, UserCheck
+  Loader2, ArrowRight, ShieldAlert, Smartphone, Check, UserCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -166,7 +166,7 @@ export default function TourVerificationModal({
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               Safe Tour Completion Protocol
               <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">
-                It's Safe 🛡️
+                It&apos;s Safe 🛡️
               </span>
             </h2>
             <p className="text-xs text-dark-400">
