@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Calendar, CheckCircle, XCircle, Clock, Eye, Compass, X, Star, Loader2, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
+import DotsLoader from "@/components/ui/DotsLoader";
 import { useSession } from "next-auth/react";
 import MeetInterface from "@/components/meet/MeetInterface";
 import TourVerificationModal from "@/components/verification/TourVerificationModal";
@@ -148,7 +149,10 @@ export default function GuideBookingsPage() {
         {/* Bookings Table */}
         <div className="card overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-dark-500">Loading bookings...</div>
+            <div className="flex flex-col items-center justify-center p-12 space-y-3">
+              <DotsLoader size="lg" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-dark-300">Loading bookings...</span>
+            </div>
           ) : bookings.length === 0 ? (
             <div className="p-8 text-center text-dark-500">No bookings found.</div>
           ) : (

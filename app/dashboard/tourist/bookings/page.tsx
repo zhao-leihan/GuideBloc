@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import DotsLoader from "@/components/ui/DotsLoader";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -552,9 +553,9 @@ export default function TouristBookingsPage() {
 
         <div className="grid gap-6">
           {loading ? (
-            <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-dark-200">
-              <Loader2 className="w-8 h-8 text-primary animate-spin" />
-              <span className="ml-3 text-dark-500">Loading bookings...</span>
+            <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-dark-800 rounded-2xl border border-dark-200 dark:border-dark-700/80 space-y-3">
+              <DotsLoader size="lg" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-dark-300">Loading bookings...</span>
             </div>
           ) : filteredBookings.length === 0 ? (
             <div className="p-12 text-center text-dark-500 bg-white rounded-2xl border border-dashed border-dark-200">
