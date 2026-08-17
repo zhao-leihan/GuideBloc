@@ -11,9 +11,9 @@ export default function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
               <img 
-                src="https://www.explomate.com/assets/navbaronly.png" 
+                src="/assets/navbaronly.png" 
                 alt="Explomate Logo" 
-                className="h-9 md:h-11 w-auto object-contain brightness-0 invert drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" 
+                className="h-9 md:h-11 w-auto object-contain" 
               />
             </Link>
             <p className="text-sm text-dark-400 leading-relaxed">
