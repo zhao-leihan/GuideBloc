@@ -2,8 +2,8 @@
 
   <img src="https://www.explomate.com/assets/navbaronly.png" alt="Explomate Logo" width="220" />
 
-  # 🌍 Explomate.ly
-  ### Decentralized Web3 Travel Marketplace & Local Guide Network
+  # Explomate
+  ### Decentralized P2P travel gig marketplace built on Avalanche C-Chain for local guide escrow bookings
 
   [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
   [![Network](https://img.shields.io/badge/Chain-Avalanche%20C--Chain-E84142?style=for-the-badge&logo=avalanche)](https://avax.network)
