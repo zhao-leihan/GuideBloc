@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { getEscrowAddress } from "./payment";
+import { getEscrowAddress, SupportedNetwork } from "./payment";
 
 const ESCROW_ABI = [
   "function releaseToGuide(bytes32 bookingId) external",
@@ -9,19 +9,20 @@ const ESCROW_ABI = [
 
 export async function backendReleaseToGuide(
   bookingId: string,
-  network: "celo" | "polygon" | "base" = "base"
+  network: SupportedNetwork = "avalanche"
 ): Promise<string> {
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  let rpcUrl = "http://127.0.0.1:8545";
-  if (network === "base") {
+  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+  let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+  if (network === "avalanche") {
+    rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
+  } else if (network === "base") {
     rpcUrl = isBaseMainnet 
       ? "https://mainnet.base.org" 
       : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-  } else if (network === "celo") {
-    rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
-  } else if (network === "polygon") {
-    rpcUrl = "http://127.0.0.1:8545";
   }
 
   let privateKey = process.env.DEPLOYER_PRIVATE_KEY;
@@ -53,19 +54,20 @@ export async function backendReleaseToGuide(
 
 export async function backendRefundTourist(
   bookingId: string,
-  network: "celo" | "polygon" | "base" = "base"
+  network: SupportedNetwork = "avalanche"
 ): Promise<string> {
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  let rpcUrl = "http://127.0.0.1:8545";
-  if (network === "base") {
+  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+  let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+  if (network === "avalanche") {
+    rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
+  } else if (network === "base") {
     rpcUrl = isBaseMainnet 
       ? "https://mainnet.base.org" 
       : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-  } else if (network === "celo") {
-    rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
-  } else if (network === "polygon") {
-    rpcUrl = "http://127.0.0.1:8545";
   }
 
   let privateKey = process.env.DEPLOYER_PRIVATE_KEY;
@@ -97,19 +99,20 @@ export async function backendRefundTourist(
 
 export async function backendConfirmBooking(
   bookingId: string,
-  network: "celo" | "polygon" | "base" = "base"
+  network: SupportedNetwork = "avalanche"
 ): Promise<string> {
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  let rpcUrl = "http://127.0.0.1:8545";
-  if (network === "base") {
+  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+  let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+  if (network === "avalanche") {
+    rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
+  } else if (network === "base") {
     rpcUrl = isBaseMainnet 
       ? "https://mainnet.base.org" 
       : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-  } else if (network === "celo") {
-    rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
-  } else if (network === "polygon") {
-    rpcUrl = "http://127.0.0.1:8545";
   }
 
   let privateKey = process.env.DEPLOYER_PRIVATE_KEY;
@@ -144,19 +147,20 @@ export async function backendCreateBooking(
   amountUSD: number,
   guideWalletAddress: string,
   token: "USDC" | "USDT" = "USDC",
-  network: "celo" | "polygon" | "base" = "base"
+  network: SupportedNetwork = "avalanche"
 ): Promise<string> {
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  let rpcUrl = "http://127.0.0.1:8545";
-  if (network === "base") {
+  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+  let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+  if (network === "avalanche") {
+    rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
+  } else if (network === "base") {
     rpcUrl = isBaseMainnet 
       ? "https://mainnet.base.org" 
       : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-  } else if (network === "celo") {
-    rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
-  } else if (network === "polygon") {
-    rpcUrl = "http://127.0.0.1:8545";
   }
 
   let privateKey = process.env.DEPLOYER_PRIVATE_KEY;

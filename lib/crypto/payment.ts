@@ -47,7 +47,7 @@ const ESCROW_ABI = [
   "function getBooking(bytes32 bookingId) external view returns (tuple(address tourist, address guide, address token, uint256 amount, uint8 status))",
 ];
 
-export type SupportedNetwork = "avalanche" | "base" | "celo" | "polygon";
+export type SupportedNetwork = "avalanche" | "base";
 
 export interface PaymentParams {
   bookingId: string;
@@ -71,46 +71,38 @@ export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwor
         : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Fuji Testnet USDT
     }
   }
-  if (network === "celo") {
-    return USDC_CELO;
-  }
-  if (network === "base") {
-    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    
-    if (!isBaseMainnet && !isBaseSepolia) {
-      return localAddresses.usdc || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-    }
 
-    if (token === "USDC") {
-      return isBaseMainnet 
-        ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-        : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
-    } else {
-      return isBaseMainnet
-        ? "0x50c5725949A6F0c72E6C4a641F24049A91D18C41"
-        : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
-    }
+  // Base L2 Fallback
+  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+  
+  if (!isBaseMainnet && !isBaseSepolia) {
+    return localAddresses.usdc || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   }
-  return token === "USDT" ? USDT_POLYGON : USDC_POLYGON;
+
+  if (token === "USDC") {
+    return isBaseMainnet 
+      ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+  } else {
+    return isBaseMainnet
+      ? "0x50c5725949A6F0c72E6C4a641F24049A91D18C41"
+      : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+  }
 }
 
 export function getEscrowAddress(network: SupportedNetwork = "avalanche"): string {
   if (network === "avalanche") {
     return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
   }
-  if (network === "base") {
-    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    
-    if (!isBaseMainnet && !isBaseSepolia) {
-      return localAddresses.escrow || "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-    }
-
-    return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
+  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+  
+  if (!isBaseMainnet && !isBaseSepolia) {
+    return localAddresses.escrow || "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
   }
-  if (network === "celo") return ESCROW_CELO;
-  return ESCROW_POLYGON;
+
+  return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
 }
 
 export type SupportedWalletType = 
@@ -325,48 +317,28 @@ export async function connectWallet(
 
   const isAvax = network === "avalanche";
   const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
-  const isCelo = network === "celo";
-  const isBase = network === "base";
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
   
   const chainIdHex = isAvax
     ? (isAvaxMainnet ? "0xa86a" : "0xa869") // 43114 vs 43113
-    : isCelo 
-      ? "0xaa36a7" 
-      : isBase 
-        ? (isBaseMainnet ? "0x2105" : (isBaseSepolia ? "0x14a34" : "0x7a69"))
-        : "0x7a69"; 
+    : (isBaseMainnet ? "0x2105" : (isBaseSepolia ? "0x14a34" : "0x7a69")); 
       
   const chainName = isAvax
     ? (isAvaxMainnet ? "Avalanche C-Chain" : "Avalanche Fuji Testnet")
-    : isCelo 
-      ? "Celo Sepolia Testnet" 
-      : isBase 
-        ? (isBaseMainnet ? "Base Mainnet" : (isBaseSepolia ? "Base Sepolia Testnet" : "Base Localhost")) 
-        : "Hardhat Localhost";
+    : (isBaseMainnet ? "Base Mainnet" : (isBaseSepolia ? "Base Sepolia Testnet" : "Base Localhost"));
       
   const rpcUrl = isAvax
     ? (isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc")
-    : isCelo 
-      ? "https://forno.celo-sepolia.celo-testnet.org" 
-      : isBase 
-        ? (isBaseMainnet ? "https://mainnet.base.org" : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545")) 
-        : "http://127.0.0.1:8545";
+    : (isBaseMainnet ? "https://mainnet.base.org" : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545"));
       
   const nativeCurrency = isAvax
     ? { name: "AVAX", symbol: "AVAX", decimals: 18 }
-    : isCelo
-      ? { name: "CELO", symbol: "CELO", decimals: 18 }
-      : { name: "ETH", symbol: "ETH", decimals: 18 };
+    : { name: "ETH", symbol: "ETH", decimals: 18 };
     
   const blockExplorer = isAvax
     ? (isAvaxMainnet ? "https://snowtrace.io" : "https://testnet.snowtrace.io")
-    : isCelo 
-      ? "https://celo-sepolia.blockscout.com" 
-      : isBase 
-        ? (isBaseMainnet ? "https://basescan.org" : "https://sepolia.basescan.org") 
-        : "http://localhost:8545";
+    : (isBaseMainnet ? "https://basescan.org" : "https://sepolia.basescan.org");
 
   try {
     await provider.send("wallet_switchEthereumChain", [{ chainId: chainIdHex }]);
@@ -446,18 +418,20 @@ export async function fetchConnectedAccountsDetails(
   };
 }
 
-export async function getTokenBalance(token: "USDT" | "USDC", address: string, network: "celo" | "polygon" | "base" = "base"): Promise<string> {
-  let rpcUrl = "http://127.0.0.1:8545"; // fallback localhost
+export async function getTokenBalance(token: "USDT" | "USDC", address: string, network: SupportedNetwork = "avalanche"): Promise<string> {
+  let rpcUrl = "https://api.avax.network/ext/bc/C/rpc"; // fallback Avalanche C-Chain
   const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
   const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  if (network === "celo") {
-    rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
+  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+
+  if (network === "avalanche") {
+    rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
   } else if (network === "base") {
     rpcUrl = isBaseMainnet 
       ? "https://mainnet.base.org" 
       : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-  } else if (network === "polygon") {
-    rpcUrl = "http://127.0.0.1:8545";
   }
 
   try {
@@ -520,7 +494,7 @@ export async function initiatePayment({
   return receipt.hash;
 }
 
-export async function releaseToGuide(bookingId: string, network: "celo" | "polygon" | "base" = "base"): Promise<string> {
+export async function releaseToGuide(bookingId: string, network: SupportedNetwork = "avalanche"): Promise<string> {
   const { provider } = await connectWallet(network);
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
@@ -531,7 +505,7 @@ export async function releaseToGuide(bookingId: string, network: "celo" | "polyg
   return receipt.hash;
 }
 
-export async function refundTourist(bookingId: string, network: "celo" | "polygon" | "base" = "base"): Promise<string> {
+export async function refundTourist(bookingId: string, network: SupportedNetwork = "avalanche"): Promise<string> {
   const { provider } = await connectWallet(network);
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
@@ -545,7 +519,7 @@ export async function refundTourist(bookingId: string, network: "celo" | "polygo
 export async function payBoostFee(
   amountUSD: number,
   token: "USDT" | "USDC" = "USDC",
-  network: "celo" | "polygon" | "base" = "base"
+  network: SupportedNetwork = "avalanche"
 ): Promise<string> {
   const { provider } = await connectWallet(network);
   const signer = await provider.getSigner();

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { ethers } from "ethers";
-import { getTokenAddress } from "@/lib/crypto/payment";
+import { getTokenAddress, SupportedNetwork } from "@/lib/crypto/payment";
 
 const ERC20_ABI = [
   "function transfer(address to, uint256 amount) external returns (bool)"
@@ -16,24 +16,30 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { recipient, token, amount, network = "base" } = body;
+    const { token, recipientAddress, amount, network = "avalanche" } = body as {
+      token: "USDT" | "USDC" | "NATIVE";
+      recipientAddress: string;
+      amount: number;
+      network: SupportedNetwork;
+    };
 
-    if (!recipient || !token || !amount || Number(amount) <= 0) {
+    if (!recipientAddress || !token || !amount || Number(amount) <= 0) {
       return NextResponse.json({ message: "Invalid parameters" }, { status: 400 });
     }
 
     const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
     const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    let rpcUrl = "http://127.0.0.1:8545";
+    const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+    let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
     
-    if (network === "base") {
+    if (network === "avalanche") {
+      rpcUrl = isAvaxMainnet 
+        ? "https://api.avax.network/ext/bc/C/rpc" 
+        : "https://api.avax-test.network/ext/bc/C/rpc";
+    } else if (network === "base") {
       rpcUrl = isBaseMainnet 
         ? "https://mainnet.base.org" 
         : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-    } else if (network === "celo") {
-      rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
-    } else if (network === "polygon") {
-      rpcUrl = "http://127.0.0.1:8545";
     }
 
     let privateKey = process.env.DEPLOYER_PRIVATE_KEY;
@@ -51,24 +57,23 @@ export async function POST(req: Request) {
     let txHash = "";
 
     if (token === "NATIVE") {
-      // Transfer native gas tokens (ETH / CELO / MATIC)
-      console.log(`[Admin Wallet] Transferring ${amount} Native to ${recipient} on ${network}`);
+      // Transfer native gas tokens (AVAX / ETH)
+      console.log(`[Admin Wallet] Transferring ${amount} Native to ${recipientAddress} on ${network}`);
       const tx = await wallet.sendTransaction({
-        to: recipient,
+        to: recipientAddress,
         value: ethers.parseEther(amount.toString())
       });
       const receipt = await tx.wait();
-      txHash = receipt ? receipt.hash : "";
+      txHash = receipt?.hash || tx.hash;
     } else {
-      // Transfer ERC20 tokens (USDC / USDT)
+      // Transfer ERC20 (USDT / USDC)
       const tokenAddress = getTokenAddress(token, network);
+      console.log(`[Admin Wallet] Transferring ${amount} ${token} (${tokenAddress}) to ${recipientAddress} on ${network}`);
       const contract = new ethers.Contract(tokenAddress, ERC20_ABI, wallet);
-      const rawAmount = ethers.parseUnits(Number(amount).toFixed(6), 6);
-
-      console.log(`[Admin Wallet] Transferring ${amount} ${token} to ${recipient} on ${network} (Address: ${tokenAddress})`);
-      const tx = await contract.transfer(recipient, rawAmount);
+      const parsedAmount = ethers.parseUnits(amount.toString(), 6);
+      const tx = await contract.transfer(recipientAddress, parsedAmount);
       const receipt = await tx.wait();
-      txHash = receipt ? receipt.hash : "";
+      txHash = receipt?.hash || tx.hash;
     }
 
     if (!txHash) {

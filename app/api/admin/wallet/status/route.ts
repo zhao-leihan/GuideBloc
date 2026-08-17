@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { ethers } from "ethers";
-import { getTokenAddress } from "@/lib/crypto/payment";
+import { getTokenAddress, SupportedNetwork } from "@/lib/crypto/payment";
 
 export const dynamic = "force-dynamic";
 
@@ -22,20 +22,21 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const network = (searchParams.get("network") || "base") as "celo" | "polygon" | "base";
+    const network = (searchParams.get("network") || "avalanche") as SupportedNetwork;
 
     const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
     const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+    const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
     
-    let rpcUrl = "https://mainnet.base.org";
-    if (network === "base") {
+    let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+    if (network === "avalanche") {
+      rpcUrl = isAvaxMainnet 
+        ? "https://api.avax.network/ext/bc/C/rpc" 
+        : "https://api.avax-test.network/ext/bc/C/rpc";
+    } else if (network === "base") {
       rpcUrl = isBaseMainnet 
         ? "https://mainnet.base.org" 
         : (isBaseSepolia ? "https://sepolia.base.org" : "https://mainnet.base.org");
-    } else if (network === "celo") {
-      rpcUrl = "https://forno.celo-sepolia.celo-testnet.org";
-    } else if (network === "polygon") {
-      rpcUrl = "https://polygon-rpc.com";
     }
 
     // Exodus Wallet / Treasury Address configured in environment

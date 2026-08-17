@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { connectWallet, getTokenBalance } from "@/lib/crypto/payment";
+import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
 import toast from "react-hot-toast";
 
 const statusColors: Record<string, string> = {
@@ -20,7 +20,7 @@ export default function TouristWalletPage() {
   const { data: session, update: updateSession } = useSession();
   const [connected, setConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [network, setNetwork] = useState<"polygon" | "base">("base");
+  const [network, setNetwork] = useState<"avalanche" | "base">("avalanche");
   const [usdtBalance, setUsdtBalance] = useState("0.00");
   const [usdcBalance, setUsdcBalance] = useState("0.00");
   const [connecting, setConnecting] = useState(false);
@@ -58,7 +58,7 @@ export default function TouristWalletPage() {
     }
   };
 
-  const loadBalances = async (address: string, chain: "polygon" | "base") => {
+  const loadBalances = async (address: string, chain: SupportedNetwork) => {
     try {
       const usdtVal = await getTokenBalance("USDT", address, chain);
       const usdcVal = await getTokenBalance("USDC", address, chain);
@@ -200,7 +200,7 @@ export default function TouristWalletPage() {
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                       <a
-                        href={network === "base" ? `https://basescan.org/address/${walletAddress}` : `https://amoy.polygonscan.com/address/${walletAddress}`}
+                        href={network === "base" ? `https://basescan.org/address/${walletAddress}` : `https://snowtrace.io/address/${walletAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1 hover:bg-dark-100 rounded text-dark-500"
