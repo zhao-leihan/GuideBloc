@@ -11,12 +11,14 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import MeetInterface from "@/components/meet/MeetInterface";
+import TourVerificationModal from "@/components/verification/TourVerificationModal";
 
 export default function TouristBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [activeMeetBooking, setActiveMeetBooking] = useState<any | null>(null);
+  const [verificationBookingModal, setVerificationBookingModal] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
   const { data: session } = useSession();
   const router = useRouter();
@@ -681,15 +683,27 @@ export default function TouristBookingsPage() {
                               </button>
 
                               {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
-                                <button
-                                  onClick={() => {
-                                    setActiveMeetBooking(booking);
-                                    setOpenDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2.5 text-xs text-secondary border-t border-dark-800 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors"
-                                >
-                                  <Compass className="w-3.5 h-3.5 text-secondary" /> Open Meet Radar
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setVerificationBookingModal(booking);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-emerald-950/40 flex items-center gap-2 cursor-pointer font-bold transition-colors"
+                                  >
+                                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Safe Verification (QR+GPS)
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      setActiveMeetBooking(booking);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 text-xs text-blue-400 hover:bg-blue-950/40 flex items-center gap-2 cursor-pointer font-bold transition-colors"
+                                  >
+                                    <Compass className="w-3.5 h-3.5 text-blue-400" /> GPS Meetup Radar
+                                  </button>
+                                </>
                               )}
 
                               {["CANCELLED", "REJECTED"].includes(booking.status) && (
@@ -993,6 +1007,19 @@ export default function TouristBookingsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* 3-Step Safe Verification Protocol Modal (QR + GPS + Mutual Confirm) */}
+      {verificationBookingModal && (
+        <TourVerificationModal
+          booking={verificationBookingModal}
+          userRole="TOURIST"
+          onClose={() => setVerificationBookingModal(null)}
+          onSuccess={() => {
+            fetchBookings();
+            toast.success("Tour Verified & Escrow Released Successfully!");
+          }}
+        />
       )}
     </DashboardLayout>
   );

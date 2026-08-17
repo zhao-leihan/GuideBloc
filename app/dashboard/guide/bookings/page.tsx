@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Calendar, CheckCircle, XCircle, Clock, Eye, Compass, X, Star, Loader2 } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, Clock, Eye, Compass, X, Star, Loader2, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import MeetInterface from "@/components/meet/MeetInterface";
+import TourVerificationModal from "@/components/verification/TourVerificationModal";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-500/10 text-yellow-600",
@@ -20,6 +21,7 @@ export default function GuideBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMeetBooking, setActiveMeetBooking] = useState<any | null>(null);
+  const [verificationBookingModal, setVerificationBookingModal] = useState<any | null>(null);
   const { data: session } = useSession();
 
   // Double Review system states
@@ -233,14 +235,21 @@ export default function GuideBookingsPage() {
                                 >
                                   Complete Tour
                                 </button>
-                                <button
-                                  onClick={() => setActiveMeetBooking(b)}
-                                  className="btn-ghost text-xs px-2.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg font-medium flex items-center gap-1 cursor-pointer"
-                                  title="Open Meetup Radar"
-                                >
-                                  <Compass className="w-3.5 h-3.5" /> Radar
-                                </button>
-                              </>
+                                 <button
+                                   onClick={() => setVerificationBookingModal(b)}
+                                   className="btn-ghost text-xs px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer"
+                                   title="3-Step Safe Verification Protocol"
+                                 >
+                                   <ShieldCheck className="w-3.5 h-3.5" /> Verify (QR+GPS)
+                                 </button>
+                                 <button
+                                   onClick={() => setActiveMeetBooking(b)}
+                                   className="btn-ghost text-xs px-2.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg font-medium flex items-center gap-1 cursor-pointer"
+                                   title="Open Meetup Radar"
+                                 >
+                                   <Compass className="w-3.5 h-3.5" /> Radar
+                                 </button>
+                               </>
                             )}
                           </div>
                         </td>
@@ -392,6 +401,19 @@ export default function GuideBookingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 3-Step Safe Verification Protocol Modal (QR + GPS + Mutual Confirm) */}
+      {verificationBookingModal && (
+        <TourVerificationModal
+          booking={verificationBookingModal}
+          userRole="GUIDE"
+          onClose={() => setVerificationBookingModal(null)}
+          onSuccess={() => {
+            fetchBookings();
+            toast.success("Tour Verified & Escrow Payout Released Successfully!");
+          }}
+        />
       )}
     </DashboardLayout>
   );
