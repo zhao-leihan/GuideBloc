@@ -90,7 +90,7 @@ export default function HowItWorksPage() {
               "Dispute resolution by admin",
               "Refund protection for cancellations",
               "On-chain transparency",
-              "Multi-network support (Polygon, Base)",
+              "Multi-network support (Avalanche C-Chain, Base L2)",
             ].map((item) => (
               <div key={item} className="flex items-center gap-2 p-3 rounded-xl bg-dark-800">
                 <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0" />

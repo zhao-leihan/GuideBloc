@@ -374,7 +374,7 @@ export default function HomePage() {
                 {[
                   { icon: Search, title: "Discover", desc: "Browse tours by destination, category, or rating." },
                   { icon: Calendar, title: "Book", desc: "Choose your date, group size, and confirm." },
-                  { icon: CreditCard, title: "Pay with Crypto", desc: "Settle securely with USDT/USDC on Polygon or Base." },
+                  { icon: CreditCard, title: "Pay with Crypto", desc: "Settle securely with USDT/USDC on Avalanche C-Chain or Base L2." },
                 ].map((step, i) => (
                   <div key={step.title} className="flex gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">

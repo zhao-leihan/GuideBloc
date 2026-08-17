@@ -11,9 +11,9 @@ export default function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
               <img 
-                src="/assets/navbar.png" 
+                src="https://www.explomate.com/assets/navbaronly.png" 
                 alt="Explomate Logo" 
-                className="h-8 md:h-10 w-auto object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]" 
+                className="h-9 md:h-11 w-auto object-contain brightness-0 invert drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" 
               />
             </Link>
             <p className="text-sm text-dark-400 leading-relaxed">
@@ -26,8 +26,11 @@ export default function Footer() {
               <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="USDC Accepted">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" alt="USDC" className="h-5 w-5 object-contain" />
               </div>
-              <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="PayPal Accepted">
-                <img src="https://www.vectorlogo.zone/logos/paypal/paypal-icon.svg" alt="PayPal" className="h-5 w-5 object-contain" />
+              <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Avalanche C-Chain Supported">
+                <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="Avalanche" className="h-5 w-5 object-contain" />
+              </div>
+              <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Base L2 Supported">
+                <img src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" alt="Base L2" className="h-5 w-5 object-contain" />
               </div>
             </div>
             <div className="pt-2">

@@ -175,22 +175,24 @@ export default function GuideWalletPage() {
               </div>
 
               {/* Network Selector Toggle */}
-              <div className="flex items-center gap-2 p-1 bg-dark-100 rounded-xl max-w-[240px]">
+              <div className="flex items-center gap-2 p-1 bg-dark-100 dark:bg-dark-800 rounded-xl max-w-[320px]">
                 <button
-                  onClick={() => setNetwork("polygon")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    network === "polygon" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+                  onClick={() => setNetwork("avalanche" as any)}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    (network as string) === "avalanche" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
                   }`}
                 >
-                  Polygon
+                  <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-3.5 h-3.5 object-contain" />
+                  Avalanche C-Chain
                 </button>
                 <button
                   onClick={() => setNetwork("base")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
                   }`}
                 >
-                  Base
+                  <img src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" alt="Base" className="w-3.5 h-3.5 object-contain" />
+                  Base L2
                 </button>
               </div>
 
@@ -318,23 +320,25 @@ export default function GuideWalletPage() {
 
               {/* Network Selection Toggle */}
               <div className="flex items-center justify-center gap-4 mb-8">
-                <span className="text-sm font-medium text-dark-700">Network:</span>
-                <div className="flex p-1 bg-dark-100 rounded-xl">
+                <span className="text-sm font-medium text-dark-700 dark:text-dark-300">Network:</span>
+                <div className="flex p-1 bg-dark-100 dark:bg-dark-800 rounded-xl">
                   <button
-                    onClick={() => setNetwork("polygon")}
-                    className={`py-1.5 px-4 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      network === "polygon" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+                    onClick={() => setNetwork("avalanche" as any)}
+                    className={`py-1.5 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      (network as string) === "avalanche" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
                     }`}
                   >
-                    Polygon
+                    <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-3.5 h-3.5 object-contain" />
+                    Avalanche C-Chain
                   </button>
                   <button
                     onClick={() => setNetwork("base")}
-                    className={`py-1.5 px-4 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
+                    className={`py-1.5 px-4 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      network === "base" ? "bg-white text-dark-900 shadow-sm" : "text-dark-400 hover:text-white"
                     }`}
                   >
-                    Base
+                    <img src="https://raw.githubusercontent.com/base-org/brand-kit/main/symbol/Base_Symbol_Blue.svg" alt="Base" className="w-3.5 h-3.5 object-contain" />
+                    Base L2
                   </button>
                 </div>
               </div>

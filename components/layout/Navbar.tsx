@@ -69,9 +69,9 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center group py-0.5">
           <img 
-            src="/assets/navbaronly.png" 
+            src="https://www.explomate.com/assets/navbaronly.png" 
             alt="Explomate Logo" 
-            className="h-6 md:h-8 w-auto object-contain drop-shadow-[0_0_6px_rgba(255,255,255,0.4)] transition-transform duration-300 group-hover:scale-105" 
+            className="h-8 md:h-10 w-auto object-contain brightness-0 invert drop-shadow-[0_0_10px_rgba(255,255,255,0.6)] transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
 
