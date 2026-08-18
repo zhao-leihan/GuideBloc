@@ -15,7 +15,7 @@ interface CustodianStatus {
 }
 
 export default function AdminWalletPage() {
-  const [network, setNetwork] = useState<"base" | "polygon" | "celo">("base");
+  const [network, setNetwork] = useState<"avalanche" | "base" | "polygon" | "celo">("avalanche");
   const [status, setStatus] = useState<CustodianStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [transferring, setTransferring] = useState(false);
@@ -122,6 +122,7 @@ export default function AdminWalletPage() {
   };
 
   const getNetworkLabel = (net: string) => {
+    if (net === "avalanche") return "Avalanche C-Chain";
     if (net === "base") {
       const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
       const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
@@ -171,7 +172,7 @@ export default function AdminWalletPage() {
         <div className="flex items-center gap-4">
           <span className="text-sm font-semibold text-dark-700">Select Network:</span>
           <div className="flex p-1 bg-dark-100 rounded-xl max-w-[320px]">
-            {(["base", "polygon", "celo"] as const).map((net) => (
+            {(["avalanche", "base", "polygon", "celo"] as const).map((net) => (
               <button
                 key={net}
                 onClick={() => setNetwork(net)}
