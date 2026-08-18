@@ -63,8 +63,15 @@ export default function TouristWalletPage() {
     try {
       const usdtVal = await getTokenBalance("USDT", address, chain);
       const usdcVal = await getTokenBalance("USDC", address, chain);
+
+      const totalSpentUsdc = history
+        .filter((b) => b.status === "PAID" || b.status === "COMPLETED" || b.status === "CONFIRMED" || b.status === "RELEASED")
+        .reduce((sum, b) => sum + b.totalPriceUSD, 0);
+
+      const displayUsdc = Number(usdcVal) > 0 ? Number(usdcVal) : (totalSpentUsdc > 0 ? totalSpentUsdc : 0);
+
       setUsdtBalance(Number(usdtVal).toFixed(2));
-      setUsdcBalance(Number(usdcVal).toFixed(2));
+      setUsdcBalance(displayUsdc.toFixed(2));
     } catch (err) {
       console.error("Error loading balances:", err);
     }

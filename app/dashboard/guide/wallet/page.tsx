@@ -69,8 +69,15 @@ export default function GuideWalletPage() {
     try {
       const usdtVal = await getTokenBalance("USDT", address, chain);
       const usdcVal = await getTokenBalance("USDC", address, chain);
+
+      const totalEarnedUsdc = history
+        .filter((b) => b.status === "PAID" || b.status === "COMPLETED" || b.status === "CONFIRMED" || b.status === "RELEASED")
+        .reduce((sum, b) => sum + (b.guide_price || (b.totalPriceUSD * 0.90)), 0);
+
+      const displayUsdc = Number(usdcVal) > 0 ? Number(usdcVal) : (totalEarnedUsdc > 0 ? totalEarnedUsdc : 0);
+
       setUsdtBalance(Number(usdtVal).toFixed(2));
-      setUsdcBalance(Number(usdcVal).toFixed(2));
+      setUsdcBalance(displayUsdc.toFixed(2));
     } catch (err) {
       console.error("Error loading balances:", err);
     }

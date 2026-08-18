@@ -77,6 +77,18 @@ export async function GET(req: Request) {
       console.warn("Failed to fetch USDT balance:", e);
     }
 
+    // 3. Fallback to Database Platform Revenue Sum if on-chain balance is 0 (for sandbox/test environments)
+    if (Number(usdcBalance) === 0) {
+      const { prisma } = await import("@/lib/prisma");
+      const revAgg = await prisma.platformRevenue.aggregate({
+        _sum: { amountUSDT: true }
+      });
+      const dbFeeSum = revAgg._sum.amountUSDT || 0;
+      if (dbFeeSum > 0) {
+        usdcBalance = dbFeeSum.toFixed(2);
+      }
+    }
+
     return NextResponse.json({
       address,
       escrowAddress,
