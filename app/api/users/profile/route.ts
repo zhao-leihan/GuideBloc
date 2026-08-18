@@ -59,22 +59,46 @@ export async function GET() {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Calculate balance based on completed bookings
+    // Calculate pending payout balance for guides based on COMPLETED bookings
     let balance = 0;
+    // activeWalletWarning: true if guide has CONFIRMED bookings with a different wallet snapshot
+    // (meaning their escrow is locked to an old wallet)
+    let activeWalletWarning = false;
+
     if (dbUser.role === "GUIDE") {
       const gigs = await prisma.gig.findMany({
         where: { guideId: userId },
-        select: { id: true }
+        select: { id: true },
       });
-      const gigIds = gigs.map(g => g.id);
+      const gigIds = gigs.map((g) => g.id);
+
       const completedBookings = await prisma.booking.findMany({
         where: { gigId: { in: gigIds }, status: "COMPLETED" },
-        select: { totalPriceUSD: true }
+        select: { guide_price: true, totalPriceUSD: true },
       });
-      balance = completedBookings.reduce((sum, b) => sum + b.totalPriceUSD, 0);
+      // Use guide_price (net after commission) if available, else totalPriceUSD * 0.9
+      balance = completedBookings.reduce(
+        (sum, b) => sum + (b.guide_price ?? b.totalPriceUSD * 0.9),
+        0
+      );
+
+      // Check if any CONFIRMED/PAID bookings have a wallet snapshot different from current wallet
+      if (dbUser.walletAddress) {
+        const mismatchedBookings = await prisma.booking.findMany({
+          where: {
+            gigId: { in: gigIds },
+            status: { in: ["CONFIRMED", "PAID"] },
+            guideWalletSnapshot: { not: null },
+            NOT: { guideWalletSnapshot: dbUser.walletAddress },
+          },
+          select: { id: true },
+          take: 1,
+        });
+        activeWalletWarning = mismatchedBookings.length > 0;
+      }
     }
 
-    return NextResponse.json({ ...dbUser, balance });
+    return NextResponse.json({ ...dbUser, balance, activeWalletWarning });
   } catch (error) {
     console.error("Profile GET error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

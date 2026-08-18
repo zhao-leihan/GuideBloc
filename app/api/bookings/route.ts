@@ -65,7 +65,10 @@ export async function POST(req: Request) {
     const user = session.user as any;
     const data = await req.json();
 
-    const gig = await prisma.gig.findUnique({ where: { id: data.gigId } });
+    const gig = await prisma.gig.findUnique({
+      where: { id: data.gigId },
+      include: { guide: { select: { id: true, walletAddress: true } } },
+    });
     if (!gig) {
       return NextResponse.json({ message: "Gig not found" }, { status: 404 });
     }
@@ -100,6 +103,9 @@ export async function POST(req: Request) {
         platform_fee,
         specialRequests: data.specialRequests,
         status: "PENDING",
+        // Lock the guide's current wallet address at booking creation time.
+        // This snapshot is used for payout even if guide changes wallet later.
+        guideWalletSnapshot: gig.guide.walletAddress || null,
       },
     });
 

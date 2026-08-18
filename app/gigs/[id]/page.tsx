@@ -103,23 +103,8 @@ export default function GigDetailPage() {
     fetchGig();
   }, [params.id]);
 
-  useEffect(() => {
-    const midtransScriptUrl = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true"
-      ? "https://app.midtrans.com/snap/snap.js"
-      : "https://app.sandbox.midtrans.com/snap/snap.js";
-
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "SB-Mid-client-dummy";
-
-    const script = document.createElement("script");
-    script.src = midtransScriptUrl;
-    script.setAttribute("data-client-key", clientKey);
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  // NOTE: Midtrans is not used. This platform is full crypto-only via escrow smart contract.
+  // Midtrans script is intentionally NOT loaded.
 
   const fetchGig = async () => {
     try {
@@ -351,157 +336,18 @@ export default function GigDetailPage() {
     }
   };
 
+  // Deprecated: Midtrans is not used on this platform (full crypto only).
+  // This handler is kept as a no-op to avoid breaking references, but is never called.
   const handlePayMidtrans = async () => {
-    if (!gig) return;
-    setIsBooking(true);
-    let bookingId: string | null = null;
-
-    try {
-      // 1. Create a pending booking in the database
-      const createRes = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gigId: gig.id,
-          bookingDate,
-          bookingTime,
-          groupSize,
-          participants: passengerDetails,
-          cryptoToken: "USDC",
-        }),
-      });
-
-      if (!createRes.ok) {
-        const errorData = await createRes.json();
-        throw new Error(errorData.message || "Failed to create booking in database");
-      }
-
-      const dbBooking = await createRes.json();
-      bookingId = dbBooking.id;
-
-      // 2. Fetch the Midtrans token for this booking
-      toast.info("Connecting to Midtrans Local Checkout...");
-      const tokenRes = await fetch("/api/payment/midtrans-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId }),
-      });
-
-      if (!tokenRes.ok) {
-        throw new Error("Failed to get Midtrans payment token");
-      }
-
-      const { token, redirectUrl } = await tokenRes.json();
-      setShowWalletModal(false);
-
-      // 3. Open Midtrans Snap popup
-      if ((window as any).snap) {
-        (window as any).snap.pay(token, {
-          onSuccess: function (result: any) {
-            console.log("Midtrans payment success:", result);
-            toast.success("Payment successful! Escrow locked.");
-            setTxHash(result.transaction_id || "N/A");
-            setShowSuccessModal(true);
-          },
-          onPending: function (result: any) {
-            console.log("Midtrans payment pending:", result);
-            toast.info("Payment pending. Check details in your Bookings.");
-            router.push("/dashboard/tourist/bookings");
-          },
-          onError: function (result: any) {
-            console.error("Midtrans payment error:", result);
-            toast.error("Payment failed. Booking cancelled.");
-            if (bookingId) {
-              fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(console.error);
-            }
-          },
-          onClose: function () {
-            console.log("Midtrans snap popup closed");
-            toast.warning("Payment cancelled.");
-            if (bookingId) {
-              fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(console.error);
-            }
-          }
-        });
-      } else {
-        // Fallback to redirection
-        window.location.href = redirectUrl;
-      }
-    } catch (error: any) {
-      console.error(error);
-      if (bookingId) {
-        try {
-          await fetch(`/api/bookings/${bookingId}`, { method: "DELETE" }).catch(console.error);
-        } catch (delErr) {
-          console.error("Failed to clean up booking:", delErr);
-        }
-      }
-      toast.error(error.message || "Payment checkout failed");
-    } finally {
-      setIsBooking(false);
-    }
+    toast.error("Midtrans payment is not available. Please use crypto wallet payment.");
   };
 
+  // Deprecated: AlchemyPay sandbox was removed. This was generating mock txHash which caused
+  // bookings to be confirmed in DB without any real on-chain escrow funding.
+  // Kept as no-op to avoid reference errors.
   const handleAlchemyPaySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (cardNumber.length < 15) {
-      toast.error("Please enter a valid credit card number");
-      return;
-    }
-    
-    setShowAlchemyPayModal(false);
-    setIsBooking(true);
-    
-    try {
-      // 1. Create pending booking in database
-      const createRes = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gigId: gig.id,
-          bookingDate,
-          bookingTime,
-          groupSize,
-          participants: passengerDetails,
-          cryptoToken: "USDC",
-        }),
-      });
-
-      if (!createRes.ok) {
-        throw new Error("Failed to create booking in database");
-      }
-
-      const dbBooking = await createRes.json();
-      const bookingId = dbBooking.id;
-
-      toast.info("Processing Fiat-to-Crypto via Alchemy Pay...");
-      await new Promise(r => setTimeout(r, 2500));
-      toast.success("USDC Successfully Purchased!");
-      
-      toast.info("Executing Smart Contract Escrow...");
-      await new Promise(r => setTimeout(r, 2000));
-      
-      const mockTxHash = "0xMOCK_ALCHEMY_" + Array.from({length: 48}, () => Math.floor(Math.random() * 16).toString(16)).join("");
-
-      // 2. Update booking status to CONFIRMED (funded)
-      await fetch(`/api/bookings/${bookingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: "CONFIRMED",
-          txHash: mockTxHash,
-          paymentNetwork: "base",
-        }),
-      });
-
-      setTxHash(mockTxHash);
-      setShowSuccessModal(true);
-      toast.success("Payment Successful! Escrow locked.");
-    } catch (error: any) {
-      toast.error(error.message || "Alchemy Pay transaction failed");
-    } finally {
-      setIsBooking(false);
-    }
+    toast.error("AlchemyPay is not available. Please use crypto wallet payment.");
   };
 
   const handleAskGuide = async () => {

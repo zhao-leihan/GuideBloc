@@ -12,6 +12,7 @@ interface CustodianStatus {
   nativeBalance: string;
   network: string;
   rpcUrl: string;
+  isDbFallback?: boolean;
 }
 
 export default function AdminWalletPage() {
@@ -82,7 +83,7 @@ export default function AdminWalletPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipient,
+          recipientAddress: recipient,
           token,
           amount: Number(amount),
           network
@@ -223,6 +224,17 @@ export default function AdminWalletPage() {
                     </button>
                   </div>
 
+                  {/* DB Fallback Warning Banner */}
+                  {(status as any).isDbFallback && (
+                    <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+                      <span className="text-amber-500 text-base leading-tight">⚠️</span>
+                      <div>
+                        <p className="font-semibold">Balance shown from DB Ledger</p>
+                        <p className="text-amber-700 mt-0.5">Live on-chain balance is 0. The value displayed is a sum of recorded revenues in the database — it may not reflect the actual on-chain wallet balance if there were sync failures.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
                       <p className="text-xs text-dark-400 font-semibold">USDC Balance</p>
@@ -274,7 +286,11 @@ export default function AdminWalletPage() {
                           <td className="px-4 py-3 text-dark-600 font-mono text-xs">{tx.date}</td>
                           <td className="px-4 py-3 font-semibold text-dark-900">{tx.source}</td>
                           <td className="px-4 py-3 text-dark-500 text-xs truncate max-w-[150px]">{tx.ref}</td>
-                          <td className="px-4 py-3 font-bold text-green-600">+{tx.amount.toFixed(2)} USDT</td>
+                          <td className={`px-4 py-3 font-bold ${
+                            tx.amount < 0 ? "text-red-600" : "text-green-600"
+                          }`}>
+                            {tx.amount < 0 ? "-" : "+"}{Math.abs(tx.amount).toFixed(2)} USDT
+                          </td>
                           <td className="px-4 py-3">
                             {tx.fullHash && tx.fullHash !== "N/A" && (
                               tx.fullHash.startsWith("0xMOCK") ? (

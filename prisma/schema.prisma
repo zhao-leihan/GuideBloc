@@ -142,12 +142,16 @@ model Booking {
   participants    Json?
   createdAt       DateTime      @default(now())
   proofPhoto      String?
+  // Snapshot of guide wallet address at booking creation time.
+  // This locks the payout destination even if the guide later changes their wallet.
+  guideWalletSnapshot String?
 
   gig             Gig      @relation(fields: [gigId], references: [id])
   tourist         User     @relation(fields: [touristId], references: [id])
   reviews         Review[]
   conversations   Conversation[]
   meetSession     MeetSession?
+  escrowPayout    EscrowPayout?
 
   @@map("bookings")
 }
@@ -353,12 +357,33 @@ model PlatformRevenue {
   @@map("platform_revenue")
 }
 
+// Tracks every escrow payout to a guide after tour completion.
+// Provides full audit trail of guide earnings and platform commission splits.
+model EscrowPayout {
+  id                  String   @id @default(cuid())
+  bookingId           String   @unique
+  guideId             String
+  // Wallet address that actually received the funds on-chain (snapshot at release time)
+  guideWallet         String
+  guideAmountUSD      Float
+  commissionAmountUSD Float
+  // The on-chain transaction hash of the releaseToGuide() call
+  releaseHash         String?
+  status              String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  createdAt           DateTime @default(now())
+
+  booking             Booking  @relation(fields: [bookingId], references: [id])
+
+  @@map("escrow_payouts")
+}
+
 enum RevenueSource {
   BOOKING_COMMISSION
   SUBSCRIPTION_FEE
   GIG_BOOST
   FEATURED_LISTING
   TIP_FEE
+  TREASURY_OUTFLOW
 }
 
 model GroupMember {

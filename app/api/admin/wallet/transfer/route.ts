@@ -81,6 +81,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Transaction failed to complete" }, { status: 500 });
     }
 
+    // Record the outflow in the platform revenue ledger
+    try {
+      const { prisma } = await import("@/lib/prisma");
+      await prisma.$transaction([
+        prisma.platformRevenue.create({
+          data: {
+            source: "TREASURY_OUTFLOW",
+            amountUSDT: -Math.abs(Number(amount)), // Negative to represent outflow
+            txHash,
+            referenceId: `${token}_TO_${recipientAddress.slice(0, 10)}`,
+          },
+        }),
+        prisma.paymentAuditLog.create({
+          data: {
+            bookingId: null,
+            txHash,
+            source: "ADMIN_WALLET_TRANSFER",
+            status: "SUCCESS",
+            rawPayload: { token, recipientAddress, amount, network },
+          },
+        }),
+      ]);
+    } catch (ledgerErr) {
+      // Non-fatal: log the DB write failure but don't fail the transfer response
+      console.error("[Admin Wallet] Failed to write ledger record:", ledgerErr);
+    }
+
     console.log(`[Admin Wallet] Successfully sent! Hash: ${txHash}`);
     return NextResponse.json({ success: true, txHash });
   } catch (error: any) {

@@ -254,16 +254,23 @@ export async function POST(req: Request) {
       }
     });
 
-    // Create Platform Revenue Log (10% Platform Commission)
+    // Create Platform Revenue Log (10% Platform Commission) only if not already recorded
+    // Note: A second revenue record will be created on COMPLETED with the actual release hash.
+    // This records the initial payment verification to have full audit chain.
     const platformFeeAmount = booking.platform_fee || (transferredAmountUSD * 0.10);
-    await prisma.platformRevenue.create({
-      data: {
-        source: "BOOKING_COMMISSION",
-        amountUSDT: platformFeeAmount,
-        txHash: cleanTxHash,
-        referenceId: booking.id
-      }
-    }).catch(() => null);
+    const existingRevenue = await prisma.platformRevenue.findFirst({
+      where: { referenceId: booking.id }
+    });
+    if (!existingRevenue) {
+      await prisma.platformRevenue.create({
+        data: {
+          source: "BOOKING_COMMISSION",
+          amountUSDT: platformFeeAmount,
+          txHash: cleanTxHash,
+          referenceId: booking.id
+        }
+      }).catch(() => null);
+    }
 
     // Save Audit Trail Log
     await prisma.paymentAuditLog.create({
