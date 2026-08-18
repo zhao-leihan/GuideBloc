@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
   // 2. Escrow & Daily Volume Logic
   const escrowBookings = await prisma.booking.findMany({
     where: {
-      status: { in: ["CONFIRMED", "DISPUTED"] },
+      status: { in: ["CONFIRMED", "PAID", "DISPUTED"] },
     },
     select: { totalPriceUSD: true },
   });
@@ -35,7 +35,7 @@ export default async function AdminDashboardPage() {
   const dailyVolumeAggregate = await prisma.booking.aggregate({
     where: {
       createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-      status: { in: ["CONFIRMED", "COMPLETED"] },
+      status: { in: ["CONFIRMED", "PAID", "COMPLETED"] },
     },
     _sum: { totalPriceUSD: true },
   });

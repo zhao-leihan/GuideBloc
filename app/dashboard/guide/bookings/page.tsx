@@ -108,12 +108,12 @@ export default function GuideBookingsPage() {
   };
 
   const pendingCount = bookings.filter((b) => b.status === "PENDING").length;
-  const confirmedCount = bookings.filter((b) => b.status === "CONFIRMED").length;
+  const confirmedCount = bookings.filter((b) => b.status === "CONFIRMED" || b.status === "PAID").length;
   const completedCount = bookings.filter((b) => b.status === "COMPLETED").length;
   
-  // Calculate total earnings from completed bookings
+  // Calculate total earnings from completed / paid bookings
   const totalRevenue = bookings
-    .filter((b) => b.status === "COMPLETED")
+    .filter((b) => b.status === "COMPLETED" || b.status === "PAID" || b.status === "CONFIRMED")
     .reduce((sum, b) => sum + (b.guide_price || (b.totalPriceUSD * 0.90)), 0);
 
   const unreviewedCompletedBooking = bookings.find(

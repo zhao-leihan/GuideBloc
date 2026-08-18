@@ -70,10 +70,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Gig not found" }, { status: 404 });
     }
 
-    // Prevent Tour Guides from booking ANY tours (Guides are restricted to View-Only mode for bookings)
-    if (user.role === "GUIDE" || user.guideStatus === "APPROVED" || gig.guideId === user.id || (user.email && gig.guideId === user.email)) {
+    // Prevent Tour Guides from booking their OWN tours (Admin & Tourists can book for testing)
+    if (user.role !== "ADMIN" && (gig.guideId === user.id || (user.email && gig.guideId === user.email))) {
       return NextResponse.json(
-        { message: "Tour Guides cannot book tours. Booking features are exclusively reserved for Tourists." },
+        { message: "Tour Guides cannot book their own tours." },
         { status: 403 }
       );
     }
