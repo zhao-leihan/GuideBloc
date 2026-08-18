@@ -259,7 +259,8 @@ export default function PaymentModal({
       ];
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-      const amountUnits = ethers.parseUnits(amount.toString(), 6); // 6 decimals for USDC & USDT
+      const safeAmountStr = Number(amount).toFixed(6);
+      const amountUnits = ethers.parseUnits(safeAmountStr, 6); // 6 decimals for USDC & USDT
 
       setVerifyStage(2);
       toast.loading(`Broadcasting ${selectedNetwork.toUpperCase()} ${selectedToken} transaction...`, { id: toastId });

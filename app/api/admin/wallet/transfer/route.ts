@@ -70,7 +70,8 @@ export async function POST(req: Request) {
       const tokenAddress = getTokenAddress(token, network);
       console.log(`[Admin Wallet] Transferring ${amount} ${token} (${tokenAddress}) to ${recipientAddress} on ${network}`);
       const contract = new ethers.Contract(tokenAddress, ERC20_ABI, wallet);
-      const parsedAmount = ethers.parseUnits(amount.toString(), 6);
+      const safeAmountStr = Number(amount).toFixed(6);
+      const parsedAmount = ethers.parseUnits(safeAmountStr, 6);
       const tx = await contract.transfer(recipientAddress, parsedAmount);
       const receipt = await tx.wait();
       txHash = receipt?.hash || tx.hash;
