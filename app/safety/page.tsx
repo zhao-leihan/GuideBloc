@@ -48,6 +48,12 @@ export default function SafetyPage() {
                 icon: ShieldAlert,
                 color: "text-accent bg-accent/10",
               },
+              {
+                title: "4. Marketplace Liability Disclaimer",
+                desc: "Explomate bertindak murni sebagai platform marketplace. Setiap insiden, kecelakaan fisik, atau hal tak terduga selama trip merupakan tanggung jawab penuh Tour Guide & Wisatawan, bukan tanggung jawab platform Explomate.",
+                icon: ShieldAlert,
+                color: "text-amber-500 bg-amber-500/10",
+              },
             ].map((pillar, idx) => (
               <div key={idx} className="card p-8 hover:border-primary/20 transition-all duration-300">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${pillar.color}`}>

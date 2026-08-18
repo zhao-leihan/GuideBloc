@@ -61,6 +61,21 @@ export default function TermsOfServicePage() {
             <p>
               Disputed escrow releases are arbitrated by Explomate&apos;s administration panel, whose decision is final and binding on both guides and tourists.
             </p>
+
+            <h2 className="text-lg font-bold text-amber-600 dark:text-amber-400 font-display border-b border-dark-100 pb-2 pt-4 flex items-center gap-2">
+              6. Marketplace Platform Role & Trip Liability Disclaimer
+            </h2>
+            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-3 text-dark-800 dark:text-dark-200">
+              <p className="font-semibold text-amber-700 dark:text-amber-300">
+                Penting / Important Notice:
+              </p>
+              <p>
+                <strong>Explomate bertindak murni sebagai penyedia platform marketplace</strong> yang menghubungkan Wisatawan (Tourist) dengan Tour Guide independen. Explomate tidak memiliki, mengelola, atau mengoperasikan layanan tur fisik secara langsung.
+              </p>
+              <p>
+                Setiap risiko perjalanan, insiden, kecelakaan fisik, cedera, kerusakan barang, atau kerugian selama trip/tur berjalan <strong>sepenuhnya merupakan tanggung jawab pribadi antara Tour Guide dan Wisatawan (Tour Guide Responsibility)</strong>. Explomate sebagai penyedia platform marketplace terbebas dari segala bentuk gugatan hukum, klaim ganti rugi, atau tanggung jawab atas kecelakaan selama pelaksanaan perjalanan tur.
+              </p>
+            </div>
           </div>
         </section>
       </div>

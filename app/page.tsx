@@ -41,33 +41,33 @@ import GigCard from "@/components/gigs/GigCard";
 const featuredDestinations = [
   {
     id: "1",
-    title: "Bali, Indonesia",
-    images: ["https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80"],
+    title: "Raja Ampat, Indonesia",
+    images: ["https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=1200&q=80"],
   },
   {
     id: "2",
-    title: "Tokyo, Japan",
-    images: ["https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80"],
+    title: "Kyoto, Japan",
+    images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80"],
   },
   {
     id: "3",
-    title: "Santorini, Greece",
-    images: ["https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80"],
+    title: "Swiss Alps, Switzerland",
+    images: ["https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80"],
   },
   {
     id: "4",
-    title: "Marrakech, Morocco",
-    images: ["https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?auto=format&fit=crop&w=1200&q=80"],
+    title: "Labuan Bajo, Indonesia",
+    images: ["https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80"],
   },
   {
     id: "5",
-    title: "Machu Picchu, Peru",
-    images: ["https://images.unsplash.com/photo-1508849789987-4e5333c12b78?auto=format&fit=crop&w=1200&q=80"],
+    title: "Paris, France",
+    images: ["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"],
   },
   {
     id: "6",
-    title: "Bangkok, Thailand",
-    images: ["https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1200&q=80"],
+    title: "Reykjavik, Iceland",
+    images: ["https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=1200&q=80"],
   },
 ];
 
