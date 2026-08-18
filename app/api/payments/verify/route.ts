@@ -250,9 +250,20 @@ export async function POST(req: Request) {
         status: "PAID",
         txHash: cleanTxHash,
         paidAmountUSD: transferredAmountUSD,
-        paymentNetwork: "Base L2 Network"
+        paymentNetwork: selectedNet === "avalanche" ? "Avalanche C-Chain" : "Base L2 Network"
       }
     });
+
+    // Create Platform Revenue Log (10% Platform Commission)
+    const platformFeeAmount = booking.platform_fee || (transferredAmountUSD * 0.10);
+    await prisma.platformRevenue.create({
+      data: {
+        source: "BOOKING_COMMISSION",
+        amountUSDT: platformFeeAmount,
+        txHash: cleanTxHash,
+        referenceId: booking.id
+      }
+    }).catch(() => null);
 
     // Save Audit Trail Log
     await prisma.paymentAuditLog.create({

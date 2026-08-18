@@ -230,7 +230,7 @@ export default function GuideBookingsPage() {
                                 </button>
                               </>
                             )}
-                            {(b.status === "CONFIRMED" || b.status === "FUNDED") && (
+                            {(b.status === "CONFIRMED" || b.status === "FUNDED" || b.status === "PAID") && (
                               <>
                                 <button
                                   onClick={() => handleUpdateStatus(b.id, "COMPLETED")}
