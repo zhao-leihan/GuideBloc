@@ -60,15 +60,15 @@ export interface PaymentParams {
 
 export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwork = "avalanche"): string {
   if (network === "avalanche") {
-    const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+    const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
     if (token === "USDC") {
-      return isAvaxMainnet 
-        ? "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" 
-        : "0xB819bE9925EcBefe8b7eAebe51f42360673ffC86"; // Fuji Testnet USDC (Minted MockUSDC)
+      return isAvaxTestnet 
+        ? "0xB819bE9925EcBefe8b7eAebe51f42360673ffC86" // Fuji Testnet USDC
+        : "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"; // Avalanche Mainnet Native USDC
     } else {
-      return isAvaxMainnet
+      return isAvaxTestnet
         ? "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7" 
-        : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Fuji Testnet USDT
+        : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Avalanche Mainnet USDT
     }
   }
 

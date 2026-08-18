@@ -295,7 +295,11 @@ export default function GuideWalletPage() {
                                     <span className="text-[10px] text-dark-405 bg-dark-100 px-2 py-0.5 rounded-full">Sandbox</span>
                                   ) : (
                                     <a
-                                      href={`https://sepolia.basescan.org/tx/${tx.txHash}`}
+                                      href={
+                                        (tx.paymentNetwork || "").toLowerCase().includes("avalanche") || (tx.paymentNetwork || "").toLowerCase().includes("avax")
+                                          ? `https://snowtrace.io/tx/${tx.txHash}`
+                                          : `https://basescan.org/tx/${tx.txHash}`
+                                      }
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"

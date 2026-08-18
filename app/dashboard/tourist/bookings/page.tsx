@@ -592,7 +592,11 @@ export default function TouristBookingsPage() {
                           <span className="text-[10px] bg-dark-100 text-dark-500 px-2 py-0.5 rounded-full ml-1">Sandbox</span>
                         ) : (
                           <a 
-                            href={`https://sepolia.basescan.org/tx/${booking.txHash}`} 
+                            href={
+                              (booking.paymentNetwork || "").toLowerCase().includes("avalanche") || (booking.paymentNetwork || "").toLowerCase().includes("avax")
+                                ? `https://snowtrace.io/tx/${booking.txHash}`
+                                : `https://basescan.org/tx/${booking.txHash}`
+                            }
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="hover:text-primary transition-colors flex items-center gap-0.5"

@@ -26,13 +26,13 @@ export async function GET(req: Request) {
 
     const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
     const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+    const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
     
     let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
     if (network === "avalanche") {
-      rpcUrl = isAvaxMainnet 
-        ? "https://api.avax.network/ext/bc/C/rpc" 
-        : "https://api.avax-test.network/ext/bc/C/rpc";
+      rpcUrl = isAvaxTestnet 
+        ? "https://api.avax-test.network/ext/bc/C/rpc" 
+        : "https://api.avax.network/ext/bc/C/rpc";
     } else if (network === "base") {
       rpcUrl = isBaseMainnet 
         ? "https://mainnet.base.org" 
