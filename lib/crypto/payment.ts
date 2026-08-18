@@ -163,6 +163,9 @@ export function openMobileWalletDeepLink(walletType: SupportedWalletType): boole
     case "zerion":
       deepLink = `https://wallet.zerion.io/dapp/${hostPath}`;
       break;
+    case "solflare":
+      deepLink = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}`;
+      break;
   }
 
   if (deepLink) {
@@ -194,6 +197,7 @@ export async function connectWallet(
       if (walletType === "okx") return rdns.includes("okx") || name.includes("okx");
       if (walletType === "phantom") return rdns.includes("phantom") || name.includes("phantom");
       if (walletType === "zerion") return rdns.includes("zerion") || name.includes("zerion");
+      if (walletType === "solflare") return rdns.includes("solflare") || name.includes("solflare");
       return false;
     };
 
@@ -275,10 +279,16 @@ export async function connectWallet(
         if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isZerion);
         if (!rawProvider && eth.isZerion) rawProvider = eth;
       }
+    } else if (walletType === "solflare") {
+      rawProvider = (window as any).solflare?.ethereum || (window as any).solflare;
+      if (!rawProvider && eth) {
+        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isSolflare);
+        if (!rawProvider && eth.isSolflare) rawProvider = eth;
+      }
     }
   }
 
-  if (!rawProvider && !walletType) {
+  if (!rawProvider) {
     rawProvider = (window as any).ethereum;
   }
 
