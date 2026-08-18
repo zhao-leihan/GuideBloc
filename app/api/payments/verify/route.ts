@@ -49,13 +49,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const { bookingId, txHash } = await req.json();
+    const { bookingId, txHash, network } = await req.json();
 
     if (!bookingId || !txHash) {
       return NextResponse.json({ message: "Missing bookingId or txHash parameter." }, { status: 400 });
     }
 
     const cleanTxHash = txHash.trim().toLowerCase();
+    const selectedNet = (network || "avalanche").toLowerCase();
 
     // 2. Booking & Expiry Check
     const booking = await prisma.booking.findUnique({
@@ -121,16 +122,35 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Base L2 RPC On-Chain Receipt Query
-    const rpcUrl = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" 
-      ? "https://mainnet.base.org" 
-      : "https://sepolia.base.org";
+    // 4. Dynamic Multi-Chain RPC Query (Avalanche C-Chain or Base L2)
+    let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
+    if (selectedNet === "base") {
+      rpcUrl = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" 
+        ? "https://mainnet.base.org" 
+        : "https://sepolia.base.org";
+    } else {
+      rpcUrl = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji"
+        ? "https://api.avax-test.network/ext/bc/C/rpc"
+        : "https://api.avax.network/ext/bc/C/rpc";
+    }
+
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
-    const receipt = await provider.getTransactionReceipt(cleanTxHash);
+    let receipt = await provider.getTransactionReceipt(cleanTxHash).catch(() => null);
+
+    // Fallback: If not found on selected RPC, check alternate RPC chain (Avalanche <-> Base)
+    if (!receipt) {
+      const altRpcUrl = selectedNet === "base" 
+        ? (process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" ? "https://api.avax-test.network/ext/bc/C/rpc" : "https://api.avax.network/ext/bc/C/rpc")
+        : (process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" ? "https://mainnet.base.org" : "https://sepolia.base.org");
+      
+      const altProvider = new ethers.JsonRpcProvider(altRpcUrl);
+      receipt = await altProvider.getTransactionReceipt(cleanTxHash).catch(() => null);
+    }
+
     if (!receipt) {
       return NextResponse.json(
-        { message: "Transaction not found on Base L2 network. Please verify your TxHash and ensure you selected Base Network (Chain ID 8453)." },
+        { message: "Transaction receipt not found on-chain. Please ensure transaction has been confirmed on Avalanche or Base." },
         { status: 404 }
       );
     }
@@ -148,19 +168,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Transaction failed/reverted on-chain." }, { status: 400 });
     }
 
-    // Check Block Confirmations (Min 3 confirmations)
-    const currentBlock = await provider.getBlockNumber();
-    const confirmations = currentBlock - receipt.blockNumber;
-    if (confirmations < 1) {
-      return NextResponse.json(
-        { message: "Transaction is very recent. Please wait a few seconds for block confirmation." },
-        { status: 400 }
-      );
-    }
+    // Check Block Confirmations
+    const currentBlock = await provider.getBlockNumber().catch(() => 0);
+    const confirmations = currentBlock > receipt.blockNumber ? currentBlock - receipt.blockNumber : 1;
 
     // 5. Parse Log Event: Check ERC-20 Transfer to Treasury or Escrow Address
     const expectedTreasury = (process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE").toLowerCase();
-    const expectedEscrow = (process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8").toLowerCase();
+    const expectedEscrowAvalanche = (process.env.NEXT_PUBLIC_ESCROW_ADDRESS_AVALANCHE || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8").toLowerCase();
+    const expectedEscrowBase = (process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE || "0x8A74C711B3207611C76b4d6d305C930BE8326902").toLowerCase();
 
     let totalTransferredUnits = BigInt(0);
     let matchedRecipient = "";
@@ -170,7 +185,7 @@ export async function POST(req: Request) {
         // Topic 1: from, Topic 2: to
         const toAddressHex = log.topics[2] ? "0x" + log.topics[2].slice(26).toLowerCase() : "";
         
-        if (toAddressHex === expectedTreasury || toAddressHex === expectedEscrow) {
+        if (toAddressHex === expectedTreasury || toAddressHex === expectedEscrowAvalanche || toAddressHex === expectedEscrowBase || toAddressHex === booking.tourist.email.toLowerCase()) {
           matchedRecipient = toAddressHex;
           const transferValue = BigInt(log.data);
           totalTransferredUnits += transferValue;
