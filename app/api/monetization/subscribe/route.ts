@@ -18,16 +18,16 @@ export async function POST(req: Request) {
     }
 
     const { tier, txHash } = await req.json();
-    if (tier !== "PRO" && tier !== "ELITE") {
-      return NextResponse.json({ message: "Invalid subscription tier" }, { status: 400 });
+    if (tier !== "PRO") {
+      return NextResponse.json({ message: "Invalid subscription tier. Only PRO is available." }, { status: 400 });
     }
 
     if (!txHash) {
       return NextResponse.json({ message: "Transaction hash is required" }, { status: 400 });
     }
 
-    // Determine cost based on Config
-    const cost = tier === "PRO" ? CONFIG.PRO_MONTHLY_PRICE : CONFIG.ELITE_MONTHLY_PRICE;
+    // Fixed $9.99 USDC for the single PRO tier
+    const cost = 9.99;
 
     // Calculate subscription period: 30 days
     const now = new Date();

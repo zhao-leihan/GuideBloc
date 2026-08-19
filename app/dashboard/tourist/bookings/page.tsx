@@ -13,6 +13,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import MeetInterface from "@/components/meet/MeetInterface";
 import TourVerificationModal from "@/components/verification/TourVerificationModal";
+import TipModal from "@/components/payment/TipModal";
 
 export default function TouristBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -38,6 +39,9 @@ export default function TouristBookingsPage() {
   const [proofPhoto, setProofPhoto] = useState<string>("");
   const [isUploadingProof, setIsUploadingProof] = useState<boolean>(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Tip modal state — shown after review submitted
+  const [tipBooking, setTipBooking] = useState<any | null>(null);
 
   const [hiddenBookingIds, setHiddenBookingIds] = useState<string[]>([]);
 
@@ -471,6 +475,7 @@ export default function TouristBookingsPage() {
         setBookings((prev) =>
           prev.map((b) => (b.id === activeReviewBooking.id ? { ...b, hasReviewed: true } : b))
         );
+        const reviewedBooking = activeReviewBooking;
         setReviewBooking(null);
         // Reset state
         setGuideRating(5);
@@ -478,6 +483,8 @@ export default function TouristBookingsPage() {
         setGuideImages([]);
         setPlatformRating(5);
         setPlatformComment("");
+        // Offer tip after review
+        setTipBooking(reviewedBooking);
       } else {
         const err = await res.json();
         toast.error(err.message || "Failed to submit reviews");
@@ -1024,6 +1031,16 @@ export default function TouristBookingsPage() {
             fetchBookings();
             toast.success("Tour Verified & Escrow Released Successfully!");
           }}
+        />
+      )}
+
+      {/* Tip Modal — appears after review submission */}
+      {tipBooking && (
+        <TipModal
+          isOpen={true}
+          onClose={() => setTipBooking(null)}
+          bookingId={tipBooking.id}
+          gigTitle={tipBooking.tourName}
         />
       )}
     </DashboardLayout>

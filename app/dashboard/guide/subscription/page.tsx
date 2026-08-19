@@ -3,214 +3,307 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Check, X, Star, Zap, Crown, Sparkles, Loader2 } from "lucide-react";
-import { connectWallet } from "@/lib/crypto/payment";
-import { CONFIG } from "@/lib/config";
-import { ethers } from "ethers";
+import {
+  Check,
+  X,
+  Loader2,
+  ShieldCheck,
+  TrendingUp,
+  LayoutGrid,
+  HeadphonesIcon,
+  Award,
+  AlertCircle,
+} from "lucide-react";
+import PaymentModal from "@/components/payment/PaymentModal";
 import toast from "react-hot-toast";
 
-const plans = [
-  {
-    name: "Free",
-    price: 0,
-    features: ["Create tours/gigs", "Normal search ranking", "Email support"],
-    notIncluded: ["Priority ranking boost", "Featured Gig badge", "Advanced analytics dashboard"],
-    icon: Star,
-    popular: false,
-  },
-  {
-    name: "Pro",
-    price: 10,
-    features: ["Priority ranking boost", "Featured Gig badge", "Advanced analytics dashboard", "High profile visibility", "Unlimited gigs", "Priority support"],
-    notIncluded: ["Premium placement", "Homepage priority placement"],
-    icon: Crown,
-    popular: true,
-  },
-  {
-    name: "Elite",
-    price: 25,
-    features: ["Strong ranking boost", "Featured Gig badge", "Advanced analytics dashboard", "Homepage priority slot", "Premium search placement", "Dedicated account manager", "Highest visibility"],
-    notIncluded: [],
-    icon: Sparkles,
-    popular: false,
-  },
+const PRO_PRICE = 9.99;
+
+const PRO_FEATURES = [
+  "Priority ranking in search results",
+  "Featured badge on all gig listings",
+  "High-visibility profile placement",
+  "Advanced discoverability score boost",
+  "Priority support channel",
+];
+
+const FREE_LIMITATIONS = [
+  "Normal search ranking",
+  "No featured badge",
+  "Standard profile visibility",
 ];
 
 export default function SubscriptionPage() {
   const { data: session, update: updateSession } = useSession();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [subType, setSubType] = useState("FREE");
   const [subExpiry, setSubExpiry] = useState<string | null>(null);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [pendingTxHash, setPendingTxHash] = useState<string | null>(null);
+  const [activating, setActivating] = useState(false);
 
   useEffect(() => {
     if (session?.user) {
       const user = session.user as any;
       setSubType(user.subscription_type || "FREE");
       if (user.subscription_expiry) {
-        setSubExpiry(new Date(user.subscription_expiry).toLocaleDateString());
+        setSubExpiry(
+          new Date(user.subscription_expiry).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        );
       }
     }
   }, [session]);
 
-  const handleSubscribe = async (plan: typeof plans[0]) => {
-    if (plan.price === 0) return;
-    setLoadingPlan(plan.name);
+  // Called by PaymentModal after on-chain tx confirmed
+  const handlePaymentConfirmed = async (txHash: string) => {
+    setPendingTxHash(txHash);
+    setShowPayModal(false);
+    setActivating(true);
 
     try {
-      toast.loading("Connecting wallet & switching to Base...");
-      const { provider } = await connectWallet("base");
-      const signer = await provider.getSigner();
-
-      // USDC ERC20 contract address on Base
-      const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-      const USDC_TRANSFER_ABI = [
-        "function transfer(address to, uint256 amount) external returns (bool)"
-      ];
-
-      const contract = new ethers.Contract(USDC_BASE_ADDRESS, USDC_TRANSFER_ABI, signer);
-      const amount = ethers.parseUnits(plan.price.toString(), 6); // USDC uses 6 decimals
-
-      toast.dismiss();
-      toast.loading(`Please confirm transaction of ${plan.price} USDC in your wallet...`);
-      
-      const tx = await contract.transfer(CONFIG.TREASURY_WALLET_ADDRESS, amount);
-      const receipt = await tx.wait();
-
-      toast.dismiss();
-      toast.loading("Activating your subscription on Explomate...");
-
       const res = await fetch("/api/monetization/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tier: plan.name.toUpperCase(),
-          txHash: receipt.hash,
-        }),
+        body: JSON.stringify({ tier: "PRO", txHash }),
       });
 
-      toast.dismiss();
       if (res.ok) {
         const result = await res.json();
-        toast.success(`Successfully upgraded to ${plan.name}!`);
+        toast.success("Pro subscription activated.");
         setSubType(result.subscription_type);
-        setSubExpiry(new Date(result.subscription_expiry).toLocaleDateString());
-        
-        // Refresh local NextAuth session
+        setSubExpiry(
+          new Date(result.subscription_expiry).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        );
         await updateSession();
       } else {
-        const errorData = await res.json();
-        toast.error(errorData.message || "Failed to register subscription on backend");
+        const err = await res.json();
+        toast.error(err.message || "Failed to activate subscription on backend");
       }
-    } catch (error: any) {
-      toast.dismiss();
-      console.error(error);
-      toast.error(error.reason || error.message || "Transaction failed");
+    } catch (e: any) {
+      toast.error("Network error activating subscription");
     } finally {
-      setLoadingPlan(null);
+      setActivating(false);
     }
   };
 
+  const isPro = subType === "PRO" || subType === "ELITE";
+
   return (
     <DashboardLayout role="guide">
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-3xl">
+        {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-dark-900">Subscription Plans</h1>
-          <p className="text-dark-500">Upgrade your freelance tier to boost ranking and unlock premium placement.</p>
+          <h1 className="text-2xl font-bold text-dark-900">Subscription</h1>
+          <p className="text-dark-500 mt-1">
+            Increase your visibility and attract more bookings with the Pro plan.
+          </p>
         </div>
 
-        {/* Current Plan Card */}
-        <div className="card p-6 bg-dark-900 text-white flex items-center justify-between border border-dark-800">
-          <div>
-            <p className="text-xs text-dark-400 uppercase tracking-wide font-semibold">Active Plan</p>
-            <h3 className="text-xl font-bold mt-1 flex items-center gap-2">
-              {subType} Tier
-              {subType !== "FREE" && <span className="inline-block w-2.5 h-2.5 rounded-full bg-secondary animate-pulse" />}
-            </h3>
-            {subType !== "FREE" && subExpiry && (
-              <p className="text-sm text-dark-300 mt-1">Renews/Expires on: {subExpiry}</p>
-            )}
-          </div>
-          <div className="text-right">
-            <span className="badge badge-primary text-xs px-3 py-1 font-semibold uppercase tracking-wider">
-              {subType === "FREE" ? "Standard" : "Boosted"}
+        {/* Current Status Card */}
+        <div className="card p-6 bg-dark-900 text-white border-none">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-widest font-semibold mb-1">
+                Active Plan
+              </p>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-xl font-bold">
+                  {isPro ? "Pro" : "Free"} Plan
+                </h2>
+                {isPro && (
+                  <span className="inline-block w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                )}
+              </div>
+              {isPro && subExpiry && (
+                <p className="text-sm text-dark-300 mt-1">Renews {subExpiry}</p>
+              )}
+              {!isPro && (
+                <p className="text-sm text-dark-400 mt-1">
+                  Upgrade to boost your ranking and get more visibility.
+                </p>
+              )}
+            </div>
+            <span
+              className={`badge text-xs px-3 py-1.5 font-semibold uppercase tracking-wider ${
+                isPro ? "badge-secondary" : "bg-dark-700 text-dark-300"
+              }`}
+            >
+              {isPro ? "Active" : "Standard"}
             </span>
           </div>
         </div>
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.map((plan) => {
-            const Icon = plan.icon;
-            const isCurrent = subType === plan.name.toUpperCase();
-            
-            return (
-              <div
-                key={plan.name}
-                className={`card p-6 relative flex flex-col justify-between ${
-                  plan.popular ? "ring-2 ring-primary shadow-lg shadow-primary/10" : ""
-                }`}
-                style={{ overflow: 'visible' }}
-              >
-                <div>
-                  {plan.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 badge bg-primary text-white text-xs px-2.5 py-1">
-                      Most Popular
-                    </span>
-                  )}
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-                    plan.popular ? "bg-primary/10 text-primary" : "bg-dark-100 text-dark-500"
-                  }`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-display font-bold text-dark-900 text-lg">{plan.name}</h3>
-                  <div className="mt-2 mb-4">
-                    <span className="text-3xl font-bold text-dark-900">{plan.price} USDC</span>
-                    <span className="text-dark-400 text-sm">/mo</span>
-                  </div>
-                  
-                  <ul className="space-y-3.5 mb-6">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-dark-600">
-                        <Check className="w-4 h-4 text-secondary flex-shrink-0" /> {f}
-                      </li>
-                    ))}
-                    {plan.notIncluded.map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-dark-300">
-                        <X className="w-4 h-4 text-dark-300 flex-shrink-0" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <button
-                  onClick={() => handleSubscribe(plan)}
-                  disabled={isCurrent || plan.price === 0 || loadingPlan !== null}
-                  className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                    isCurrent
-                      ? "bg-dark-100 text-dark-500 cursor-default"
-                      : plan.popular
-                      ? "btn-primary py-2.5"
-                      : "border border-dark-200 text-dark-700 hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {loadingPlan === plan.name ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Paying...
-                    </>
-                  ) : isCurrent ? (
-                    "Active Tier"
-                  ) : plan.price === 0 ? (
-                    "Included"
-                  ) : (
-                    `Upgrade (${plan.price} USDC)`
-                  )}
-                </button>
+        {/* Plans comparison */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Free Plan */}
+          <div className="card p-6 flex flex-col border border-dark-100">
+            <div className="mb-4">
+              <p className="text-xs font-bold text-dark-400 uppercase tracking-wider mb-2">
+                Free
+              </p>
+              <div className="flex items-end gap-1">
+                <span className="text-3xl font-bold text-dark-900">$0</span>
+                <span className="text-dark-400 text-sm pb-1">/mo</span>
               </div>
-            );
-          })}
+            </div>
+            <ul className="space-y-2.5 flex-1">
+              {FREE_LIMITATIONS.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm text-dark-400">
+                  <X className="w-4 h-4 text-dark-300 flex-shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              disabled
+              className="mt-5 w-full py-2.5 rounded-xl text-sm font-semibold bg-dark-100 text-dark-400 cursor-default"
+            >
+              {isPro ? "Downgraded Plan" : "Current Plan"}
+            </button>
+          </div>
+
+          {/* Pro Plan */}
+          <div
+            className="card p-6 flex flex-col relative ring-2 ring-primary shadow-lg shadow-primary/10"
+            style={{ overflow: "visible" }}
+          >
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 badge bg-primary text-white text-xs px-3 py-1 font-bold">
+              Recommended
+            </span>
+            <div className="mb-4">
+              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">
+                Pro
+              </p>
+              <div className="flex items-end gap-1">
+                <span className="text-3xl font-bold text-dark-900">
+                  ${PRO_PRICE}
+                </span>
+                <span className="text-dark-400 text-sm pb-1">/mo</span>
+              </div>
+              <p className="text-xs text-dark-400 mt-1">Paid in USDC</p>
+            </div>
+            <ul className="space-y-2.5 flex-1">
+              {PRO_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-sm text-dark-700">
+                  <Check className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+
+            {activating ? (
+              <button
+                disabled
+                className="mt-5 btn-primary w-full py-2.5 text-sm flex items-center justify-center gap-2"
+              >
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Activating...
+              </button>
+            ) : isPro ? (
+              <button
+                disabled
+                className="mt-5 w-full py-2.5 rounded-xl text-sm font-semibold bg-secondary/10 text-secondary cursor-default border border-secondary/20"
+              >
+                Active — Renews {subExpiry}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowPayModal(true)}
+                className="mt-5 btn-primary w-full py-2.5 text-sm font-semibold cursor-pointer"
+              >
+                Upgrade for ${PRO_PRICE} USDC
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* What happens when you upgrade */}
+        {!isPro && (
+          <div className="card p-6 border border-dark-100">
+            <h3 className="font-semibold text-dark-900 mb-4 text-sm">
+              How the Pro boost works
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  icon: TrendingUp,
+                  label: "Search Priority",
+                  desc: "Your gigs appear higher in explore and search results automatically.",
+                },
+                {
+                  icon: Award,
+                  label: "Featured Badge",
+                  desc: "A visible Pro badge appears on all your tour listings.",
+                },
+                {
+                  icon: LayoutGrid,
+                  label: "Discoverability Score",
+                  desc: "Your ranking score increases immediately upon activation.",
+                },
+                {
+                  icon: HeadphonesIcon,
+                  label: "Priority Support",
+                  desc: "Faster response times from the Explomate support team.",
+                },
+              ].map(({ icon: Icon, label, desc }) => (
+                <div key={label} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-dark-900">{label}</p>
+                    <p className="text-xs text-dark-500 mt-0.5 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pending tx confirmation notice */}
+        {pendingTxHash && !activating && (
+          <div className="card p-4 border border-secondary/20 bg-secondary/5 flex items-start gap-3">
+            <ShieldCheck className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-dark-900">
+                Payment confirmed on-chain
+              </p>
+              <p className="text-xs text-dark-500 mt-0.5 font-mono break-all">
+                {pendingTxHash}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Security note */}
+        <div className="flex items-start gap-2 text-xs text-dark-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <p>
+            Payment is processed directly on-chain via your Web3 wallet. No
+            card or fiat required. Subscription activates immediately after
+            on-chain confirmation.
+          </p>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPayModal}
+        onClose={() => setShowPayModal(false)}
+        amount={PRO_PRICE}
+        token="USDC"
+        gigTitle="Pro Guide Subscription — 30 Days"
+        bookingDate={new Date().toISOString().slice(0, 10)}
+        bookingId={`SUB_${(session?.user as any)?.id?.slice(-6) || "GUIDE"}`}
+        onConfirm={handlePaymentConfirmed}
+      />
     </DashboardLayout>
   );
 }
