@@ -5,10 +5,9 @@ import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import toast from "react-hot-toast";
 import { Rocket, Info, Image as ImageIcon, MapPin, DollarSign, Clock, Users, X, FileText, Globe, Loader2, AlertCircle, Calendar } from "lucide-react";
-import { connectWallet } from "@/lib/crypto/payment";
 import { useRouter } from "next/navigation";
 import { CONFIG } from "@/lib/config";
-import { ethers } from "ethers";
+import PaymentModal from "@/components/payment/PaymentModal";
 
 const categories = [
   "Adventure",
@@ -33,6 +32,9 @@ export default function CreateGigPage() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [boostAlgorithm, setBoostAlgorithm] = useState(false);
+  // ID of the newly created gig — set after creation, used by boost PaymentModal
+  const [pendingBoostGigId, setPendingBoostGigId] = useState<string | null>(null);
+  const [activatingBoost, setActivatingBoost] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -210,45 +212,11 @@ export default function CreateGigPage() {
       const newGig = await res.json();
       toast.success("Gig created successfully!", { id: "create-gig" });
 
-      // 2. If boosted, try to connect wallet and pay boost fee
+      // 2. If boost was requested, open the PaymentModal for the new gig
       if (boostAlgorithm) {
-        try {
-          toast.loading(`Connecting wallet & switching to Base for ${CONFIG.FEATURED_GIG_PRICE} USDC boost...`, { id: "boost-gig" });
-          const { provider } = await connectWallet("base");
-          const signer = await provider.getSigner();
-
-          // USDC address on Base
-          const USDC_BASE_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-          const USDC_TRANSFER_ABI = [
-            "function transfer(address to, uint256 amount) external returns (bool)",
-          ];
-
-          const contract = new ethers.Contract(USDC_BASE_ADDRESS, USDC_TRANSFER_ABI, signer);
-          const amount = ethers.parseUnits(CONFIG.FEATURED_GIG_PRICE.toString(), 6);
-
-          toast.loading(`Please confirm payment of ${CONFIG.FEATURED_GIG_PRICE} USDC in your wallet...`, { id: "boost-gig" });
-          const tx = await contract.transfer(CONFIG.TREASURY_WALLET_ADDRESS, amount);
-          const receipt = await tx.wait();
-
-          toast.loading("Registering boost on platform...", { id: "boost-gig" });
-          const boostRes = await fetch("/api/monetization/boost", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              gigId: newGig.id,
-              txHash: receipt.hash,
-            }),
-          });
-
-          if (boostRes.ok) {
-            toast.success("Gig successfully created and boosted to Featured! 🚀", { id: "boost-gig" });
-          } else {
-            toast.error("Gig created, but boost registration pending. You can boost it from My Gigs list.", { id: "boost-gig" });
-          }
-        } catch (payErr: any) {
-          console.warn("Boost payment skipped/failed:", payErr);
-          toast.success("Gig created successfully! (Boost payment can be completed from My Gigs list)", { id: "boost-gig" });
-        }
+        setPendingBoostGigId(newGig.id);
+        // Don't redirect yet — wait for boost payment flow
+        return;
       }
 
       router.push("/dashboard/guide/gigs");
@@ -259,6 +227,37 @@ export default function CreateGigPage() {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  // Called by PaymentModal after boost payment confirmed on-chain
+  const handleBoostConfirmed = async (txHash: string, network: string) => {
+    if (!pendingBoostGigId) return;
+    setActivatingBoost(true);
+    try {
+      const res = await fetch("/api/monetization/boost", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gigId: pendingBoostGigId, txHash, network }),
+      });
+      if (res.ok) {
+        toast.success("Gig created and boosted to Featured for 7 days.");
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "Boost registration failed. Try from My Gigs.");
+      }
+    } catch {
+      toast.error("Network error activating boost.");
+    } finally {
+      setActivatingBoost(false);
+      setPendingBoostGigId(null);
+      router.push("/dashboard/guide/gigs");
+    }
+  };
+
+  const handleBoostSkipped = () => {
+    setPendingBoostGigId(null);
+    toast.success("Gig created. You can boost it anytime from My Gigs.");
+    router.push("/dashboard/guide/gigs");
   };
 
   return (
@@ -731,6 +730,30 @@ export default function CreateGigPage() {
           </div>
         </form>
       </div>
+
+      {/* Boost Payment Modal — appears after gig is created if boost was selected */}
+      {pendingBoostGigId && !activatingBoost && (
+        <PaymentModal
+          isOpen={true}
+          onClose={handleBoostSkipped}
+          amount={CONFIG.FEATURED_GIG_PRICE}
+          token="USDC"
+          gigTitle="Gig Boost — 7 Days Featured"
+          bookingDate={new Date().toISOString().slice(0, 10)}
+          bookingId={`BOOST_${pendingBoostGigId.slice(-6)}`}
+          onConfirm={handleBoostConfirmed}
+        />
+      )}
+
+      {activatingBoost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+            <p className="font-semibold text-dark-900 text-sm">Activating boost...</p>
+            <p className="text-xs text-dark-400 mt-1">Verifying on-chain and updating ranking</p>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

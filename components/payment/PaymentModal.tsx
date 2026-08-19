@@ -28,7 +28,7 @@ interface PaymentModalProps {
   gigTitle: string;
   bookingDate: string;
   bookingId?: string;
-  onConfirm?: (txHash: string) => void;
+  onConfirm?: (txHash: string, network: string) => void;
 }
 
 // Exact USDC & USDT Token Logos from Footer.tsx
@@ -286,7 +286,7 @@ export default function PaymentModal({
 
       toast.dismiss(toastId);
       setStep("success");
-      onConfirm?.(receipt.hash);
+      onConfirm?.(receipt.hash, selectedNetwork);
       toast.success(`${selectedToken} payment confirmed on ${selectedNetwork.toUpperCase()} & locked in Escrow!`);
     } catch (payErr: any) {
       toast.dismiss(toastId);
@@ -330,7 +330,7 @@ export default function PaymentModal({
         setVerifyStage(3);
         setTxHash(inputTxHash.trim());
         setStep("success");
-        onConfirm?.(inputTxHash.trim());
+        onConfirm?.(inputTxHash.trim(), selectedNetwork);
         toast.success("Payment verified on-chain!");
       } else {
         setError(data.message || "On-chain verification failed.");

@@ -58,7 +58,7 @@ export default function SubscriptionPage() {
   }, [session]);
 
   // Called by PaymentModal after on-chain tx confirmed
-  const handlePaymentConfirmed = async (txHash: string) => {
+  const handlePaymentConfirmed = async (txHash: string, network: string) => {
     setPendingTxHash(txHash);
     setShowPayModal(false);
     setActivating(true);
@@ -67,7 +67,7 @@ export default function SubscriptionPage() {
       const res = await fetch("/api/monetization/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: "PRO", txHash }),
+        body: JSON.stringify({ tier: "PRO", txHash, network }),
       });
 
       if (res.ok) {

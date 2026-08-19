@@ -3,7 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { recalculateGuideGigsRanking } from "@/lib/ranking";
-import { CONFIG } from "@/lib/config";
+import { verifyTreasuryTransfer } from "@/lib/crypto/verifyTreasuryTransfer";
+
+export const dynamic = "force-dynamic";
+
+const PRO_PRICE = 9.99;
 
 export async function POST(req: Request) {
   try {
@@ -14,60 +18,107 @@ export async function POST(req: Request) {
 
     const user = session.user as any;
     if (user.role !== "GUIDE") {
-      return NextResponse.json({ message: "Only guides can purchase subscriptions" }, { status: 403 });
+      return NextResponse.json(
+        { message: "Only guides can purchase subscriptions" },
+        { status: 403 }
+      );
     }
 
-    const { tier, txHash } = await req.json();
+    const { tier, txHash, network } = await req.json();
+
     if (tier !== "PRO") {
-      return NextResponse.json({ message: "Invalid subscription tier. Only PRO is available." }, { status: 400 });
+      return NextResponse.json(
+        { message: "Invalid subscription tier. Only PRO is available." },
+        { status: 400 }
+      );
     }
 
     if (!txHash) {
-      return NextResponse.json({ message: "Transaction hash is required" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Transaction hash is required" },
+        { status: 400 }
+      );
     }
 
-    // Fixed $9.99 USDC for the single PRO tier
-    const cost = 9.99;
+    // ── Replay protection ──────────────────────────────────────────────
+    const existing = await prisma.userSubscription.findFirst({
+      where: { txHash },
+    });
+    if (existing) {
+      return NextResponse.json(
+        { message: "This transaction has already been used to activate a subscription." },
+        { status: 400 }
+      );
+    }
 
-    // Calculate subscription period: 30 days
+    // ── On-chain verification ──────────────────────────────────────────
+    // Confirm that txHash is a real USDC/USDT transfer to our treasury
+    // of at least $9.99 before granting any access.
+    const verification = await verifyTreasuryTransfer(
+      txHash,
+      PRO_PRICE,
+      network || "avalanche"
+    );
+
+    if (!verification.ok) {
+      // Log the failed attempt for audit
+      await prisma.paymentAuditLog.create({
+        data: {
+          txHash,
+          source: "SUBSCRIPTION_FEE",
+          status: "REJECTED",
+          errorMessage: verification.error,
+          rawPayload: { userId: user.id, tier, network },
+        },
+      });
+      return NextResponse.json(
+        { message: verification.error || "On-chain verification failed." },
+        { status: 400 }
+      );
+    }
+
+    // ── Activate subscription ──────────────────────────────────────────
     const now = new Date();
-    let currentExpiry = user.subscription_expiry ? new Date(user.subscription_expiry) : null;
-    let newExpiry = new Date();
+    const currentExpiry = user.subscription_expiry
+      ? new Date(user.subscription_expiry)
+      : null;
 
-    if (currentExpiry && currentExpiry > now) {
-      newExpiry = new Date(currentExpiry.getTime() + 30 * 24 * 60 * 60 * 1000);
-    } else {
-      newExpiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    }
+    // Stack on top of existing active subscription if any
+    const newExpiry = new Date(
+      (currentExpiry && currentExpiry > now ? currentExpiry : now).getTime() +
+        30 * 24 * 60 * 60 * 1000
+    );
 
-    // 1. Update User model subscription properties
+    // 1. Update user
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        subscription_type: tier,
-        subscription_expiry: newExpiry,
-      },
+      data: { subscription_type: tier, subscription_expiry: newExpiry },
     });
 
-    // 2. Fetch or create a SubscriptionPlan matching the tier (for relational integrity)
+    // 2. Ensure SubscriptionPlan record exists
     let plan = await prisma.subscriptionPlan.findFirst({
-      where: { name: tier, role: "GUIDE" }
+      where: { name: tier, role: "GUIDE" },
     });
-
     if (!plan) {
       plan = await prisma.subscriptionPlan.create({
         data: {
           name: tier,
           role: "GUIDE",
-          priceMonthly: cost,
-          priceYearly: cost * 10, // dummy
-          commissionRate: 5.0, // flat 5%
-          features: tier === "PRO" ? ["Priority ranking boost", "Featured badge"] : ["Strong ranking boost", "Homepage priority"],
-        }
+          priceMonthly: PRO_PRICE,
+          priceYearly: PRO_PRICE * 10,
+          commissionRate: 5.0,
+          features: [
+            "Priority ranking boost",
+            "Featured badge on all listings",
+            "High-visibility profile placement",
+            "Advanced discoverability score boost",
+            "Priority support channel",
+          ],
+        },
       });
     }
 
-    // 3. Log user subscription transaction history
+    // 3. Record subscription history
     await prisma.userSubscription.create({
       data: {
         userId: user.id,
@@ -79,26 +130,45 @@ export async function POST(req: Request) {
       },
     });
 
-    // 4. Log platform revenue details
+    // 4. Record platform revenue
     await prisma.platformRevenue.create({
       data: {
         source: "SUBSCRIPTION_FEE",
-        amountUSDT: cost, // store USDC payment amount
+        amountUSDT: verification.transferredUSD,
         txHash,
         referenceId: user.id,
       },
     });
 
-    // 5. Trigger bulk discoverability score update for all this guide's gigs
+    // 5. Audit log — success
+    await prisma.paymentAuditLog.create({
+      data: {
+        txHash,
+        source: "SUBSCRIPTION_FEE",
+        status: "SUCCESS",
+        rawPayload: {
+          userId: user.id,
+          tier,
+          amountUSD: verification.transferredUSD,
+          network: verification.network,
+          blockNumber: verification.blockNumber,
+        },
+      },
+    });
+
+    // 6. Recalculate ranking for all guide gigs
     await recalculateGuideGigsRanking(user.id);
 
     return NextResponse.json({
-      message: `Successfully upgraded to ${tier}`,
+      message: "Pro subscription activated successfully.",
       subscription_type: tier,
       subscription_expiry: newExpiry,
     });
   } catch (error) {
-    console.error("Monetization subscribe POST error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    console.error("[Subscribe API Error]", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

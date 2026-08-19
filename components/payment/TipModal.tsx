@@ -32,7 +32,7 @@ export default function TipModal({ isOpen, onClose, bookingId, gigTitle }: TipMo
     setShowPayModal(true);
   };
 
-  const handlePaymentConfirmed = async (hash: string) => {
+  const handlePaymentConfirmed = async (hash: string, network: string) => {
     setShowPayModal(false);
     setConfirming(true);
     setTxHash(hash);
@@ -45,7 +45,7 @@ export default function TipModal({ isOpen, onClose, bookingId, gigTitle }: TipMo
           txHash: hash,
           amountUSD: tipAmount,
           bookingId,
-          network: "usdc",
+          network,
         }),
       });
 

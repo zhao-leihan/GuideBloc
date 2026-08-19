@@ -78,7 +78,7 @@ export default function GuideGigsPage() {
   };
 
   // Called by PaymentModal once on-chain tx confirmed
-  const handleBoostPaymentConfirmed = async (txHash: string) => {
+  const handleBoostPaymentConfirmed = async (txHash: string, network: string) => {
     if (!boostTargetGig) return;
     setActivatingBoost(true);
 
@@ -86,7 +86,7 @@ export default function GuideGigsPage() {
       const res = await fetch("/api/monetization/boost", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gigId: boostTargetGig.id, txHash }),
+        body: JSON.stringify({ gigId: boostTargetGig.id, txHash, network }),
       });
 
       if (res.ok) {
