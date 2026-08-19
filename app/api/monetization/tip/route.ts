@@ -91,6 +91,36 @@ export async function POST(req: Request) {
       },
     });
 
+    // Send thank-you email to tipper
+    try {
+      const { triggerTipReceivedEmail } = await import("@/lib/email");
+      const tipper = await prisma.user.findUnique({
+        where: { id: (session.user as any).id },
+        select: { email: true, name: true },
+      });
+
+      // Try to resolve the gig title from the bookingId
+      let gigTitle = "your recent tour";
+      if (bookingId) {
+        const booking = await prisma.booking.findUnique({
+          where: { id: bookingId },
+          include: { gig: { select: { title: true } } },
+        });
+        if (booking?.gig?.title) gigTitle = booking.gig.title;
+      }
+
+      if (tipper) {
+        await triggerTipReceivedEmail(
+          tipper.email,
+          tipper.name,
+          actualAmountUSD,
+          gigTitle
+        );
+      }
+    } catch (emailErr) {
+      console.error("[Tip Email] Failed to send thank-you email:", emailErr);
+    }
+
     return NextResponse.json({
       success: true,
       message: "Thank you for your support!",

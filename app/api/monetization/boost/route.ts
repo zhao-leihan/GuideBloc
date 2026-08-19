@@ -139,6 +139,29 @@ export async function POST(req: Request) {
     // 5. Recalculate gig ranking score
     await recalculateGigRankingScore(gigId);
 
+    // 6. Send boost confirmation email to guide
+    try {
+      const { triggerGigBoostEmail } = await import("@/lib/email");
+      const guideUser = await import("@/lib/prisma").then(({ prisma }) =>
+        prisma.user.findUnique({ where: { id: user.id }, select: { name: true } })
+      );
+      const boostedUntilFormatted = newExpiry.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      await triggerGigBoostEmail(
+        user.email,
+        guideUser?.name ?? user.name,
+        gig.title,
+        boostedUntilFormatted,
+        verification.transferredUSD
+      );
+    } catch (emailErr) {
+      console.error("[Boost Email] Failed to send boost email:", emailErr);
+    }
+
     return NextResponse.json({
       message: "Gig boosted to Featured for 7 days.",
       featured_until: newExpiry,

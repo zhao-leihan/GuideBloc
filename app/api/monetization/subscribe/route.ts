@@ -159,6 +159,20 @@ export async function POST(req: Request) {
     // 6. Recalculate ranking for all guide gigs
     await recalculateGuideGigsRanking(user.id);
 
+    // 7. Send activation confirmation email
+    try {
+      const { triggerSubscriptionActivatedEmail } = await import("@/lib/email");
+      const expiryFormatted = newExpiry.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      await triggerSubscriptionActivatedEmail(user.email, user.name, expiryFormatted);
+    } catch (emailErr) {
+      console.error("[Subscribe Email] Failed to send activation email:", emailErr);
+    }
+
     return NextResponse.json({
       message: "Pro subscription activated successfully.",
       subscription_type: tier,

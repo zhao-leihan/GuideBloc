@@ -217,3 +217,161 @@ export async function triggerBookingCompletionEmail(bookingId: string, recipient
   const html = getEmailLayout("Escrow Release", content);
   return sendTransactionalEmail({ to: recipientEmail, subject, html });
 }
+
+/**
+ * Sent to the tourist when a tour is marked COMPLETED — confirms escrow was released.
+ */
+export async function triggerTouristCompletionEmail(
+  bookingId: string,
+  recipientEmail: string,
+  gigTitle: string,
+  guideName: string,
+  totalPaid: number
+) {
+  const subject = `🎉 Tour Complete — Thank You for Exploring with Explomate!`;
+  const content = `
+    <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Tour Completed! 🌍</h2>
+    <p>Hi there,</p>
+    <p>We hope you had an incredible experience on <strong>"${gigTitle}"</strong> with your guide <strong>${guideName}</strong>!</p>
+    <p>Your escrow payment of <strong>$${totalPaid.toFixed(2)} USDC</strong> has been released to the guide — your trust in the platform means the world to us. ❤️</p>
+    <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 13px; color: #065f46;">
+        <strong>Booking ID:</strong> ${bookingId}<br/>
+        <strong>Tour:</strong> ${gigTitle}<br/>
+        <strong>Amount Released:</strong> $${totalPaid.toFixed(2)} USDC
+      </p>
+    </div>
+    <p>Don't forget to leave a review — it helps ${guideName} grow and helps other travelers discover amazing experiences! 🌟</p>
+    <p>Thank you for adventuring with us. We can't wait to see where you go next! 🗺️</p>
+    <p>Warm regards,<br/>The Explomate Team</p>
+  `;
+
+  const html = getEmailLayout("Tour Completion", content);
+  return sendTransactionalEmail({ to: recipientEmail, subject, html });
+}
+
+/**
+ * Sent to the guide when their escrow is released after tour completion.
+ */
+export async function triggerGuidePayoutEmail(
+  bookingId: string,
+  recipientEmail: string,
+  guideName: string,
+  gigTitle: string,
+  guideNet: number,
+  commissionAmount: number,
+  xpEarned: number
+) {
+  const subject = `💸 Payout Confirmed — $${guideNet.toFixed(2)} USDC Sent to Your Wallet!`;
+  const content = `
+    <h2 style="color: #10b981; margin-top: 0; font-size: 20px; font-weight: 700;">Payment's in your wallet! 🎉</h2>
+    <p>Hi <strong>${guideName}</strong>,</p>
+    <p>Great news! The tour <strong>"${gigTitle}"</strong> has been marked as completed by the tourist, and your escrow funds have been released on-chain. 🚀</p>
+    <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 13px; color: #065f46;">
+        <strong>Booking ID:</strong> ${bookingId}<br/>
+        <strong>Your Net Earnings:</strong> $${guideNet.toFixed(2)} USDC<br/>
+        <strong>Platform Fee (10%):</strong> $${commissionAmount.toFixed(2)} USDC<br/>
+        <strong>XP Earned:</strong> +${xpEarned} XP ⚡
+      </p>
+    </div>
+    <p>You're building something special — keep delivering amazing experiences and your ranking will keep rising! 📈</p>
+    <p>Keep up the great work and thank you for being part of Explomate. 🙏</p>
+    <p>See you on the next one,<br/>The Explomate Team</p>
+  `;
+
+  const html = getEmailLayout("Payout Confirmed", content);
+  return sendTransactionalEmail({ to: recipientEmail, subject, html });
+}
+
+/**
+ * Sent to the guide when their Pro subscription is activated.
+ */
+export async function triggerSubscriptionActivatedEmail(
+  recipientEmail: string,
+  guideName: string,
+  expiryDate: string
+) {
+  const subject = `⭐ Pro Subscription Activated — You're Now Boosted on Explomate!`;
+  const content = `
+    <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Welcome to Pro! ⭐</h2>
+    <p>Hi <strong>${guideName}</strong>,</p>
+    <p>Your <strong>Pro Guide Subscription</strong> is now live! Your profile and gigs are now boosted across the entire Explomate platform. 🚀</p>
+    <div style="background: #eef2ff; border-left: 4px solid #4f46e5; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 13px; color: #3730a3;">
+        ✅ Priority ranking in search results<br/>
+        ✅ Featured badge on all your listings<br/>
+        ✅ High-visibility profile placement<br/>
+        ✅ Advanced discoverability score boost<br/><br/>
+        <strong>Active until:</strong> ${expiryDate}
+      </p>
+    </div>
+    <p>Thank you so much for investing in your presence on Explomate. We're rooting for you every step of the way! 💪</p>
+    <p>Go get those bookings! 🗺️<br/>The Explomate Team</p>
+  `;
+
+  const html = getEmailLayout("Pro Subscription Active", content);
+  return sendTransactionalEmail({ to: recipientEmail, subject, html });
+}
+
+/**
+ * Sent to the guide when they successfully boost a gig.
+ */
+export async function triggerGigBoostEmail(
+  recipientEmail: string,
+  guideName: string,
+  gigTitle: string,
+  boostedUntil: string,
+  amountPaid: number
+) {
+  const subject = `🚀 Gig Boosted — "${gigTitle}" is Now Featured!`;
+  const content = `
+    <h2 style="color: #8b5cf6; margin-top: 0; font-size: 20px; font-weight: 700;">Your Gig is Boosted! 🚀</h2>
+    <p>Hi <strong>${guideName}</strong>,</p>
+    <p>Your tour <strong>"${gigTitle}"</strong> has been successfully boosted to a <strong>Featured</strong> position on Explomate. Travelers browsing the explore page will see your listing first! 👀</p>
+    <div style="background: #faf5ff; border-left: 4px solid #8b5cf6; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 13px; color: #5b21b6;">
+        <strong>Gig:</strong> ${gigTitle}<br/>
+        <strong>Amount Paid:</strong> $${amountPaid.toFixed(2)} USDC<br/>
+        <strong>Featured Until:</strong> ${boostedUntil}<br/>
+        <strong>Boost Type:</strong> Top Search Placement ⚡
+      </p>
+    </div>
+    <p>Make sure your gig description, photos, and pricing are looking sharp — you're in the spotlight now! ✨</p>
+    <p>Thank you for choosing to grow with Explomate. We appreciate you! 🙏<br/>The Explomate Team</p>
+  `;
+
+  const html = getEmailLayout("Gig Boost Active", content);
+  return sendTransactionalEmail({ to: recipientEmail, subject, html });
+}
+
+/**
+ * Sent to admin/treasury when a tip is received from a tourist.
+ * Also sends a warm thank-you note back to the tipper.
+ */
+export async function triggerTipReceivedEmail(
+  tipperEmail: string,
+  tipperName: string,
+  amountUSD: number,
+  gigTitle: string
+) {
+  const subject = `💛 Thank You for Your Tip — You're Amazing!`;
+  const content = `
+    <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px; font-weight: 700;">You just made our day! 💛</h2>
+    <p>Hi <strong>${tipperName}</strong>,</p>
+    <p>Thank you so, so much for your generous tip of <strong>$${amountUSD.toFixed(2)} USDC</strong> after your experience with <strong>"${gigTitle}"</strong>! 🎉</p>
+    <p>Every contribution like yours directly helps us keep Explomate running, improving, and supporting local tour guides around the world. You're not just tipping — you're making a real difference. ❤️</p>
+    <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 13px; color: #92400e;">
+        <strong>Tip Amount:</strong> $${amountUSD.toFixed(2)} USDC<br/>
+        <strong>Tour:</strong> ${gigTitle}<br/>
+        <strong>Paid on-chain via:</strong> USDC (Avalanche / Base)
+      </p>
+    </div>
+    <p>From the bottom of our hearts — <strong>thank you</strong>. Travelers like you are why we do what we do. 🌍✨</p>
+    <p>Until the next adventure,<br/>The Explomate Team 💚</p>
+  `;
+
+  const html = getEmailLayout("Tip Received", content);
+  return sendTransactionalEmail({ to: tipperEmail, subject, html });
+}

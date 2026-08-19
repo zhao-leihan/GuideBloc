@@ -382,11 +382,17 @@ export async function PATCH(
       }
     }
 
-    // ─── COMPLETED: Gamification rewards ────────────────────────────────────
+    // ─── COMPLETED: Gamification rewards + payout emails ────────────────────
     if (status === "COMPLETED") {
       const xpEarned = Math.max(100, Math.round(booking.totalPriceUSD * 10));
       const guide = await prisma.user.findUnique({
         where: { id: booking.gig.guide.id },
+      });
+
+      // Fetch tourist details for email
+      const tourist = await prisma.user.findUnique({
+        where: { id: booking.touristId },
+        select: { email: true, name: true },
       });
 
       if (guide) {
@@ -419,6 +425,41 @@ export async function PATCH(
               body: `Congratulations on leveling up to Level ${newLevel}! Your guide status has gained priority rank boost.`,
             },
           });
+        }
+
+        // Send real payout email to guide
+        try {
+          const { triggerGuidePayoutEmail } = await import("@/lib/email");
+          await triggerGuidePayoutEmail(
+            booking.id,
+            guide.email,
+            guide.name,
+            booking.gig.title,
+            guideNet,
+            commissionAmount,
+            xpEarned
+          );
+        } catch (emailErr) {
+          console.error("[Payout Email] Guide payout email failed:", emailErr);
+        }
+      }
+
+      // Send completion confirmation email to tourist
+      if (tourist) {
+        try {
+          const { triggerTouristCompletionEmail } = await import("@/lib/email");
+          const guideName = booking.gig.guide
+            ? (await prisma.user.findUnique({ where: { id: booking.gig.guide.id }, select: { name: true } }))?.name ?? "your guide"
+            : "your guide";
+          await triggerTouristCompletionEmail(
+            booking.id,
+            tourist.email,
+            booking.gig.title,
+            guideName,
+            booking.totalPriceUSD
+          );
+        } catch (emailErr) {
+          console.error("[Completion Email] Tourist completion email failed:", emailErr);
         }
       }
     }
