@@ -52,39 +52,27 @@ async function main() {
   });
   console.log("Default platform settings configured.");
 
-  // 2. Create Super-Admin Zhao han
+  // 2. Create Super-Admin Rayhan
   const adminPassword = await bcrypt.hash("Rayhan3723", 10);
-  const zhaohan = await prisma.user.upsert({
-    where: { email: "zhaohan@explomate.com" },
+  const admin = await prisma.user.upsert({
+    where: { email: "rayhan@explomate.com" },
     update: {
       password: adminPassword,
+      role: "ADMIN",
+      name: "Rayhan",
     },
     create: {
-      email: "zhaohan@explomate.com",
-      name: "Zhao han",
+      email: "rayhan@explomate.com",
+      name: "Rayhan",
       password: adminPassword,
       role: "ADMIN",
       avatar: "",
-      bio: "",
+      bio: "Official Explomate Platform Administrator",
       country: "",
       language: [],
     },
   });
-  await prisma.user.upsert({
-    where: { email: "zhaohan@explormate.com" },
-    update: { password: adminPassword },
-    create: {
-      email: "zhaohan@explormate.com",
-      name: "Zhao han",
-      password: adminPassword,
-      role: "ADMIN",
-      avatar: "",
-      bio: "",
-      country: "",
-      language: [],
-    },
-  });
-  console.log(`Super-Admin account created: ${zhaohan.email} (Password: Rayhan3723)`);
+  console.log(`Super-Admin account created: ${admin.email} (Password: Rayhan3723)`);
 
   console.log("Clean seeding completed successfully!");
 }

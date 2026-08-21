@@ -15,18 +15,18 @@ async function main() {
   const deletedGigs = await prisma.gig.deleteMany({});
   console.log(`Cleared all test bookings, reviews, messages & ${deletedGigs.count} sample gig(s) from Neon DB.`);
 
-  // 2. Admin: Zhao Han
+  // 2. Admin: Rayhan
   const admin = await prisma.user.upsert({
-    where: { email: "zhaohan@explormate.com" },
+    where: { email: "rayhan@explomate.com" },
     update: {
       password: hashedPassword,
       role: "ADMIN",
-      name: "Zhao Han",
+      name: "Rayhan",
       walletAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
     },
     create: {
-      name: "Zhao Han",
-      email: "zhaohan@explormate.com",
+      name: "Rayhan",
+      email: "rayhan@explomate.com",
       password: hashedPassword,
       role: "ADMIN",
       walletAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",

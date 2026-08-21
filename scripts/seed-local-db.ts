@@ -8,27 +8,27 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash("@Rayhan3723", 12);
 
-  // 1. Admin Zhao Han
-  const zhaoHan = await prisma.user.upsert({
-    where: { email: "zhaohan@explormate.com" },
+  // 1. Admin: Rayhan
+  const admin = await prisma.user.upsert({
+    where: { email: "rayhan@explomate.com" },
     update: {
-      name: "Zhao Han",
       password: hashedPassword,
       role: "ADMIN",
+      name: "Rayhan",
       walletAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
     },
     create: {
-      email: "zhaohan@explormate.com",
-      name: "Zhao Han",
+      name: "Rayhan",
+      email: "rayhan@explomate.com",
       password: hashedPassword,
       role: "ADMIN",
-      country: "Indonesia",
       walletAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
+      bio: "Official Explomate Platform Administrator",
     },
   });
-  console.log("Admin Zhao Han updated:", zhaoHan.email);
+  console.log("Admin seeded:", admin.email);
 
-  // 2. Tourist Rayhan
+  // 2. Tourist: Rayhan Abbrar
   const rayhan = await prisma.user.upsert({
     where: { email: "rayhanabbrar233@gmail.com" },
     update: {
