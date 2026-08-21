@@ -288,11 +288,12 @@ export async function connectWallet(
     }
   }
 
-  if (!rawProvider) {
+  // Only fall back to window.ethereum if NO specific walletType was requested
+  if (!rawProvider && !walletType) {
     rawProvider = (window as any).ethereum;
   }
 
-  // If wallet extension is missing and user is on mobile browser, launch deep link!
+  // If requested wallet extension is missing:
   if (!rawProvider) {
     if (walletType && isMobileBrowser()) {
       const redirected = openMobileWalletDeepLink(walletType);
@@ -300,10 +301,16 @@ export async function connectWallet(
         throw new Error(`Opening ${walletType} app on mobile...`);
       }
     }
-    const walletName = walletType
-      ? walletType.charAt(0).toUpperCase() + walletType.slice(1)
-      : "Crypto";
-    throw new Error(`${walletName} wallet is not installed. If you are on mobile, please open this site inside the wallet's built-in browser.`);
+    const walletName = walletType === "metamask" 
+      ? "MetaMask" 
+      : walletType === "coinbase" 
+        ? "Coinbase Wallet" 
+        : walletType === "solflare" 
+          ? "Solflare Wallet" 
+          : walletType 
+            ? walletType.charAt(0).toUpperCase() + walletType.slice(1)
+            : "Web3 Crypto";
+    throw new Error(`${walletName} extension is not detected. Please install ${walletName} or use a supported wallet.`);
   }
 
   // Explicitly request permissions to show account selection dialog

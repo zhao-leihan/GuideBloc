@@ -42,7 +42,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }: any) {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
@@ -50,7 +50,15 @@ export const authOptions: NextAuthOptions = {
         token.guideStatus = (user as any).guideStatus;
         token.walletAddress = (user as any).walletAddress;
       }
-      // Always fetch the freshest user role and guideStatus from the database
+      if (trigger === "update" && session) {
+        if (session.walletAddress !== undefined) {
+          token.walletAddress = session.walletAddress;
+        }
+        if (session.name !== undefined) token.name = session.name;
+        if (session.role !== undefined) token.role = session.role;
+        if (session.avatar !== undefined) token.avatar = session.avatar;
+      }
+      // Always fetch the freshest user role, guideStatus and walletAddress from the database
       if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },

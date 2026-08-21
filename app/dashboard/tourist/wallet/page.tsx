@@ -1,8 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
 import DotsLoader from "@/components/ui/DotsLoader";
@@ -28,20 +28,109 @@ export default function TouristWalletPage() {
   const [walletType, setWalletType] = useState<"metamask" | "coinbase" | "solflare" | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const userWalletAddress = (session?.user as any)?.walletAddress;
+  // Helper to load balances for address
+  const loadBalances = useCallback(async (address: string, chain: SupportedNetwork) => {
+    try {
+      const usdtVal = await getTokenBalance("USDT", address, chain);
+      const usdcVal = await getTokenBalance("USDC", address, chain);
+
+      const totalSpentUsdc = history
+        .filter((b) => b.status === "PAID" || b.status === "COMPLETED" || b.status === "CONFIRMED" || b.status === "RELEASED")
+        .reduce((sum, b) => sum + b.totalPriceUSD, 0);
+
+      const displayUsdc = Number(usdcVal) > 0 ? Number(usdcVal) : (totalSpentUsdc > 0 ? totalSpentUsdc : 0);
+
+      setUsdtBalance(Number(usdtVal).toFixed(2));
+      setUsdcBalance(displayUsdc.toFixed(2));
+    } catch (err) {
+      console.error("Error loading balances:", err);
+    }
+  }, [history]);
+
+  // Fetch fresh profile directly from DB on mount
+  const fetchProfile = useCallback(async () => {
+    try {
+      setLoadingProfile(true);
+      const res = await fetch("/api/users/profile");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.walletAddress) {
+          setConnected(true);
+          setWalletAddress(data.walletAddress);
+          await loadBalances(data.walletAddress, network);
+        } else {
+          setConnected(false);
+          setWalletAddress(null);
+          setUsdtBalance("0.00");
+          setUsdcBalance("0.00");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [network, loadBalances]);
 
   useEffect(() => {
-    if (userWalletAddress) {
-      setConnected(true);
-      setWalletAddress(userWalletAddress);
-      loadBalances(userWalletAddress, network);
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    if (session?.user) {
       fetchHistory();
-    } else {
-      setConnected(false);
-      setWalletAddress(null);
     }
-  }, [userWalletAddress, network]);
+  }, [session]);
+
+  // Reload balances when network changes
+  useEffect(() => {
+    if (walletAddress) {
+      loadBalances(walletAddress, network);
+    }
+  }, [network, walletAddress, loadBalances]);
+
+  // Listen to browser wallet account changes (e.g. user switches account in MetaMask)
+  useEffect(() => {
+    if (typeof window === "undefined" || !(window as any).ethereum) return;
+
+    const handleAccountsChanged = async (accounts: string[]) => {
+      if (accounts && accounts.length > 0) {
+        const newAddress = accounts[0];
+        if (walletAddress && newAddress.toLowerCase() !== walletAddress.toLowerCase()) {
+          toast.success(`Account switched to ${newAddress.substring(0, 6)}...${newAddress.substring(newAddress.length - 4)}`);
+          setWalletAddress(newAddress);
+          setConnected(true);
+          // Sync with database
+          await fetch("/api/users/profile", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ walletAddress: newAddress }),
+          });
+          await updateSession({ walletAddress: newAddress });
+          await loadBalances(newAddress, network);
+        }
+      } else {
+        // User disconnected in wallet extension
+        setConnected(false);
+        setWalletAddress(null);
+        setUsdtBalance("0.00");
+        setUsdcBalance("0.00");
+        await fetch("/api/users/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletAddress: null }),
+        });
+        await updateSession({ walletAddress: null });
+      }
+    };
+
+    (window as any).ethereum.on?.("accountsChanged", handleAccountsChanged);
+    return () => {
+      (window as any).ethereum?.removeListener?.("accountsChanged", handleAccountsChanged);
+    };
+  }, [walletAddress, network, updateSession, loadBalances]);
 
   const fetchHistory = async () => {
     try {
@@ -59,30 +148,12 @@ export default function TouristWalletPage() {
     }
   };
 
-  const loadBalances = async (address: string, chain: SupportedNetwork) => {
-    try {
-      const usdtVal = await getTokenBalance("USDT", address, chain);
-      const usdcVal = await getTokenBalance("USDC", address, chain);
-
-      const totalSpentUsdc = history
-        .filter((b) => b.status === "PAID" || b.status === "COMPLETED" || b.status === "CONFIRMED" || b.status === "RELEASED")
-        .reduce((sum, b) => sum + b.totalPriceUSD, 0);
-
-      const displayUsdc = Number(usdcVal) > 0 ? Number(usdcVal) : (totalSpentUsdc > 0 ? totalSpentUsdc : 0);
-
-      setUsdtBalance(Number(usdtVal).toFixed(2));
-      setUsdcBalance(displayUsdc.toFixed(2));
-    } catch (err) {
-      console.error("Error loading balances:", err);
-    }
-  };
-
   const handleConnect = async (providerType: "metamask" | "coinbase" | "solflare") => {
     setConnecting(true);
     setWalletType(providerType);
+    const toastId = toast.loading(`Connecting to ${providerType === "metamask" ? "MetaMask" : providerType === "coinbase" ? "Coinbase Wallet" : "Solflare"}...`);
+
     try {
-      toast.loading(`Connecting to ${providerType === "metamask" ? "MetaMask" : providerType === "coinbase" ? "Coinbase Wallet" : "Solflare"}...`);
-      
       const { address } = await connectWallet(network, providerType);
       
       setWalletAddress(address);
@@ -94,18 +165,18 @@ export default function TouristWalletPage() {
         body: JSON.stringify({ walletAddress: address }),
       });
 
-      toast.dismiss();
+      toast.dismiss(toastId);
       if (res.ok) {
-        toast.success(`${providerType.toUpperCase()} connected successfully!`);
-        await updateSession();
+        toast.success(`${providerType.toUpperCase()} connected: ${formatAddress(address)}`);
+        await updateSession({ walletAddress: address });
         await loadBalances(address, network);
         await fetchHistory();
       } else {
         toast.error("Failed to save wallet address to profile");
       }
     } catch (error: any) {
-      toast.dismiss();
-      console.error(error);
+      toast.dismiss(toastId);
+      console.error("Connect error:", error);
       toast.error(error.reason || error.message || "Connection failed");
     } finally {
       setConnecting(false);
@@ -114,28 +185,28 @@ export default function TouristWalletPage() {
   };
 
   const handleDisconnect = async () => {
+    const toastId = toast.loading("Disconnecting wallet...");
     try {
-      toast.loading("Disconnecting wallet...");
       const res = await fetch("/api/users/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ walletAddress: null }),
       });
 
-      toast.dismiss();
+      toast.dismiss(toastId);
       if (res.ok) {
         setConnected(false);
         setWalletAddress(null);
         setUsdtBalance("0.00");
         setUsdcBalance("0.00");
         setHistory([]);
-        toast.success("Wallet disconnected");
-        await updateSession();
+        toast.success("Wallet disconnected successfully");
+        await updateSession({ walletAddress: null });
       } else {
         toast.error("Failed to update profile");
       }
     } catch {
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.error("Failed to disconnect");
     }
   };
@@ -152,6 +223,21 @@ export default function TouristWalletPage() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
+  const getExplorerUrl = (address: string) => {
+    if (network === "base") {
+      const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+      return isBaseMainnet
+        ? `https://basescan.org/address/${address}`
+        : `https://sepolia.basescan.org/address/${address}`;
+    }
+    const isAvaxMainnet =
+      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+    return isAvaxMainnet
+      ? `https://snowtrace.io/address/${address}`
+      : `https://testnet.snowtrace.io/address/${address}`;
+  };
+
   return (
     <DashboardLayout role="tourist">
       <div className="space-y-6">
@@ -161,7 +247,11 @@ export default function TouristWalletPage() {
         </div>
 
         <div className="card p-6 space-y-6">
-          {connected && walletAddress ? (
+          {loadingProfile ? (
+            <div className="flex items-center justify-center p-12">
+              <DotsLoader size="lg" />
+            </div>
+          ) : connected && walletAddress ? (
             <>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -170,10 +260,22 @@ export default function TouristWalletPage() {
                   </div>
                   <div>
                     <h3 className="font-display font-semibold text-dark-900">Wallet Connected</h3>
-                    <p className="text-sm text-dark-400 capitalize">Active Network: {network}</p>
+                    <p className="text-sm text-dark-400 capitalize">Active Network: {network === "avalanche" ? "Avalanche C-Chain" : "Base L2"}</p>
                   </div>
                 </div>
-                <button onClick={handleDisconnect} className="btn-ghost text-danger text-sm">Disconnect</button>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleConnect("metamask")} 
+                    disabled={connecting}
+                    className="btn-ghost text-xs text-primary font-semibold flex items-center gap-1 cursor-pointer"
+                    title="Switch or reconnect wallet account"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${connecting ? "animate-spin" : ""}`} /> Change
+                  </button>
+                  <button onClick={handleDisconnect} className="btn-ghost text-danger text-sm cursor-pointer font-semibold">
+                    Disconnect
+                  </button>
+                </div>
               </div>
 
               {/* Network Selector Toggle */}
@@ -206,15 +308,15 @@ export default function TouristWalletPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 bg-dark-50 rounded-xl flex flex-col justify-between">
-                  <p className="text-xs text-dark-400">Address</p>
+                  <p className="text-xs text-dark-400 font-medium">Address</p>
                   <div className="flex items-center justify-between mt-1">
-                    <p className="font-mono text-sm text-dark-900">{formatAddress(walletAddress)}</p>
+                    <p className="font-mono text-sm text-dark-900 font-semibold">{formatAddress(walletAddress)}</p>
                     <div className="flex items-center gap-1">
-                      <button onClick={copyToClipboard} className="p-1 hover:bg-dark-100 rounded text-dark-500" title="Copy Address">
+                      <button onClick={copyToClipboard} className="p-1 hover:bg-dark-100 rounded text-dark-500 cursor-pointer" title="Copy Address">
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                       <a
-                        href={network === "base" ? `https://basescan.org/address/${walletAddress}` : `https://snowtrace.io/address/${walletAddress}`}
+                        href={getExplorerUrl(walletAddress)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1 hover:bg-dark-100 rounded text-dark-500"
@@ -226,11 +328,11 @@ export default function TouristWalletPage() {
                   </div>
                 </div>
                 <div className="p-4 bg-dark-50 rounded-xl">
-                  <p className="text-xs text-dark-400">USDT Balance</p>
+                  <p className="text-xs text-dark-400 font-medium">USDT Balance</p>
                   <p className="font-bold text-lg text-dark-900 mt-1">{usdtBalance} USDT</p>
                 </div>
                 <div className="p-4 bg-dark-50 rounded-xl">
-                  <p className="text-xs text-dark-400">USDC Balance</p>
+                  <p className="text-xs text-dark-400 font-medium">USDC Balance</p>
                   <p className="font-bold text-lg text-dark-900 mt-1">{usdcBalance} USDC</p>
                 </div>
               </div>
@@ -262,15 +364,12 @@ export default function TouristWalletPage() {
                         {history.map((tx: any) => {
                           const date = new Date(tx.bookingDate).toLocaleDateString();
                           const isCompleted = tx.status === "COMPLETED";
-                          const isRefunded = ["CANCELLED", "REJECTED", "REFUNDED"].includes(tx.status);
                           return (
                             <tr key={tx.id} className="hover:bg-dark-50/50">
                               <td className="px-4 py-3 text-dark-600 font-mono text-xs">{date}</td>
                               <td className="px-4 py-3 font-semibold">
-                                {isRefunded ? (
-                                  <span className="text-rose-600">Refund Received</span>
-                                ) : isCompleted ? (
-                                  <span className="text-green-600">Payout Completed</span>
+                                {isCompleted ? (
+                                  <span className="text-green-600">Payment Released</span>
                                 ) : (
                                   <span className="text-blue-600">Escrow Locked</span>
                                 )}
@@ -279,29 +378,27 @@ export default function TouristWalletPage() {
                                 {tx.gig?.title || "Unknown Tour"}
                               </td>
                               <td className="px-4 py-3 font-bold text-dark-900">
-                                {isRefunded ? "+" : "-"}{tx.totalPriceUSD.toFixed(2)} USDC
+                                -{tx.totalPriceUSD.toFixed(2)} USDC
                               </td>
                               <td className="px-4 py-3">
                                 <span className={`badge text-[10px] font-bold px-2 py-0.5 rounded-lg ${
-                                  isRefunded 
-                                    ? "bg-rose-500/10 text-rose-600 border border-rose-500/20" 
-                                    : isCompleted
-                                      ? "bg-green-500/10 text-green-600 border border-green-500/20" 
-                                      : "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+                                  tx.status === "COMPLETED" 
+                                    ? "bg-green-500/10 text-green-600 border border-green-500/20" 
+                                    : "bg-blue-500/10 text-blue-600 border border-blue-500/20"
                                 }`}>
-                                  {tx.status}
+                                  {tx.status === "COMPLETED" ? "RELEASED" : "SECURED"}
                                 </span>
                               </td>
                               <td className="px-4 py-3">
                                 {tx.txHash && tx.txHash !== "N/A" && (
                                   tx.txHash.startsWith("0xMOCK") ? (
-                                    <span className="text-[10px] text-dark-400 bg-dark-100 px-2 py-0.5 rounded-full">Sandbox</span>
+                                    <span className="text-[10px] text-dark-405 bg-dark-100 px-2 py-0.5 rounded-full">Sandbox</span>
                                   ) : (
                                     <a
                                       href={
                                         (tx.paymentNetwork || "").toLowerCase().includes("avalanche") || (tx.paymentNetwork || "").toLowerCase().includes("avax")
-                                          ? `https://snowtrace.io/tx/${tx.txHash}`
-                                          : `https://basescan.org/tx/${tx.txHash}`
+                                          ? (process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" || process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet" ? `https://snowtrace.io/tx/${tx.txHash}` : `https://testnet.snowtrace.io/tx/${tx.txHash}`)
+                                          : (process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" ? `https://basescan.org/tx/${tx.txHash}` : `https://sepolia.basescan.org/tx/${tx.txHash}`)
                                       }
                                       target="_blank"
                                       rel="noopener noreferrer"
@@ -368,7 +465,7 @@ export default function TouristWalletPage() {
                 <button
                   onClick={() => handleConnect("metamask")}
                   disabled={connecting}
-                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group"
+                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group cursor-pointer"
                 >
                   {connecting && walletType === "metamask" ? (
                     <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
@@ -385,7 +482,7 @@ export default function TouristWalletPage() {
                 <button
                   onClick={() => handleConnect("coinbase")}
                   disabled={connecting}
-                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group"
+                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group cursor-pointer"
                 >
                   {connecting && walletType === "coinbase" ? (
                     <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
@@ -402,7 +499,7 @@ export default function TouristWalletPage() {
                 <button
                   onClick={() => handleConnect("solflare")}
                   disabled={connecting}
-                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group"
+                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group cursor-pointer"
                 >
                   {connecting && walletType === "solflare" ? (
                     <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
