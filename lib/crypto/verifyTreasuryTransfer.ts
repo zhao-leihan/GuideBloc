@@ -45,7 +45,8 @@ export async function verifyTreasuryTransfer(
 ): Promise<VerifyResult> {
   const treasury = (
     process.env.NEXT_PUBLIC_PLATFORM_TREASURY ||
-    "0x9815A1a65B330F6CBEcD05d31C98a1C98C32b9A4"
+    process.env.TREASURY_ADDRESS ||
+    "0x079D9c349741C27565ee04e31E4174F640F512aE"
   ).toLowerCase();
 
   const cleanHash = txHash.trim().toLowerCase();

@@ -70,41 +70,47 @@ export default async function AdminDashboardPage() {
     take: 5,
   });
 
-  // 4. External Wallet Monitoring (Exodus Wallet using Base RPC)
-  const exodusAddress = process.env.EXODUS_PUBLIC_ADDRESS || "0xba75267D2849e7C6D273eD6a84d41E00fCb19f61"; // specific public address
-  let exodusBalance = "0.0000";
-  let exodusTransactions: any[] = [];
+  // 4. Platform Treasury Wallet Monitoring (Base L2 RPC)
+  const treasuryAddress = process.env.TREASURY_ADDRESS || process.env.NEXT_PUBLIC_PLATFORM_TREASURY || "0x079D9c349741C27565ee04e31E4174F640F512aE";
+  let treasuryBalance = "0.0000";
+  let treasuryTransactions: any[] = [];
 
   try {
-    const rpcResponse = await fetch("https://sepolia.base.org", {
+    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+    const rpcUrl = isBaseMainnet ? "https://mainnet.base.org" : "https://sepolia.base.org";
+    const rpcResponse = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0",
         method: "eth_getBalance",
-        params: [exodusAddress, "latest"],
+        params: [treasuryAddress, "latest"],
         id: 1,
       }),
+      cache: "no-store",
     });
     if (rpcResponse.ok) {
       const rpcData = await rpcResponse.json();
       if (rpcData.result) {
         const balanceWei = BigInt(rpcData.result);
-        exodusBalance = (Number(balanceWei) / 1e18).toFixed(4);
+        treasuryBalance = (Number(balanceWei) / 1e18).toFixed(4);
       }
     }
   } catch (err) {
-    console.error("Exodus balance fetch error:", err);
+    console.error("Treasury balance fetch error:", err);
   }
 
   try {
-    const scanResponse = await fetch(
-      `https://api-sepolia.basescan.org/api?module=account&action=txlist&address=${exodusAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`
-    );
+    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
+    const scanUrl = isBaseMainnet
+      ? `https://api.basescan.org/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`
+      : `https://api-sepolia.basescan.org/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`;
+
+    const scanResponse = await fetch(scanUrl, { cache: "no-store" });
     if (scanResponse.ok) {
       const scanData = await scanResponse.json();
       if (scanData.status === "1" && Array.isArray(scanData.result)) {
-        exodusTransactions = scanData.result.map((tx: any) => ({
+        treasuryTransactions = scanData.result.map((tx: any) => ({
           hash: tx.hash,
           from: tx.from,
           to: tx.to,
@@ -114,7 +120,7 @@ export default async function AdminDashboardPage() {
       }
     }
   } catch (err) {
-    console.error("Exodus transaction list fetch error:", err);
+    console.error("Treasury transaction list fetch error:", err);
   }
 
 
@@ -178,11 +184,11 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Exodus Wallet Monitoring via RPC (2 Cols) */}
+          {/* Platform Treasury Wallet Monitoring via RPC (2 Cols) */}
           <div className="card p-6 lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between border-b border-dark-100 pb-3">
               <div>
-                <h3 className="font-display font-bold text-dark-900 text-lg">Exodus Treasury Monitor</h3>
+                <h3 className="font-display font-bold text-dark-900 text-lg">Platform Treasury Monitor</h3>
                 <p className="text-xs text-dark-400">Real-time Base RPC & explorer node status (Read-Only)</p>
               </div>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600">
@@ -192,14 +198,14 @@ export default async function AdminDashboardPage() {
 
             <div className="bg-dark-50 p-4 rounded-xl space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-dark-600">Exodus Wallet Address:</span>
-                <code className="text-xs bg-white border border-dark-200 px-2.5 py-1 rounded text-dark-900 font-mono break-all">
-                  {exodusAddress}
+                <span className="text-sm font-semibold text-dark-600">Platform Treasury Address:</span>
+                <code className="text-xs bg-white border border-dark-200 px-2.5 py-1 rounded text-dark-900 font-mono break-all font-semibold">
+                  {treasuryAddress}
                 </code>
               </div>
               <div className="flex items-center justify-between border-t border-dark-200/50 pt-2 mt-2">
                 <span className="text-sm font-semibold text-dark-600">Dynamic Balance:</span>
-                <span className="text-lg font-black text-primary font-mono">{exodusBalance} ETH</span>
+                <span className="text-lg font-black text-primary font-mono">{treasuryBalance} ETH</span>
               </div>
             </div>
 
@@ -219,14 +225,14 @@ export default async function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {exodusTransactions.length === 0 ? (
+                    {treasuryTransactions.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="py-4 text-center text-dark-400">
                           No recent transactions found on Base network for this wallet.
                         </td>
                       </tr>
                     ) : (
-                      exodusTransactions.map((tx, idx) => (
+                      treasuryTransactions.map((tx, idx) => (
                         <tr key={idx} className="border-b border-dark-100/50 hover:bg-dark-50/50 transition-colors">
                           <td className="py-2 font-mono text-primary font-medium">
                             <a href={`https://basescan.org/tx/${tx.hash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
