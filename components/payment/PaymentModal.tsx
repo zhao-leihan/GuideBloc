@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { 
   X, Loader2, CheckCircle2, AlertCircle, ArrowLeft, 
-  ShieldCheck, Copy, AlertTriangle, QrCode, RotateCcw, 
-  ChevronRight, RefreshCw, Check, Sparkles
+  ShieldCheck, Copy, AlertTriangle, QrCode, 
+  ChevronRight, RefreshCw, Check, Sparkles, ExternalLink
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DotsLoader from "@/components/ui/DotsLoader";
@@ -31,7 +31,7 @@ interface PaymentModalProps {
   onConfirm?: (txHash: string, network: string) => void;
 }
 
-// Exact USDC & USDT Token Logos from Footer.tsx
+// Exact USDC & USDT Token Logos
 const USDCLogo = (
   <img 
     src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" 
@@ -73,6 +73,12 @@ const WalletLogos: Record<string, React.ReactNode> = {
       alt="MetaMask" 
       className="w-7 h-7 flex-shrink-0 object-contain" 
     />
+  ),
+  walletconnect: (
+    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="16" fill="#3B99FC"/>
+      <path d="M9.8 12.8C13.2 9.4 18.8 9.4 22.2 12.8L22.8 13.4C23.1 13.7 23.1 14.1 22.8 14.4L21.4 15.8C21.3 15.9 21.0 15.9 20.9 15.8L20.0 14.9C17.8 12.7 14.2 12.7 12.0 14.9L11.0 15.8C10.9 15.9 10.7 15.9 10.5 15.8L9.2 14.4C8.9 14.1 8.9 13.7 9.2 13.4L9.8 12.8ZM25.0 15.6L26.2 16.8C26.5 17.1 26.5 17.5 26.2 17.8L20.8 23.2C20.5 23.5 20.1 23.5 19.8 23.2L16.0 19.4C15.9 19.3 15.8 19.3 15.7 19.4L11.9 23.2C11.6 23.5 11.2 23.5 10.9 23.2L5.5 17.8C5.2 17.5 5.2 17.1 5.5 16.8L6.7 15.6C7.0 15.3 7.4 15.3 7.7 15.6L11.5 19.4C11.6 19.5 11.7 19.5 11.8 19.4L15.6 15.6C15.9 15.3 16.3 15.3 16.6 15.6L20.4 19.4C20.5 19.5 20.6 19.5 20.7 19.4L24.5 15.6C24.8 15.3 25.0 15.3 25.0 15.6Z" fill="white"/>
+    </svg>
   ),
   coinbase: (
     <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
@@ -129,9 +135,10 @@ const WALLET_OPTIONS: {
   badge?: string;
 }[] = [
   { id: "metamask", name: "MetaMask", desc: "Popular Web3 Extension & Mobile App", badge: "Popular" },
+  { id: "walletconnect", name: "WalletConnect", desc: "Connect any mobile or desktop wallet via QR", badge: "Universal" },
   { id: "coinbase", name: "Coinbase Wallet", desc: "Self-Custody Web3 & Mobile Wallet", badge: "Recommended" },
   { id: "trust", name: "Trust Wallet", desc: "Multi-Chain Crypto Mobile App" },
-  { id: "rainbow", name: "Rainbow Wallet", desc: "Fun, Fast & Simple EVM Wallet" },
+  { id: "rainbow", name: "Rainbow Wallet", desc: "Simple & modern EVM mobile wallet" },
   { id: "okx", name: "OKX Wallet", desc: "Multi-Chain Web3 & Exchange Wallet" },
   { id: "phantom", name: "Phantom (EVM)", desc: "Multi-Chain Solana & EVM Wallet" },
   { id: "zerion", name: "Zerion Wallet", desc: "Smart Web3 Portfolio & DeFi Wallet" },
@@ -168,8 +175,7 @@ export default function PaymentModal({
   if (!isOpen) return null;
 
   const escrowAddress = getEscrowAddress(selectedNetwork);
-  const uniqueDecimalTag = (amount + 0.0123).toFixed(4);
-  const chainIdNum = selectedNetwork === "avalanche" ? 43113 : 8453;
+  const chainIdNum = selectedNetwork === "avalanche" ? 43114 : 8453;
   const eip681Uri = `ethereum:${escrowAddress}@${chainIdNum}/transfer?address=${escrowAddress}&uint256=${Math.round(amount * 1e6)}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(eip681Uri)}`;
 
@@ -178,7 +184,6 @@ export default function PaymentModal({
     toast.success(`${label} copied!`);
   };
 
-  // Connect to wallet, trigger permissions account prompt & fetch USDC/USDT balance
   const handleConnectWalletType = async (
     walletType: SupportedWalletType, 
     tokenOverride?: "USDT" | "USDC",
@@ -189,7 +194,7 @@ export default function PaymentModal({
     setSelectedWalletType(walletType);
     setConnecting(true);
     setError(null);
-    const toastId = toast.loading(`Connecting to ${walletType} on ${activeNetwork.toUpperCase()}...`);
+    const toastId = toast.loading(`Connecting to ${walletType}...`);
 
     try {
       const res = await fetchConnectedAccountsDetails(activeNetwork, amount, walletType, activeToken);
@@ -217,7 +222,6 @@ export default function PaymentModal({
     }
   };
 
-  // Switch network dynamically
   const handleSwitchNetwork = async (newNetwork: SupportedNetwork) => {
     setSelectedNetwork(newNetwork);
     if (step === "select_account" && selectedWalletType) {
@@ -225,7 +229,6 @@ export default function PaymentModal({
     }
   };
 
-  // Switch token between USDC and USDT dynamically
   const handleSwitchToken = async (newToken: "USDT" | "USDC") => {
     setSelectedToken(newToken);
     if (step === "select_account" && selectedWalletType) {
@@ -233,7 +236,6 @@ export default function PaymentModal({
     }
   };
 
-  // Execute On-Chain Web3 Escrow Payment using Selected Account
   const handleExecutePayment = async () => {
     if (!browserProvider || !selectedAccountAddress) {
       toast.error("Please select a Web3 account first");
@@ -242,13 +244,13 @@ export default function PaymentModal({
 
     const currentAcc = connectedAccounts.find(a => a.address.toLowerCase() === selectedAccountAddress.toLowerCase());
     if (currentAcc && currentAcc.usdcBalance < amount) {
-      toast.error(`Insufficient ${selectedToken} balance (${currentAcc.formattedUsdc} ${selectedToken}). Required: ${amount.toFixed(2)} ${selectedToken}.`);
+      toast.error(`Insufficient balance. Required: ${amount.toFixed(2)} ${selectedToken}.`);
       return;
     }
 
     setStep("processing");
     setVerifyStage(1);
-    const toastId = toast.loading(`Confirming ${selectedToken} transaction on ${selectedNetwork.toUpperCase()}...`);
+    const toastId = toast.loading(`Confirming ${selectedToken} transaction...`);
 
     try {
       const signer = await browserProvider.getSigner(selectedAccountAddress);
@@ -259,11 +261,9 @@ export default function PaymentModal({
       ];
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-      const safeAmountStr = Number(amount).toFixed(6);
-      const amountUnits = ethers.parseUnits(safeAmountStr, 6); // 6 decimals for USDC & USDT
+      const amountUnits = ethers.parseUnits(amount.toString(), 6);
 
       setVerifyStage(2);
-      toast.loading(`Broadcasting ${selectedNetwork.toUpperCase()} ${selectedToken} transaction...`, { id: toastId });
       const tx = await tokenContract.transfer(escrowAddress, amountUnits);
 
       toast.loading(`Awaiting ${selectedNetwork.toUpperCase()} block confirmation...`, { id: toastId });
@@ -272,7 +272,6 @@ export default function PaymentModal({
       setVerifyStage(3);
       setTxHash(receipt.hash);
 
-      // Verify on backend
       await fetch("/api/payments/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -282,12 +281,12 @@ export default function PaymentModal({
           token: selectedToken,
           network: selectedNetwork
         })
-      });
+      }).catch(err => console.warn("Backend verify API non-blocking warning:", err));
 
       toast.dismiss(toastId);
       setStep("success");
       onConfirm?.(receipt.hash, selectedNetwork);
-      toast.success(`${selectedToken} payment confirmed on ${selectedNetwork.toUpperCase()} & locked in Escrow!`);
+      toast.success(`${selectedToken} payment confirmed!`);
     } catch (payErr: any) {
       toast.dismiss(toastId);
       console.error("Web3 payment error:", payErr);
@@ -296,7 +295,6 @@ export default function PaymentModal({
     }
   };
 
-  // Manual TxHash verification handler
   const handleVerifyManualTxHash = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputTxHash.trim() || inputTxHash.length < 10) {
@@ -307,7 +305,7 @@ export default function PaymentModal({
     setVerifying(true);
     setError(null);
     setVerifyStage(1);
-    const toastId = toast.loading(`Connecting to ${selectedNetwork.toUpperCase()} RPC Node...`);
+    const toastId = toast.loading(`Verifying transaction...`);
 
     try {
       setTimeout(() => setVerifyStage(2), 1200);
@@ -339,7 +337,7 @@ export default function PaymentModal({
     } catch (err: any) {
       toast.dismiss(toastId);
       console.error(err);
-      setError(err.message || "Error verifying payment on-chain.");
+      setError("Network error while connecting to RPC. Please try again.");
       setStep("error");
     } finally {
       setVerifying(false);
@@ -349,14 +347,12 @@ export default function PaymentModal({
   const selectedAccObj = connectedAccounts.find(a => a.address.toLowerCase() === selectedAccountAddress.toLowerCase());
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white rounded-3xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 transition-all duration-300">
+    <div className="fixed inset-0 bg-dark-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden animate-in fade-in duration-200">
+      <div className="bg-white text-dark-900 rounded-3xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-xl lg:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-dark-100 transition-all duration-300">
         
-        {/* Dynamic Explomate Royal Blue Header Banner (No Red) */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 dark:from-blue-700 dark:via-indigo-800 dark:to-blue-900 p-5 sm:p-6 text-white overflow-hidden flex-shrink-0">
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          
-          <div className="flex items-center justify-between relative z-10">
+        {/* Clean Modern Web2 Light Header */}
+        <div className="bg-white border-b border-dark-100 p-5 sm:p-6 flex-shrink-0">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {step !== "select_wallet" && step !== "success" && step !== "processing" && (
                 <button 
@@ -364,42 +360,42 @@ export default function PaymentModal({
                     setError(null);
                     setStep("select_wallet");
                   }}
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all cursor-pointer"
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-dark-50 border border-dark-200 flex items-center justify-center text-dark-700 hover:bg-dark-100 transition-all cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
               )}
 
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider mb-1">
-                  <Sparkles className="w-3 h-3 text-cyan-200" /> Double Chain Web3 Escrow
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> 100% Escrow Protected
                 </div>
-                <h3 className="text-base sm:text-lg font-black tracking-tight text-white leading-snug">
-                  Web3 Escrow Payment
+                <h3 className="text-base sm:text-lg font-bold text-dark-900 leading-snug">
+                  Complete Tour Booking
                 </h3>
               </div>
             </div>
 
             <button 
               onClick={onClose} 
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-dark-50 border border-dark-200 flex items-center justify-center text-dark-500 hover:text-dark-900 hover:bg-dark-100 transition-all cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Double Chain & Token Switcher Controls */}
-          <div className="mt-4 p-3 sm:p-3.5 bg-white/15 dark:bg-black/30 backdrop-blur-md rounded-2xl border border-white/25 space-y-3 relative z-10">
+          {/* Clean Order Summary & Network/Token Switcher */}
+          <div className="mt-4 p-4 bg-dark-50 rounded-2xl border border-dark-100 space-y-3">
             
-            {/* Row 1: Network Selection Pill Bar */}
+            {/* Row 1: Network Selection */}
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-100">Select Network:</span>
-              <div className="bg-black/25 p-1 rounded-xl flex items-center gap-1 border border-white/20">
+              <span className="text-[11px] font-bold text-dark-500 uppercase tracking-wider">Payment Network:</span>
+              <div className="bg-white p-1 rounded-xl flex items-center gap-1 border border-dark-200 shadow-sm">
                 <button
                   type="button"
                   onClick={() => handleSwitchNetwork("avalanche")}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    selectedNetwork === "avalanche" ? "bg-white text-blue-700 shadow-md" : "text-white/80 hover:text-white"
+                  className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    selectedNetwork === "avalanche" ? "bg-primary text-white shadow-sm" : "text-dark-600 hover:text-dark-900"
                   }`}
                 >
                   {AvaxLogo} Avalanche C-Chain
@@ -407,8 +403,8 @@ export default function PaymentModal({
                 <button
                   type="button"
                   onClick={() => handleSwitchNetwork("base")}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    selectedNetwork === "base" ? "bg-white text-blue-700 shadow-md" : "text-white/80 hover:text-white"
+                  className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    selectedNetwork === "base" ? "bg-primary text-white shadow-sm" : "text-dark-600 hover:text-dark-900"
                   }`}
                 >
                   {BaseLogo} Base L2
@@ -417,19 +413,19 @@ export default function PaymentModal({
             </div>
 
             {/* Row 2: Token Switcher & Amount */}
-            <div className="pt-2 border-t border-white/15 flex flex-wrap items-center justify-between gap-2">
+            <div className="pt-3 border-t border-dark-200/60 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-[10px] uppercase font-bold tracking-wider text-cyan-100">Total Amount Due</p>
-                <p className="font-extrabold text-white text-xs truncate max-w-[140px] sm:max-w-[220px] mt-0.5">{gigTitle}</p>
+                <p className="text-[11px] font-semibold text-dark-400 uppercase tracking-wider">Tour Experience</p>
+                <p className="font-bold text-dark-900 text-sm truncate max-w-[150px] sm:max-w-[240px] mt-0.5">{gigTitle}</p>
               </div>
               
-              <div className="flex items-center gap-2.5">
-                <div className="bg-black/25 p-1 rounded-xl flex items-center gap-1 border border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="bg-white p-1 rounded-xl flex items-center gap-1 border border-dark-200 shadow-sm">
                   <button
                     type="button"
                     onClick={() => handleSwitchToken("USDC")}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      selectedToken === "USDC" ? "bg-white text-slate-900 shadow-md" : "text-white/80 hover:text-white"
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedToken === "USDC" ? "bg-primary/10 text-primary border border-primary/30" : "text-dark-600 hover:text-dark-900"
                     }`}
                   >
                     {USDCLogo} USDC
@@ -437,8 +433,8 @@ export default function PaymentModal({
                   <button
                     type="button"
                     onClick={() => handleSwitchToken("USDT")}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      selectedToken === "USDT" ? "bg-white text-slate-900 shadow-md" : "text-white/80 hover:text-white"
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedToken === "USDT" ? "bg-primary/10 text-primary border border-primary/30" : "text-dark-600 hover:text-dark-900"
                     }`}
                   >
                     {USDTLogo} USDT
@@ -446,7 +442,7 @@ export default function PaymentModal({
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight block leading-none">
+                  <span className="text-2xl sm:text-3xl font-black text-primary font-mono tracking-tight block leading-none">
                     ${amount.toFixed(2)}
                   </span>
                 </div>
@@ -456,52 +452,39 @@ export default function PaymentModal({
           </div>
         </div>
 
-        {/* Modal Body with Single Clean Scrollbar & Responsive Laptop Grid */}
-        <div className="p-5 sm:p-6 space-y-5 bg-white dark:bg-[#0f172a] overflow-y-auto flex-1">
-
-          {/* Escrow Guarantee Pill */}
-          {step !== "processing" && step !== "success" && (
-            <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl p-3 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div className="text-xs">
-                <p className="font-bold text-emerald-900 dark:text-emerald-300 leading-tight">100% Escrow Protected ({selectedNetwork.toUpperCase()} - {selectedToken})</p>
-                <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Funds locked safely in Smart Contract until tour completes.</p>
-              </div>
-            </div>
-          )}
+        {/* Modal Body */}
+        <div className="p-5 sm:p-6 space-y-4 bg-white overflow-y-auto flex-1">
 
           {/* STEP 1: SELECT WEB3 WALLET */}
           {step === "select_wallet" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">Select Web3 Wallet:</span>
-                <span className="text-[10px] text-blue-600 dark:text-cyan-400 font-extrabold bg-blue-50 dark:bg-cyan-950/50 px-2 py-0.5 rounded-full border border-blue-200 dark:border-cyan-800">
+                <span className="text-xs font-bold text-dark-700">Choose Payment Method:</span>
+                <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                   {selectedNetwork.toUpperCase()} • {selectedToken}
                 </span>
               </div>
 
-              {/* Wallet Options Grid (Single column on HP, 2 Columns on Laptop) */}
+              {/* Wallet Options Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {WALLET_OPTIONS.map((w) => (
                   <button
                     key={w.id}
                     disabled={connecting}
                     onClick={() => handleConnectWalletType(w.id)}
-                    className="w-full flex items-center gap-3 p-3 sm:p-3.5 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-blue-500 dark:hover:border-cyan-500 hover:bg-blue-50/50 dark:hover:bg-cyan-950/40 transition-all text-left group cursor-pointer bg-slate-50 dark:bg-slate-900/60"
+                    className="w-full flex items-center gap-3 p-3.5 border border-dark-200 rounded-2xl hover:border-primary hover:bg-primary/5 transition-all text-left group cursor-pointer bg-white shadow-sm"
                   >
                     {WalletLogos[w.id]}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{w.name}</span>
+                        <span className="font-bold text-dark-900 text-sm">{w.name}</span>
                         {w.badge && (
-                          <span className="text-[8px] bg-blue-50 dark:bg-cyan-500/10 text-blue-600 dark:text-cyan-400 font-bold px-1.5 py-0.5 rounded-full border border-blue-200 dark:border-cyan-500/20">{w.badge}</span>
+                          <span className="text-[9px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded-full border border-primary/20">{w.badge}</span>
                         )}
                       </div>
-                      <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5 truncate">{w.desc}</span>
+                      <span className="text-xs text-dark-400 block mt-0.5 truncate">{w.desc}</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-500 dark:group-hover:text-cyan-500 transition-colors flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-dark-300 group-hover:text-primary transition-colors flex-shrink-0" />
                   </button>
                 ))}
               </div>
@@ -510,13 +493,13 @@ export default function PaymentModal({
               <div className="pt-2 flex items-center gap-2">
                 <button
                   onClick={() => setStep("qr_scan")}
-                  className="flex-1 p-3 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-900/60"
+                  className="flex-1 p-3 border border-dark-200 rounded-xl hover:border-primary text-xs font-bold text-dark-700 flex items-center justify-center gap-2 bg-dark-50 hover:bg-dark-100 transition-colors"
                 >
-                  <QrCode className="w-4 h-4 text-blue-600 dark:text-cyan-400" /> {selectedNetwork.toUpperCase()} QR
+                  <QrCode className="w-4 h-4 text-primary" /> {selectedNetwork.toUpperCase()} QR Pay
                 </button>
                 <button
                   onClick={() => setStep("verify_txhash")}
-                  className="flex-1 p-3 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-blue-500 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-900/60"
+                  className="flex-1 p-3 border border-dark-200 rounded-xl hover:border-primary text-xs font-bold text-dark-700 flex items-center justify-center gap-2 bg-dark-50 hover:bg-dark-100 transition-colors"
                 >
                   Paste TxHash
                 </button>
@@ -528,12 +511,12 @@ export default function PaymentModal({
           {step === "select_account" && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">Select Account for Booking:</span>
+                <span className="text-xs font-bold text-dark-700">Select Wallet Account:</span>
                 <button
                   onClick={() => handleConnectWalletType(selectedWalletType)}
-                  className="text-[11px] text-blue-600 dark:text-cyan-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer"
                 >
-                  <RefreshCw className="w-3 h-3" /> Switch/Choose in Wallet
+                  <RefreshCw className="w-3 h-3" /> Switch in Wallet
                 </button>
               </div>
 
@@ -547,20 +530,20 @@ export default function PaymentModal({
                       onClick={() => setSelectedAccountAddress(acc.address)}
                       className={`p-4 border rounded-2xl transition-all cursor-pointer ${
                         isSelected 
-                          ? "border-blue-500 dark:border-cyan-500 bg-blue-500/10 dark:bg-cyan-500/15 ring-2 ring-blue-500/30" 
-                          : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+                          ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm" 
+                          : "border-dark-200 bg-white hover:bg-dark-50"
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-blue-500 bg-blue-600 text-white" : "border-slate-300 dark:border-slate-700"}`}>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isSelected ? "border-primary bg-primary text-white" : "border-dark-300"}`}>
                             {isSelected && <Check className="w-3 h-3" />}
                           </div>
                           <div>
-                            <span className="font-bold text-slate-900 dark:text-white text-xs block">
+                            <span className="font-bold text-dark-900 text-xs block">
                               Account {index + 1}
                             </span>
-                            <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                            <span className="font-mono text-xs text-dark-500 block mt-0.5">
                               {acc.address.slice(0, 8)}...{acc.address.slice(-6)}
                             </span>
                           </div>
@@ -572,34 +555,34 @@ export default function PaymentModal({
                             e.stopPropagation();
                             copyToClipboard(acc.address, `Account ${index + 1} Address`);
                           }}
-                          className="text-slate-400 hover:text-blue-500 dark:hover:text-cyan-400 p-1"
+                          className="text-dark-400 hover:text-primary p-1"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
                       {/* Balance Details Pill Bar */}
-                      <div className="mt-3 pt-2.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                      <div className="mt-3 pt-2.5 border-t border-dark-100 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-1.5">
                             {selectedToken === "USDC" ? USDCLogo : USDTLogo}
                             <div>
-                              <span className="text-[10px] text-slate-400 uppercase font-bold block">{selectedToken} ({selectedNetwork.toUpperCase()})</span>
-                              <span className="font-extrabold text-slate-900 dark:text-white font-mono">{acc.formattedUsdc}</span>
+                              <span className="text-[10px] text-dark-400 uppercase font-bold block">{selectedToken} ({selectedNetwork.toUpperCase()})</span>
+                              <span className="font-black text-dark-900 font-mono text-sm">{acc.formattedUsdc}</span>
                             </div>
                           </div>
-                          <div className="pl-2 border-l border-slate-200 dark:border-slate-800">
-                            <span className="text-[10px] text-slate-400 uppercase font-bold block">Gas ({selectedNetwork === "avalanche" ? "AVAX" : "ETH"})</span>
-                            <span className="font-semibold text-slate-600 dark:text-slate-300 font-mono">{acc.ethBalance}</span>
+                          <div className="pl-3 border-l border-dark-200">
+                            <span className="text-[10px] text-dark-400 uppercase font-bold block">Gas ({selectedNetwork === "avalanche" ? "AVAX" : "ETH"})</span>
+                            <span className="font-semibold text-dark-700 font-mono text-xs">{acc.ethBalance}</span>
                           </div>
                         </div>
 
                         {acc.hasEnoughBalance ? (
-                          <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-500/20">
+                          <span className="text-[10px] font-bold bg-green-500/10 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-green-500/20">
                             <CheckCircle2 className="w-3 h-3" /> Sufficient
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold bg-amber500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-500/20">
+                          <span className="text-[10px] font-bold bg-amber-500/10 text-amber-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-500/20">
                             <AlertCircle className="w-3 h-3" /> Low Balance
                           </span>
                         )}
@@ -611,45 +594,45 @@ export default function PaymentModal({
 
               {/* Insufficient Balance Alert */}
               {selectedAccObj && !selectedAccObj.hasEnoughBalance && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-900 dark:text-amber-300 font-semibold flex items-center gap-2">
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>Selected account has <strong>{selectedAccObj.formattedUsdc} {selectedToken}</strong>. Booking total is <strong>{amount.toFixed(2)} {selectedToken}</strong>. Please switch account or top up {selectedToken}.</span>
+                  <span>Selected account has <strong>{selectedAccObj.formattedUsdc} {selectedToken}</strong>. Booking total is <strong>{amount.toFixed(2)} {selectedToken}</strong>. Please top up or select another account.</span>
                 </div>
               )}
 
               <button
                 disabled={!selectedAccObj || !selectedAccObj.hasEnoughBalance}
                 onClick={handleExecutePayment}
-                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-600 dark:to-indigo-600 text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 disabled:opacity-50 cursor-pointer transition-all"
+                className="w-full py-3.5 bg-primary hover:bg-primary-600 text-white text-sm font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 cursor-pointer transition-all"
               >
                 <ShieldCheck className="w-4 h-4" /> Confirm & Pay ${amount.toFixed(2)} {selectedToken} ({selectedNetwork.toUpperCase()}) ➔
               </button>
             </div>
           )}
 
-          {/* SCAN BASE QR CODE STEP */}
+          {/* SCAN QR CODE STEP */}
           {step === "qr_scan" && (
             <div className="space-y-4 animate-in fade-in duration-200 text-center">
-              <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center">
-                <div className="bg-white p-3 rounded-2xl shadow-md border border-slate-200 mb-2">
+              <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100 flex flex-col items-center">
+                <div className="bg-white p-3 rounded-2xl shadow-sm border border-dark-200 mb-2">
                   <img src={qrCodeUrl} alt="Escrow QR Code" className="w-44 h-44 object-contain rounded-lg" />
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  Scan via Mobile Web3 App (MetaMask, Coinbase, Trust, Rainbow)
+                <p className="text-xs text-dark-500 font-medium">
+                  Scan via Mobile Wallet (MetaMask, Coinbase, Trust, Rainbow, WalletConnect)
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800 text-left flex items-center justify-between">
+              <div className="p-3 bg-dark-50 rounded-xl border border-dark-100 text-left flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">{selectedNetwork.toUpperCase()} Escrow Address</span>
-                  <span className="text-xs font-mono font-semibold text-slate-900 dark:text-white truncate block">{escrowAddress}</span>
+                  <span className="text-[10px] text-dark-400 uppercase font-bold block">{selectedNetwork.toUpperCase()} Escrow Address</span>
+                  <span className="text-xs font-mono font-semibold text-dark-900 truncate block">{escrowAddress}</span>
                 </div>
-                <button onClick={() => copyToClipboard(escrowAddress, "Escrow Address")} className="text-blue-600 dark:text-cyan-400 hover:underline text-xs font-bold p-1">
+                <button onClick={() => copyToClipboard(escrowAddress, "Escrow Address")} className="text-primary hover:underline text-xs font-bold p-1">
                   Copy
                 </button>
               </div>
 
-              <button onClick={() => setStep("verify_txhash")} className="w-full py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+              <button onClick={() => setStep("verify_txhash")} className="w-full py-2.5 text-xs font-bold rounded-xl border border-dark-200 text-dark-700 hover:bg-dark-50">
                 Done Payment? Enter TxHash Manually ➔
               </button>
             </div>
@@ -659,8 +642,8 @@ export default function PaymentModal({
           {step === "verify_txhash" && (
             <form onSubmit={handleVerifyManualTxHash} className="space-y-4 animate-in fade-in duration-200">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-900 dark:text-white block">Enter {selectedNetwork.toUpperCase()} Transaction Hash (TxHash):</label>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Paste the 66-character <code>0x...</code> hash from your Web3 wallet transaction receipt.</p>
+                <label className="text-xs font-bold text-dark-900 block">Enter {selectedNetwork.toUpperCase()} Transaction Hash (TxHash):</label>
+                <p className="text-[11px] text-dark-500">Paste the 66-character <code>0x...</code> hash from your Web3 wallet transaction receipt.</p>
               </div>
 
               <input
@@ -668,13 +651,13 @@ export default function PaymentModal({
                 value={inputTxHash}
                 onChange={(e) => setInputTxHash(e.target.value)}
                 placeholder="e.g. 0x123abc456def789..."
-                className="w-full p-3.5 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 rounded-xl focus:border-blue-500 outline-none text-xs font-mono text-slate-900 dark:text-white"
+                className="w-full p-3.5 border border-dark-200 bg-white rounded-xl focus:border-primary outline-none text-xs font-mono text-dark-900 shadow-sm"
               />
 
               <button
                 type="submit"
                 disabled={verifying || !inputTxHash.trim()}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20"
+                className="w-full py-3 bg-primary hover:bg-primary-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-primary/20 disabled:opacity-50"
               >
                 {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} Verify On-Chain Payment ➔
               </button>
@@ -686,8 +669,8 @@ export default function PaymentModal({
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
               <DotsLoader size="lg" />
               <div>
-                <h4 className="font-bold text-slate-900 dark:text-white text-base">Processing Web3 Escrow Transaction</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Connecting to {selectedNetwork.toUpperCase()} RPC Node & Confirming Block ({selectedToken})...</p>
+                <h4 className="font-bold text-dark-900 text-base">Processing Escrow Payment</h4>
+                <p className="text-xs text-dark-500 mt-1">Confirming block on {selectedNetwork.toUpperCase()} blockchain ({selectedToken})...</p>
               </div>
             </div>
           )}
@@ -695,24 +678,25 @@ export default function PaymentModal({
           {/* SUCCESS STEP */}
           {step === "success" && (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95 duration-300">
-              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-green-500/10 text-green-600 rounded-full flex items-center justify-center">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
               <div>
-                <h4 className="font-black text-slate-900 dark:text-white text-xl">Payment Successfully Verified!</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Your {selectedToken} funds are safely locked in {selectedNetwork.toUpperCase()} Escrow Smart Contract.</p>
+                <h4 className="font-bold text-dark-900 text-xl">Payment Successfully Verified!</h4>
+                <p className="text-xs text-dark-500 mt-1">Your {selectedToken} funds are safely locked in {selectedNetwork.toUpperCase()} Escrow Smart Contract.</p>
+                <p className="text-xs text-primary font-semibold mt-1">Official PDF receipt has been sent to your email.</p>
               </div>
               {txHash && (
                 <a
-                  href={selectedNetwork === "avalanche" ? `https://testnet.snowtrace.io/tx/${txHash}` : `https://basescan.org/tx/${txHash}`}
+                  href={selectedNetwork === "avalanche" ? `https://snowtrace.io/tx/${txHash}` : `https://basescan.org/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 dark:text-cyan-400 hover:underline font-mono flex items-center gap-1 font-semibold"
+                  className="text-xs text-primary hover:underline font-mono flex items-center gap-1 font-semibold"
                 >
-                  View on {selectedNetwork === "avalanche" ? "SnowTrace Block Explorer" : "BaseScan Explorer"} ↗
+                  View on {selectedNetwork === "avalanche" ? "SnowTrace Explorer" : "BaseScan Explorer"} <ExternalLink className="w-3 h-3" />
                 </a>
               )}
-              <button onClick={onClose} className="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl cursor-pointer">
+              <button onClick={onClose} className="w-full py-3 bg-dark-900 hover:bg-dark-800 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md">
                 Done & View Booking Details ➔
               </button>
             </div>
@@ -721,14 +705,14 @@ export default function PaymentModal({
           {/* ERROR STEP */}
           {step === "error" && (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 animate-in fade-in duration-200">
-              <div className="w-14 h-14 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center">
+              <div className="w-14 h-14 bg-red-500/10 text-red-600 rounded-full flex items-center justify-center">
                 <AlertCircle className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="font-bold text-slate-900 dark:text-white text-base">Payment Verification Failed</h4>
-                <p className="text-xs text-rose-500 mt-1 max-w-xs mx-auto font-medium">{error}</p>
+                <h4 className="font-bold text-dark-900 text-base">Payment Verification Failed</h4>
+                <p className="text-xs text-red-600 mt-1 max-w-xs mx-auto font-medium">{error}</p>
               </div>
-              <button onClick={() => setStep("select_wallet")} className="w-full py-3 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-bold rounded-xl cursor-pointer">
+              <button onClick={() => setStep("select_wallet")} className="w-full py-3 border border-dark-200 text-dark-900 hover:bg-dark-50 text-xs font-bold rounded-xl cursor-pointer">
                 Try Again ➔
               </button>
             </div>

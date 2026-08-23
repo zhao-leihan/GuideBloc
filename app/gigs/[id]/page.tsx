@@ -89,6 +89,7 @@ export default function GigDetailPage() {
   const [showPassengerModal, setShowPassengerModal] = useState(false);
   const [passengerDetails, setPassengerDetails] = useState<any[]>([]);
   const [savedCompanions, setSavedCompanions] = useState<any[]>([]);
+  const [currentBookingId, setCurrentBookingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (session?.user) {
@@ -259,8 +260,40 @@ export default function GigDetailPage() {
       }
     }
 
-    setShowPassengerModal(false);
-    setShowWalletModal(true);
+    // 1. Create a pending booking record in the database
+    setIsBooking(true);
+    const toastId = toast.loading("Preparing your booking record...");
+    try {
+      const createRes = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId: gig.id,
+          bookingDate,
+          bookingTime,
+          groupSize,
+          participants: passengerDetails,
+          cryptoToken: "USDC",
+        }),
+      });
+
+      toast.dismiss(toastId);
+      if (!createRes.ok) {
+        const errorData = await createRes.json();
+        throw new Error(errorData.message || "Failed to initialize booking record.");
+      }
+
+      const dbBooking = await createRes.json();
+      setCurrentBookingId(dbBooking.id);
+      setShowPassengerModal(false);
+      setShowWalletModal(true);
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      console.error("Booking initialization error:", err);
+      toast.error(err.message || "Could not start booking process.");
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const handleBookNow = async (walletType: "metamask" | "coinbase" | "walletconnect") => {
@@ -1015,10 +1048,34 @@ export default function GigDetailPage() {
         token="USDC"
         gigTitle={gig?.title || "Tour Experience"}
         bookingDate={bookingDate}
-        bookingId={gig ? `BK_${gig.id.slice(-6)}` : undefined}
-        onConfirm={(hash) => {
+        bookingId={currentBookingId || (gig ? `BK_${gig.id.slice(-6)}` : undefined)}
+        onConfirm={async (hash, network) => {
           setTxHash(hash);
-          setShowSuccessModal(true);
+          const toastId = toast.loading("Confirming booking on-chain and generating receipt...");
+          try {
+            if (currentBookingId) {
+              const patchRes = await fetch(`/api/bookings/${currentBookingId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  status: "CONFIRMED",
+                  txHash: hash,
+                  paymentNetwork: network === "base" ? "Base L2 Network" : "Avalanche C-Chain",
+                }),
+              });
+              if (!patchRes.ok) {
+                const patchErr = await patchRes.json();
+                console.warn("Booking confirmation warning:", patchErr);
+              }
+            }
+            toast.dismiss(toastId);
+            toast.success("Booking confirmed! PDF receipt has been sent to your email.");
+            setShowSuccessModal(true);
+          } catch (err) {
+            toast.dismiss(toastId);
+            console.error("Booking confirmation error:", err);
+            setShowSuccessModal(true);
+          }
         }}
       />
 

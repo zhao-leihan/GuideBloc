@@ -296,7 +296,7 @@ export async function POST(req: Request) {
         bookingTime: booking.bookingTime || "09:00 AM",
         groupSize: booking.groupSize,
         totalPriceUSD: transferredAmountUSD,
-        paymentNetwork: "Base L2 Network",
+        paymentNetwork: selectedNet === "avalanche" ? "Avalanche C-Chain" : "Base L2 Network",
         txHash: cleanTxHash,
         paymentMethod: "Exchange / Direct Crypto Transfer",
         gig: { title: booking.gig.title, location: booking.gig.location },

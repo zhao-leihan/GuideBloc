@@ -56,9 +56,10 @@ export async function PATCH(
     const booking = await prisma.booking.findUnique({
       where: { id: params.id },
       include: {
+        tourist: true,
         gig: {
           include: {
-            guide: { select: { id: true, walletAddress: true } },
+            guide: { select: { id: true, name: true, email: true, walletAddress: true } },
           },
         },
       },
@@ -179,6 +180,40 @@ export async function PATCH(
         ...(proofPhoto && { proofPhoto }),
       },
     });
+
+    // ─── CONFIRMED: Generate PDF Receipt & Send Email to Tourist ─────────────
+    if (status === "CONFIRMED") {
+      try {
+        const { generateReceiptPdf } = await import("@/lib/receipt");
+        const { triggerBookingSuccessEmail } = await import("@/lib/email");
+
+        const effectiveNetwork = updatedBooking.paymentNetwork || paymentNetwork || "Avalanche C-Chain";
+        const effectiveTxHash = updatedBooking.txHash || txHash || "0x...";
+
+        const pdfBuffer = generateReceiptPdf({
+          id: updatedBooking.id,
+          bookingDate: updatedBooking.bookingDate.toISOString(),
+          bookingTime: updatedBooking.bookingTime || "09:00 AM",
+          groupSize: updatedBooking.groupSize,
+          totalPriceUSD: updatedBooking.totalPriceUSD,
+          paymentNetwork: effectiveNetwork,
+          txHash: effectiveTxHash,
+          paymentMethod: "Web3 Smart Contract Escrow",
+          gig: { title: booking.gig.title, location: booking.gig.location },
+          tourist: { name: booking.tourist.name, email: booking.tourist.email },
+        });
+
+        await triggerBookingSuccessEmail(
+          updatedBooking.id,
+          booking.tourist.email,
+          booking.gig.title,
+          updatedBooking.totalPriceUSD,
+          pdfBuffer
+        );
+      } catch (emailErr) {
+        console.error("[Booking PATCH Email Error]", emailErr);
+      }
+    }
 
     // ─── COMPLETED: Release escrow on-chain, then record earnings ───────────
     if (status === "COMPLETED") {

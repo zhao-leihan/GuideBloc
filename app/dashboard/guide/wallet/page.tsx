@@ -30,24 +30,18 @@ export default function GuideWalletPage() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Helper to load balances for address
+  // Helper to load pure on-chain balances for address (No DB fallback)
   const loadBalances = useCallback(async (address: string, chain: SupportedNetwork) => {
     try {
       const usdtVal = await getTokenBalance("USDT", address, chain);
       const usdcVal = await getTokenBalance("USDC", address, chain);
 
-      const totalEarnedUsdc = history
-        .filter((b) => b.status === "PAID" || b.status === "COMPLETED" || b.status === "CONFIRMED" || b.status === "RELEASED")
-        .reduce((sum, b) => sum + (b.guide_price || (b.totalPriceUSD * 0.90)), 0);
-
-      const displayUsdc = Number(usdcVal) > 0 ? Number(usdcVal) : (totalEarnedUsdc > 0 ? totalEarnedUsdc : 0);
-
       setUsdtBalance(Number(usdtVal).toFixed(2));
-      setUsdcBalance(displayUsdc.toFixed(2));
+      setUsdcBalance(Number(usdcVal).toFixed(2));
     } catch (err) {
-      console.error("Error loading balances:", err);
+      console.error("Error loading on-chain balances:", err);
     }
-  }, [history]);
+  }, []);
 
   // Fetch fresh profile directly from DB on mount
   const fetchProfile = useCallback(async () => {

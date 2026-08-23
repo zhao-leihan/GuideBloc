@@ -198,6 +198,7 @@ export async function connectWallet(
       if (walletType === "phantom") return rdns.includes("phantom") || name.includes("phantom");
       if (walletType === "zerion") return rdns.includes("zerion") || name.includes("zerion");
       if (walletType === "solflare") return rdns.includes("solflare") || name.includes("solflare");
+      if (walletType === "walletconnect") return rdns.includes("walletconnect") || name.includes("walletconnect");
       return false;
     };
 
@@ -285,6 +286,8 @@ export async function connectWallet(
         if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isSolflare);
         if (!rawProvider && eth.isSolflare) rawProvider = eth;
       }
+    } else if (walletType === "walletconnect") {
+      rawProvider = (window as any).walletConnectProvider || (window as any).ethereum;
     }
   }
 
@@ -545,8 +548,7 @@ export async function payBoostFee(
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
   
   const amount = ethers.parseUnits(amountUSD.toFixed(6), 6);
-  // Hardcoded treasury address (Account 0 from Hardhat)
-  const treasuryAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+  const treasuryAddress = process.env.NEXT_PUBLIC_PLATFORM_TREASURY || process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE";
 
   const tx = await tokenContract.transfer(treasuryAddress, amount);
   const receipt = await tx.wait();
