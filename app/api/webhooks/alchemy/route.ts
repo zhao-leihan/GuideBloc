@@ -8,9 +8,9 @@ import { generateReceiptPdf } from "@/lib/receipt";
 export const dynamic = "force-dynamic";
 
 /**
- * SCENARIO A: Webhook Event Listener for Base L2 Escrow Smart Contract.
- * Validates HMAC SHA-256 signature from Alchemy/Node provider.
- * Idempotently verifies EscrowFunded events and cross-checks receipt on Base L2.
+ * Webhook Event Listener for Avalanche C-Chain Escrow Smart Contract.
+ * Validates HMAC SHA-256 signature from provider.
+ * Idempotently verifies EscrowFunded events and cross-checks receipt on Avalanche C-Chain.
  */
 export async function POST(req: Request) {
   try {
@@ -31,10 +31,13 @@ export async function POST(req: Request) {
     const payload = JSON.parse(rawBody);
     const logs = payload.event?.activity || payload.logs || [];
 
-    // Base L2 RPC for independent on-chain cross-checking
-    const rpcUrl = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" 
-      ? "https://mainnet.base.org" 
-      : "https://sepolia.base.org";
+    // Avalanche C-Chain RPC for independent on-chain cross-checking
+    const isAvaxMainnet =
+      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+    const rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
     const provider = new ethers.JsonRpcProvider(rpcUrl);
 
     for (const logItem of logs) {
@@ -87,7 +90,7 @@ export async function POST(req: Request) {
           status: "PAID",
           txHash,
           paidAmountUSD: booking.totalPriceUSD,
-          paymentNetwork: "Base L2 Network"
+          paymentNetwork: "Avalanche C-Chain"
         }
       });
 
@@ -110,9 +113,9 @@ export async function POST(req: Request) {
           bookingTime: booking.bookingTime || "09:00 AM",
           groupSize: booking.groupSize,
           totalPriceUSD: booking.totalPriceUSD,
-          paymentNetwork: "Base L2 Network",
+          paymentNetwork: "Avalanche C-Chain",
           txHash,
-          paymentMethod: "Base Escrow Smart Contract",
+          paymentMethod: "Avalanche Escrow Smart Contract",
           gig: { title: booking.gig.title, location: booking.gig.location },
           tourist: { name: booking.tourist.name, email: booking.tourist.email }
         });

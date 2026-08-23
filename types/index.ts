@@ -102,7 +102,7 @@ export interface PaymentParams {
   bookingId: string;
   amountUSD: number;
   token: "USDT" | "USDC";
-  network: "polygon" | "base";
+  network: "avalanche";
   guideWalletAddress: string;
 }
 

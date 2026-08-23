@@ -3,23 +3,22 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
-const POLYGON_CHAIN_ID = 137; // 0x89
-const BASE_CHAIN_ID = 8453; // 0x2105
+const AVAX_CHAIN_ID = 43114; // 0xa86a
 
 interface NetworkSwitcherProps {
-  targetChain?: "polygon" | "base";
+  targetChain?: "avalanche";
   onSwitched?: () => void;
 }
 
 export default function NetworkSwitcher({
-  targetChain = "base",
+  targetChain = "avalanche",
   onSwitched,
 }: NetworkSwitcherProps) {
   const [currentChain, setCurrentChain] = useState<number | null>(null);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   const [switching, setSwitching] = useState(false);
 
-  const targetChainId = targetChain === "polygon" ? POLYGON_CHAIN_ID : BASE_CHAIN_ID;
+  const targetChainId = AVAX_CHAIN_ID;
 
   useEffect(() => {
     if (typeof window === "undefined" || !(window as any).ethereum) return;
@@ -60,26 +59,15 @@ export default function NetworkSwitcher({
     } catch (err: any) {
       // Chain not added - add it
       if (err.code === 4902) {
-        const networks: Record<string, any> = {
-          polygon: {
-            chainId: "0x89",
-            chainName: "Polygon Mainnet",
-            rpcUrls: ["https://polygon-rpc.com"],
-            nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
-            blockExplorerUrls: ["https://polygonscan.com"],
-          },
-          base: {
-            chainId: "0x2105",
-            chainName: "Base",
-            rpcUrls: ["https://mainnet.base.org"],
-            nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
-            blockExplorerUrls: ["https://basescan.org"],
-          },
-        };
-
         await (window as any).ethereum.request({
           method: "wallet_addEthereumChain",
-          params: [networks[targetChain]],
+          params: [{
+            chainId: "0xa86a",
+            chainName: "Avalanche C-Chain",
+            rpcUrls: ["https://api.avax.network/ext/bc/C/rpc"],
+            nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
+            blockExplorerUrls: ["https://snowtrace.io"],
+          }],
         });
       }
     } finally {
@@ -89,9 +77,9 @@ export default function NetworkSwitcher({
 
   if (isCorrectNetwork) {
     return (
-      <div className="flex items-center gap-2 text-secondary text-sm">
+      <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
         <CheckCircle2 className="w-4 h-4" />
-        Connected to {targetChain === "polygon" ? "Polygon" : "Base"}
+        Connected to Avalanche C-Chain
       </div>
     );
   }
@@ -99,20 +87,17 @@ export default function NetworkSwitcher({
   if (currentChain === null) return null;
 
   return (
-    <div className="flex items-center gap-3 bg-accent/10 border border-accent/20 rounded-xl px-4 py-3">
-      <AlertTriangle className="w-5 h-5 text-accent flex-shrink-0" />
-      <div className="flex-1">
-        <p className="text-sm font-medium text-dark-800">Wrong Network</p>
-        <p className="text-xs text-dark-500">
-          Switch to {targetChain === "polygon" ? "Polygon" : "Base"} to continue
-        </p>
+    <div className="flex items-center justify-between p-3 bg-warning/10 rounded-xl border border-warning/20">
+      <div className="flex items-center gap-2 text-warning text-sm">
+        <AlertTriangle className="w-4 h-4" />
+        <span>Please switch to Avalanche C-Chain</span>
       </div>
       <button
         onClick={switchNetwork}
         disabled={switching}
-        className="btn-outline text-xs py-1.5 px-3 disabled:opacity-50"
+        className="btn-primary text-xs px-3 py-1.5 cursor-pointer font-bold"
       >
-        {switching ? "Switching..." : "Switch"}
+        {switching ? "Switching..." : "Switch to Avalanche"}
       </button>
     </div>
   );

@@ -232,7 +232,7 @@ export async function POST(req: Request) {
         status: "PAID",
         txHash: cleanTxHash,
         paidAmountUSD: transferredAmountUSD,
-        paymentNetwork: selectedNet === "avalanche" ? "Avalanche C-Chain" : "Base L2 Network"
+        paymentNetwork: "Avalanche C-Chain"
       }
     });
 

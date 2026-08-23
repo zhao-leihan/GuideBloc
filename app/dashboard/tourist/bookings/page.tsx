@@ -299,7 +299,7 @@ export default function TouristBookingsPage() {
                         <span style="color: #64748b;">Method</span>
                         <span style="font-weight: 700; color: #4f46e5;">Crypto Escrow (USDC/USDT)</span>
                         <span style="color: #64748b;">Network</span>
-                        <span style="font-weight: 600; color: #0f172a;">Base L2 Network</span>
+                        <span style="font-weight: 600; color: #0f172a;">${booking.paymentNetwork || 'Avalanche C-Chain'}</span>
                         <span style="color: #64748b;">Date</span>
                         <span style="font-weight: 600; color: #0f172a;">${booking.date} ${booking.bookingTime ? '· ' + booking.bookingTime : ''}</span>
                     </div>

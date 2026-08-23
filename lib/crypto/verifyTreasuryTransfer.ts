@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 const TRANSFER_TOPIC =
   "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
-export type SupportedChain = "avalanche" | "base";
+export type SupportedChain = "avalanche";
 
 export interface VerifyResult {
   ok: boolean;
@@ -15,13 +15,7 @@ export interface VerifyResult {
   error?: string;
 }
 
-function getRpc(network: SupportedChain): string {
-  if (network === "base") {
-    return process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet"
-      ? "https://mainnet.base.org"
-      : "https://sepolia.base.org";
-  }
-  // Avalanche
+function getRpc(network: SupportedChain = "avalanche"): string {
   return process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji"
     ? "https://api.avax-test.network/ext/bc/C/rpc"
     : "https://api.avax.network/ext/bc/C/rpc";
@@ -29,14 +23,7 @@ function getRpc(network: SupportedChain): string {
 
 /**
  * Verifies that a given txHash represents a USDC/USDT transfer
- * TO the platform treasury wallet, with an amount >= minAmountUSD.
- *
- * Tries the provided network first, then falls back to the other one
- * (handles cases where the user picked the wrong network in the UI).
- *
- * @param txHash     - 0x-prefixed transaction hash
- * @param minAmountUSD - minimum expected amount in USD (e.g. 9.99 for subscription)
- *                       pass 0 to accept any positive amount (e.g. tips)
+ * TO the platform treasury wallet on Avalanche C-Chain.
  */
 export async function verifyTreasuryTransfer(
   txHash: string,
@@ -50,26 +37,14 @@ export async function verifyTreasuryTransfer(
   ).toLowerCase();
 
   const cleanHash = txHash.trim().toLowerCase();
-  const networks: SupportedChain[] = [
-    preferredNetwork,
-    preferredNetwork === "avalanche" ? "base" : "avalanche",
-  ];
-
+  const usedNetwork: SupportedChain = "avalanche";
   let receipt: ethers.TransactionReceipt | null = null;
-  let usedNetwork: SupportedChain = preferredNetwork;
 
-  // Try preferred network, then fallback to the other
-  for (const net of networks) {
-    try {
-      const provider = new ethers.JsonRpcProvider(getRpc(net));
-      receipt = await provider.getTransactionReceipt(cleanHash);
-      if (receipt) {
-        usedNetwork = net;
-        break;
-      }
-    } catch {
-      // RPC error — try next network
-    }
+  try {
+    const provider = new ethers.JsonRpcProvider(getRpc("avalanche"));
+    receipt = await provider.getTransactionReceipt(cleanHash);
+  } catch {
+    // RPC error
   }
 
   if (!receipt) {
@@ -79,7 +54,7 @@ export async function verifyTreasuryTransfer(
       fromAddress: "",
       network: usedNetwork,
       blockNumber: 0,
-      error: "Transaction not found on Avalanche or Base. It may not be confirmed yet.",
+      error: "Transaction not found on Avalanche C-Chain. Please ensure it has confirmed on SnowTrace.",
     };
   }
 

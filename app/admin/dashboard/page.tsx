@@ -70,14 +70,16 @@ export default async function AdminDashboardPage() {
     take: 5,
   });
 
-  // 4. Platform Treasury Wallet Monitoring (Base L2 RPC)
+  // 4. Platform Treasury Wallet Monitoring (Avalanche C-Chain RPC)
   const treasuryAddress = process.env.TREASURY_ADDRESS || process.env.NEXT_PUBLIC_PLATFORM_TREASURY || "0x079D9c349741C27565ee04e31E4174F640F512aE";
   let treasuryBalance = "0.0000";
   let treasuryTransactions: any[] = [];
 
   try {
-    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const rpcUrl = isBaseMainnet ? "https://mainnet.base.org" : "https://sepolia.base.org";
+    const isAvaxMainnet =
+      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+    const rpcUrl = isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc";
     const rpcResponse = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -101,10 +103,12 @@ export default async function AdminDashboardPage() {
   }
 
   try {
-    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const scanUrl = isBaseMainnet
-      ? `https://api.basescan.org/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`
-      : `https://api-sepolia.basescan.org/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`;
+    const isAvaxMainnet =
+      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+    const scanUrl = isAvaxMainnet
+      ? `https://api.snowtrace.io/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`
+      : `https://api-testnet.snowtrace.io/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`;
 
     const scanResponse = await fetch(scanUrl, { cache: "no-store" });
     if (scanResponse.ok) {

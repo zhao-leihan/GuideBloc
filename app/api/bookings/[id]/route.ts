@@ -14,28 +14,13 @@ function isRealTxHash(hash: string | null | undefined): boolean {
 }
 
 // Helper: dynamically resolve the correct RPC URL for a given network string
-function getRpcUrlForNetwork(network: string | null | undefined): string {
-  const net = (network || "avalanche").toLowerCase();
-
-  if (net === "avalanche") {
-    const isMainnet =
-      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-    return isMainnet
-      ? "https://api.avax.network/ext/bc/C/rpc"
-      : "https://api.avax-test.network/ext/bc/C/rpc";
-  }
-
-  if (net === "base") {
-    const isMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const isSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    if (isMainnet) return "https://mainnet.base.org";
-    if (isSepolia) return "https://sepolia.base.org";
-    return "http://127.0.0.1:8545";
-  }
-
-  // Fallback
-  return "https://api.avax.network/ext/bc/C/rpc";
+function getRpcUrl(network?: string | null): string {
+  const isMainnet =
+    process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+    process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+  return isMainnet
+    ? "https://api.avax.network/ext/bc/C/rpc"
+    : "https://api.avax-test.network/ext/bc/C/rpc";
 }
 
 export async function PATCH(
@@ -145,7 +130,7 @@ export async function PATCH(
       // ✅ FIX: Use dynamic RPC URL based on the booking's paymentNetwork — NOT localhost
       if (txHash.startsWith("0x") && !txHash.startsWith("0xMOCK")) {
         const effectiveNetwork = paymentNetwork || booking.paymentNetwork || "avalanche";
-        const rpcUrl = getRpcUrlForNetwork(effectiveNetwork);
+        const rpcUrl = getRpcUrl(effectiveNetwork);
 
         // Only verify on-chain for real networks (skip for localhost dev)
         if (rpcUrl !== "http://127.0.0.1:8545") {

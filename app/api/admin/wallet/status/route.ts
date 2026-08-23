@@ -12,7 +12,7 @@ const ERC20_ABI = [
 
 /**
  * Admin Wallet On-Chain Status Query.
- * Fetches real-time live balances from Base L2 blockchain matching Exodus Wallet / Treasury Address.
+ * Fetches real-time live balances from Avalanche C-Chain matching Treasury Address.
  */
 export async function GET(req: Request) {
   try {
@@ -21,32 +21,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const network = (searchParams.get("network") || "avalanche") as SupportedNetwork;
-
-    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+    const network: SupportedNetwork = "avalanche";
     const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
-    
-    let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
-    if (network === "avalanche") {
-      rpcUrl = isAvaxTestnet 
-        ? "https://api.avax-test.network/ext/bc/C/rpc" 
-        : "https://api.avax.network/ext/bc/C/rpc";
-    } else if (network === "base") {
-      rpcUrl = isBaseMainnet 
-        ? "https://mainnet.base.org" 
-        : (isBaseSepolia ? "https://sepolia.base.org" : "https://mainnet.base.org");
-    }
+    const rpcUrl = isAvaxTestnet 
+      ? "https://api.avax-test.network/ext/bc/C/rpc" 
+      : "https://api.avax.network/ext/bc/C/rpc";
 
-    // Exodus Wallet / Treasury Address configured in environment
+    // Treasury Address configured in environment
     const treasuryAddress = process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE";
     const escrowAddress = process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
 
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const address = treasuryAddress;
 
-    // 1. Fetch Native Gas Balance (ETH / MATIC / CELO) on Base L2
+    // 1. Fetch Native Gas Balance (AVAX) on Avalanche C-Chain
     let formattedNative = "0.0000";
     try {
       const nativeBal = await provider.getBalance(address);
@@ -55,7 +43,7 @@ export async function GET(req: Request) {
       console.warn("Failed to fetch native balance:", e);
     }
 
-    // 2. Fetch USDC & USDT Balance on Base L2 (matching Exodus Wallet)
+    // 2. Fetch USDC & USDT Balance on Avalanche C-Chain
     let usdcBalance = "0.00";
     let usdtBalance = "0.00";
 

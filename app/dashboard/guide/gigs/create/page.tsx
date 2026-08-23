@@ -697,7 +697,7 @@ export default function CreateGigPage() {
               <div className="bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-secondary/20 flex items-start gap-2 animate-in fade-in zoom-in duration-300 relative z-10">
                 <Info className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                 <p className="text-xs text-dark-600">
-                  You will be prompted by your connected wallet to pay <strong>{CONFIG.FEATURED_GIG_PRICE} USDC</strong> on the <strong>Base Network</strong>. This boost will immediately feature your gig.
+                  You will be prompted by your connected wallet to pay <strong>{CONFIG.FEATURED_GIG_PRICE} USDC</strong> on <strong>Avalanche C-Chain</strong>. This boost will immediately feature your gig.
                 </p>
               </div>
             )}

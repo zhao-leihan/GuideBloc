@@ -182,7 +182,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
           updated[msgIndex] = {
             ...updated[msgIndex],
             bookingId: booking.id,
-            text: `Awesome! I have successfully reserved this tour for you in our database (Booking ID: ${booking.id}).\n\nClick the button below to pay **${Number(booking.totalPriceUSD).toFixed(2)} USDT** on Base network via your crypto wallet.`,
+            text: `Awesome! I have successfully reserved this tour for you in our database (Booking ID: ${booking.id}).\n\nClick the button below to pay **${Number(booking.totalPriceUSD).toFixed(2)} USDT** on Avalanche C-Chain via your crypto wallet.`,
             action: "PAY",
             actionData: {
               bookingId: booking.id,
@@ -215,7 +215,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
         body: JSON.stringify({
           status: "CONFIRMED",
           txHash,
-          paymentNetwork: "base",
+          paymentNetwork: "Avalanche C-Chain",
         }),
       });
 
@@ -403,7 +403,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                           <div className="text-xs text-dark-300">
                             <p>Tour: <strong>{msg.actionData.gigTitle}</strong></p>
                             <p>Amount: <strong>{Number(msg.actionData.amount).toFixed(2)} {msg.actionData.token}</strong></p>
-                            <p className="text-[10px] text-dark-400 mt-1">Locked in escrow on Base network.</p>
+                            <p className="text-[10px] text-dark-400 mt-1">Locked in escrow on Avalanche C-Chain.</p>
                           </div>
                           <button
                             onClick={() => {

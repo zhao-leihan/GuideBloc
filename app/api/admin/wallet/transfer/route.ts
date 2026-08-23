@@ -27,25 +27,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Invalid parameters" }, { status: 400 });
     }
 
-    const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-    const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-    const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
-    let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
-    
-    if (network === "avalanche") {
-      rpcUrl = isAvaxMainnet 
-        ? "https://api.avax.network/ext/bc/C/rpc" 
-        : "https://api.avax-test.network/ext/bc/C/rpc";
-    } else if (network === "base") {
-      rpcUrl = isBaseMainnet 
-        ? "https://mainnet.base.org" 
-        : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-    }
+    const isAvaxMainnet =
+      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+    const rpcUrl = isAvaxMainnet 
+      ? "https://api.avax.network/ext/bc/C/rpc" 
+      : "https://api.avax-test.network/ext/bc/C/rpc";
 
-    let privateKey = process.env.DEPLOYER_PRIVATE_KEY;
-    if (rpcUrl === "http://127.0.0.1:8545") {
-      privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"; // Default Hardhat Account #0
-    }
+    const privateKey = process.env.DEPLOYER_PRIVATE_KEY;
 
     if (!privateKey) {
       return NextResponse.json({ message: "Custodian Private Key not configured" }, { status: 500 });

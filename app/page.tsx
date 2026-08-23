@@ -252,7 +252,7 @@ export default function HomePage() {
               Why Travelers & Guides Trust Explomate
             </h2>
             <p className="text-dark-500 text-base md:text-lg leading-relaxed">
-              We leverage Base network smart contract technology to ensure 100% payout security, zero upfront payment risk, and seamless peer-to-peer travel.
+              We leverage Avalanche C-Chain smart contract technology to ensure 100% payout security, zero upfront payment risk, and seamless peer-to-peer travel.
             </p>
           </div>
 
@@ -374,7 +374,7 @@ export default function HomePage() {
                 {[
                   { icon: Search, title: "Discover", desc: "Browse tours by destination, category, or rating." },
                   { icon: Calendar, title: "Book", desc: "Choose your date, group size, and confirm." },
-                  { icon: CreditCard, title: "Pay with Crypto", desc: "Settle securely with USDT/USDC on Avalanche C-Chain or Base L2." },
+                  { icon: CreditCard, title: "Pay with Crypto", desc: "Settle securely with USDT/USDC on Avalanche C-Chain." },
                 ].map((step, i) => (
                   <div key={step.title} className="flex gap-4">
                     <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">

@@ -48,20 +48,12 @@ const USDTLogo = (
   />
 );
 
-// Official Avalanche C-Chain & Base L2 Network Logos
+// Official Avalanche C-Chain Network Logo
 const AvaxLogo = (
   <img 
     src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" 
     alt="AVAX" 
     className="w-4 h-4 object-contain flex-shrink-0" 
-  />
-);
-
-const BaseLogo = (
-  <img 
-    src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" 
-    alt="Base" 
-    className="w-4 h-4 object-contain inline-block" 
   />
 );
 

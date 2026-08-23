@@ -16,7 +16,7 @@ interface CustodianStatus {
 }
 
 export default function AdminWalletPage() {
-  const [network, setNetwork] = useState<"avalanche" | "base" | "polygon" | "celo">("avalanche");
+  const network = "avalanche";
   const [status, setStatus] = useState<CustodianStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [transferring, setTransferring] = useState(false);
@@ -123,15 +123,7 @@ export default function AdminWalletPage() {
   };
 
   const getNetworkLabel = (net: string) => {
-    if (net === "avalanche") return "Avalanche C-Chain";
-    if (net === "base") {
-      const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-      const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-      return !isBaseMainnet && !isBaseSepolia ? "Base (Localhost)" : "Base Network";
-    }
-    if (net === "polygon") return "Polygon Network";
-    if (net === "celo") return "Celo Network";
-    return net;
+    return "Avalanche C-Chain";
   };
 
   const getExplorerLink = (hash: string) => {
@@ -159,21 +151,12 @@ export default function AdminWalletPage() {
           </button>
         </div>
 
-        {/* Network Selection Toggle */}
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-semibold text-dark-700">Select Network:</span>
-          <div className="flex p-1 bg-dark-100 rounded-xl max-w-[320px]">
-            {(["avalanche", "base", "polygon", "celo"] as const).map((net) => (
-              <button
-                key={net}
-                onClick={() => setNetwork(net)}
-                className={`py-1.5 px-4 rounded-lg text-xs font-semibold capitalize transition-all ${
-                  network === net ? "bg-white text-dark-900 shadow-sm" : "text-dark-500 hover:text-dark-900"
-                }`}
-              >
-                {net}
-              </button>
-            ))}
+        {/* Network Display Badge */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-dark-700">Active Blockchain:</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-dark-200 shadow-sm text-xs font-bold text-dark-900">
+            <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain" />
+            Avalanche C-Chain (Mainnet)
           </div>
         </div>
 
@@ -235,8 +218,8 @@ export default function AdminWalletPage() {
                       <p className="font-bold text-xl text-dark-950 mt-1">{Number(status.usdtBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })} USDT</p>
                     </div>
                     <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
-                      <p className="text-xs text-dark-400 font-semibold">Native Gas Balance</p>
-                      <p className="font-bold text-xl text-dark-950 mt-1">{Number(status.nativeBalance).toLocaleString(undefined, { maximumFractionDigits: 4 })} {network === "celo" ? "CELO" : network === "polygon" ? "POL" : "ETH"}</p>
+                      <p className="text-xs text-dark-400 font-semibold">Native Gas Balance (AVAX)</p>
+                      <p className="font-bold text-xl text-dark-950 mt-1">{Number(status.nativeBalance).toLocaleString(undefined, { maximumFractionDigits: 4 })} AVAX</p>
                     </div>
                   </div>
                 </>
@@ -331,7 +314,7 @@ export default function AdminWalletPage() {
                           : "border-dark-200 text-dark-600 hover:border-dark-350"
                       }`}
                     >
-                      {t === "NATIVE" ? (network === "celo" ? "CELO" : network === "polygon" ? "POL" : "ETH") : t}
+                      {t === "NATIVE" ? "AVAX" : t}
                     </button>
                   ))}
                 </div>
@@ -362,7 +345,7 @@ export default function AdminWalletPage() {
                     className="input-field w-full pr-16"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-dark-400">
-                    {token === "NATIVE" ? (network === "celo" ? "CELO" : network === "polygon" ? "POL" : "ETH") : token}
+                    {token === "NATIVE" ? "AVAX" : token}
                   </span>
                 </div>
               </div>

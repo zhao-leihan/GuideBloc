@@ -47,7 +47,7 @@ const ESCROW_ABI = [
   "function getBooking(bytes32 bookingId) external view returns (tuple(address tourist, address guide, address token, uint256 amount, uint8 status))",
 ];
 
-export type SupportedNetwork = "avalanche" | "base";
+export type SupportedNetwork = "avalanche";
 
 export interface PaymentParams {
   bookingId: string;
@@ -305,30 +305,15 @@ export async function connectWallet(
     throw new Error("No connected Web3 accounts found.");
   }
 
-  const isAvax = network === "avalanche";
-  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
-  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
+  const isAvaxMainnet =
+    process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+    process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
   
-  const chainIdHex = isAvax
-    ? (isAvaxMainnet ? "0xa86a" : "0xa869") // 43114 vs 43113
-    : (isBaseMainnet ? "0x2105" : (isBaseSepolia ? "0x14a34" : "0x7a69")); 
-      
-  const chainName = isAvax
-    ? (isAvaxMainnet ? "Avalanche C-Chain" : "Avalanche Fuji Testnet")
-    : (isBaseMainnet ? "Base Mainnet" : (isBaseSepolia ? "Base Sepolia Testnet" : "Base Localhost"));
-      
-  const rpcUrl = isAvax
-    ? (isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc")
-    : (isBaseMainnet ? "https://mainnet.base.org" : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545"));
-      
-  const nativeCurrency = isAvax
-    ? { name: "AVAX", symbol: "AVAX", decimals: 18 }
-    : { name: "ETH", symbol: "ETH", decimals: 18 };
-    
-  const blockExplorer = isAvax
-    ? (isAvaxMainnet ? "https://snowtrace.io" : "https://testnet.snowtrace.io")
-    : (isBaseMainnet ? "https://basescan.org" : "https://sepolia.basescan.org");
+  const chainIdHex = isAvaxMainnet ? "0xa86a" : "0xa869"; // 43114 vs 43113
+  const chainName = isAvaxMainnet ? "Avalanche C-Chain" : "Avalanche Fuji Testnet";
+  const rpcUrl = isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc";
+  const nativeCurrency = { name: "AVAX", symbol: "AVAX", decimals: 18 };
+  const blockExplorer = isAvaxMainnet ? "https://snowtrace.io" : "https://testnet.snowtrace.io";
 
   try {
     await provider.send("wallet_switchEthereumChain", [{ chainId: chainIdHex }]);
@@ -409,20 +394,13 @@ export async function fetchConnectedAccountsDetails(
 }
 
 export async function getTokenBalance(token: "USDT" | "USDC", address: string, network: SupportedNetwork = "avalanche"): Promise<string> {
-  let rpcUrl = "https://api.avax.network/ext/bc/C/rpc"; // fallback Avalanche C-Chain
-  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  const isAvaxMainnet = process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet";
+  const isAvaxMainnet =
+    process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
+    process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
 
-  if (network === "avalanche") {
-    rpcUrl = isAvaxMainnet 
-      ? "https://api.avax.network/ext/bc/C/rpc" 
-      : "https://api.avax-test.network/ext/bc/C/rpc";
-  } else if (network === "base") {
-    rpcUrl = isBaseMainnet 
-      ? "https://mainnet.base.org" 
-      : (isBaseSepolia ? "https://sepolia.base.org" : "http://127.0.0.1:8545");
-  }
+  const rpcUrl = isAvaxMainnet 
+    ? "https://api.avax.network/ext/bc/C/rpc" 
+    : "https://api.avax-test.network/ext/bc/C/rpc";
 
   try {
     const provider = new ethers.JsonRpcProvider(rpcUrl);

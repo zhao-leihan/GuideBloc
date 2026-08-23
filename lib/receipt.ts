@@ -127,7 +127,7 @@ export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
   doc.text(booking.tourist.email, 20, 65);
 
   const pMethod = booking.paymentMethod || "Crypto Escrow (USDC/USDT)";
-  const pNetwork = (booking.paymentNetwork || "Base L2 Network").toUpperCase();
+  const pNetwork = (booking.paymentNetwork || "Avalanche C-Chain").toUpperCase();
 
   doc.text(`Method: ${pMethod}`, 110, 60);
   doc.text(`Escrow Network: ${pNetwork}`, 110, 65);

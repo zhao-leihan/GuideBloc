@@ -332,8 +332,8 @@ export default function GigDetailPage() {
         bookingId: dbBooking.id,
         amountUSD: gig.priceUSD * groupSize,
         token: "USDC", 
-        network: "base", 
-        guideWalletAddress: gig.guide?.walletAddress || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 
+        network: "avalanche", 
+        guideWalletAddress: gig.guide?.walletAddress || "0x079D9c349741C27565ee04e31E4174F640F512aE", 
         walletType: mappedWalletType
       });
 
@@ -344,7 +344,7 @@ export default function GigDetailPage() {
         body: JSON.stringify({
           status: "CONFIRMED",
           txHash: hash,
-          paymentNetwork: "base",
+          paymentNetwork: "Avalanche C-Chain",
         }),
       });
 

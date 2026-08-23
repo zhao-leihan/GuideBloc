@@ -44,7 +44,7 @@ export async function PUT(req: NextRequest) {
       settings = await prisma.platformSettings.create({
         data: {
           commissionRate: body.commissionRate || 0.10,
-          supportedChains: body.supportedChains || ["polygon", "base"],
+          supportedChains: body.supportedChains || ["avalanche"],
         },
       });
     }

@@ -29,9 +29,6 @@ export default function Footer() {
               <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Avalanche C-Chain Supported">
                 <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="Avalanche" className="h-5 w-5 object-contain" />
               </div>
-              <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Base L2 Supported">
-                <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base L2" className="h-5 w-5 object-contain" />
-              </div>
             </div>
             <div className="pt-2">
               <a 

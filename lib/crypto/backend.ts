@@ -12,28 +12,14 @@ const ESCROW_ABI = [
  * Returns the correct RPC URL for a given network based on environment variables.
  * Single source of truth — no more duplicated logic across functions.
  */
-function getRpcUrl(network: SupportedNetwork): string {
+function getRpcUrl(network: SupportedNetwork = "avalanche"): string {
   const isAvaxMainnet =
     process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
     process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
 
-  if (network === "avalanche") {
-    return isAvaxMainnet
-      ? "https://api.avax.network/ext/bc/C/rpc"
-      : "https://api.avax-test.network/ext/bc/C/rpc";
-  }
-
-  if (network === "base") {
-    if (isBaseMainnet) return "https://mainnet.base.org";
-    if (isBaseSepolia) return "https://sepolia.base.org";
-    // Only fall back to localhost for explicit local dev
-    return "http://127.0.0.1:8545";
-  }
-
-  // Safe default — should never reach here in production
-  return "https://api.avax.network/ext/bc/C/rpc";
+  return isAvaxMainnet
+    ? "https://api.avax.network/ext/bc/C/rpc"
+    : "https://api.avax-test.network/ext/bc/C/rpc";
 }
 
 /**

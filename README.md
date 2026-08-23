@@ -22,14 +22,14 @@
 
 ## 📖 Overview
 
-**Explomate.ly** is a state-of-the-art Web3 decentralized travel marketplace (DApp) that connects global travelers (*Tourists*) with verified local insiders (*Tour Guides*). Powered by smart escrow contracts on **Avalanche C-Chain** and **Base L2**, Explomate eliminates middleman fees, ensures zero-trust payment safety, and delivers an immersive, gamified travel experience worldwide.
+**Explomate.ly** is a state-of-the-art Web3 decentralized travel marketplace (DApp) that connects global travelers (*Tourists*) with verified local insiders (*Tour Guides*). Powered by smart escrow contracts on **Avalanche C-Chain**, Explomate eliminates middleman fees, ensures zero-trust payment safety, and delivers an immersive, gamified travel experience worldwide.
 
 ---
 
 ## ⚡ Core Platform Features
 
-### 🛡️ 1. Multi-Chain Smart Escrow Protection
-- **Zero-Trust Settlement**: Traveler payments in **USDC/USDT** are securely locked in immutable smart escrow contracts on **Avalanche C-Chain** and **Base L2**.
+### 🛡️ 1. Smart Escrow Protection
+- **Zero-Trust Settlement**: Traveler payments in **USDC/USDT** are securely locked in immutable smart escrow contracts on **Avalanche C-Chain**.
 - **Automated Payout Release**: Funds are safely transferred to the Tour Guide's wallet only after the traveler confirms successful tour completion.
 - **Payout Wallet Enforcement**: Guides must link an EVM-compatible payout wallet before publishing any tour offer.
 
@@ -58,7 +58,6 @@
 | Network | Network Type | Contract Address | Chain ID |
 | :--- | :--- | :--- | :--- |
 | 🔺 **Avalanche C-Chain** | **Mainnet** | [`0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8`](https://snowtrace.io/address/0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8) | `43114` |
-| 🔵 **Base L2** | **Mainnet** | [`0x8A74C711B3207611C76b4d6d305C930BE8326902`](https://basescan.org/address/0x8A74C711B3207611C76b4d6d305C930BE8326902) | `8453` |
 | 🔺 **Avalanche Fuji** | **Testnet** | [`0x8A74C711B3207611C76b4d6d305C930BE8326902`](https://testnet.snowtrace.io/address/0x8A74C711B3207611C76b4d6d305C930BE8326902) | `43113` |
 
 ---
