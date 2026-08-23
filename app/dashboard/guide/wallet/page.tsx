@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
@@ -21,11 +21,11 @@ export default function GuideWalletPage() {
   const { data: session, update: updateSession } = useSession();
   const [connected, setConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [network, setNetwork] = useState<"avalanche" | "base">("avalanche");
+  const network: SupportedNetwork = "avalanche";
   const [usdtBalance, setUsdtBalance] = useState("0.00");
   const [usdcBalance, setUsdcBalance] = useState("0.00");
   const [connecting, setConnecting] = useState(false);
-  const [walletType, setWalletType] = useState<"metamask" | "coinbase" | "solflare" | null>(null);
+  const [walletType, setWalletType] = useState<"metamask" | "coinbase" | "walletconnect" | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -66,7 +66,7 @@ export default function GuideWalletPage() {
     } finally {
       setLoadingProfile(false);
     }
-  }, [network, loadBalances]);
+  }, [loadBalances]);
 
   useEffect(() => {
     fetchProfile();
@@ -78,14 +78,14 @@ export default function GuideWalletPage() {
     }
   }, [session]);
 
-  // Reload balances when network changes
+  // Reload balances when wallet address is set
   useEffect(() => {
     if (walletAddress) {
       loadBalances(walletAddress, network);
     }
   }, [network, walletAddress, loadBalances]);
 
-  // Listen to browser wallet account changes (e.g. user switches account in MetaMask)
+  // Listen to browser wallet account changes
   useEffect(() => {
     if (typeof window === "undefined" || !(window as any).ethereum) return;
 
@@ -142,10 +142,10 @@ export default function GuideWalletPage() {
     }
   };
 
-  const handleConnect = async (providerType: "metamask" | "coinbase" | "solflare") => {
+  const handleConnect = async (providerType: "metamask" | "coinbase" | "walletconnect") => {
     setConnecting(true);
     setWalletType(providerType);
-    const toastId = toast.loading(`Connecting to ${providerType === "metamask" ? "MetaMask" : providerType === "coinbase" ? "Coinbase Wallet" : "Solflare"}...`);
+    const toastId = toast.loading(`Connecting to ${providerType}...`);
 
     try {
       // Connect to chosen wallet provider
@@ -163,7 +163,7 @@ export default function GuideWalletPage() {
 
       toast.dismiss(toastId);
       if (res.ok) {
-        toast.success(`${providerType.toUpperCase()} connected: ${formatAddress(address)}`);
+        toast.success(`Payout wallet linked: ${formatAddress(address)}`);
         await updateSession({ walletAddress: address });
         await loadBalances(address, network);
       } else {
@@ -180,7 +180,7 @@ export default function GuideWalletPage() {
   };
 
   const handleDisconnect = async () => {
-    const toastId = toast.loading("Disconnecting wallet...");
+    const toastId = toast.loading("Unlinking payout wallet...");
     try {
       const res = await fetch("/api/users/profile", {
         method: "PUT",
@@ -194,7 +194,7 @@ export default function GuideWalletPage() {
         setWalletAddress(null);
         setUsdtBalance("0.00");
         setUsdcBalance("0.00");
-        toast.success("Wallet disconnected successfully");
+        toast.success("Payout wallet unlinked successfully");
         await updateSession({ walletAddress: null });
       } else {
         toast.error("Failed to update profile");
@@ -218,29 +218,18 @@ export default function GuideWalletPage() {
   };
 
   const getExplorerUrl = (address: string) => {
-    if (network === "base") {
-      const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-      return isBaseMainnet
-        ? `https://basescan.org/address/${address}`
-        : `https://sepolia.basescan.org/address/${address}`;
-    }
-    const isAvaxMainnet =
-      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-    return isAvaxMainnet
-      ? `https://snowtrace.io/address/${address}`
-      : `https://testnet.snowtrace.io/address/${address}`;
+    return `https://snowtrace.io/address/${address}`;
   };
 
   return (
     <DashboardLayout role="guide">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-dark-900">Wallet</h1>
-          <p className="text-dark-500">Connect your crypto wallet to receive payouts</p>
+          <h1 className="text-2xl font-bold text-dark-900">Guide Payout Wallet</h1>
+          <p className="text-dark-500">Register and link your Avalanche wallet to receive automated escrow disbursements</p>
         </div>
 
-        <div className="card p-6 space-y-6">
+        <div className="card p-6 space-y-6 bg-white border border-dark-100 rounded-3xl shadow-sm">
           {loadingProfile ? (
             <div className="flex items-center justify-center p-12">
               <DotsLoader size="lg" />
@@ -249,12 +238,12 @@ export default function GuideWalletPage() {
             <>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-secondary" />
+                  <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-display font-semibold text-dark-900">Wallet Connected</h3>
-                    <p className="text-sm text-dark-400 capitalize">Active Network: {network === "avalanche" ? "Avalanche C-Chain" : "Base L2"}</p>
+                    <h3 className="font-display font-bold text-dark-900">Payout Wallet Linked & Active</h3>
+                    <p className="text-xs text-dark-400">Network: Avalanche C-Chain (Mainnet)</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -267,115 +256,101 @@ export default function GuideWalletPage() {
                     <RefreshCw className={`w-3.5 h-3.5 ${connecting ? "animate-spin" : ""}`} /> Change
                   </button>
                   <button onClick={handleDisconnect} className="btn-ghost text-danger text-sm cursor-pointer font-semibold">
-                    Disconnect
+                    Unlink
                   </button>
                 </div>
               </div>
 
-              {/* Network Selector Toggle */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-dark-800 rounded-2xl border border-slate-200 dark:border-dark-700/80 max-w-[340px]">
-                <button
-                  type="button"
-                  onClick={() => setNetwork("avalanche")}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                    network === "avalanche"
-                      ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
-                      : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
-                  }`}
-                >
-                  <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain flex-shrink-0" />
-                  <span>Avalanche C-Chain</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNetwork("base")}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                    network === "base"
-                      ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
-                      : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
-                  }`}
-                >
-                  <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-4 h-4 object-contain flex-shrink-0" />
-                  <span>Base L2</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-dark-50 rounded-xl flex flex-col justify-between">
-                  <p className="text-xs text-dark-400 font-medium">Payout Address</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="font-mono text-sm text-dark-900 font-semibold">{formatAddress(walletAddress)}</p>
-                    <div className="flex items-center gap-1">
-                      <button onClick={copyToClipboard} className="p-1 hover:bg-dark-100 rounded text-dark-500 cursor-pointer" title="Copy Address">
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-                      <a
-                        href={getExplorerUrl(walletAddress)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 hover:bg-dark-100 rounded text-dark-500"
-                        title="View on Explorer"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
+              {/* Wallet Address Display */}
+              <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-dark-400 uppercase tracking-wider">Registered Payout Address</span>
+                  <span className="badge badge-success text-[10px] uppercase font-bold tracking-wider">Linked to Profile</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="font-mono text-sm font-bold text-dark-900 truncate">
+                    {walletAddress}
+                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={copyToClipboard}
+                      className="p-2 hover:bg-dark-200 rounded-xl transition-colors text-dark-400 hover:text-dark-900 cursor-pointer"
+                      title="Copy Address"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <a
+                      href={getExplorerUrl(walletAddress)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 hover:bg-dark-200 rounded-xl transition-colors text-dark-400 hover:text-primary cursor-pointer"
+                      title="View on SnowTrace Explorer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
                   </div>
                 </div>
-                <div className="p-4 bg-dark-50 rounded-xl">
-                  <p className="text-xs text-dark-400 font-medium">USDT Balance</p>
-                  <p className="font-bold text-lg text-dark-900 mt-1">{usdtBalance} USDT</p>
+              </div>
+
+              {/* Balances Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-dark-400 uppercase tracking-wider">USDC Balance (AVAX)</span>
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" 
+                      alt="USDC" 
+                      className="w-5 h-5 object-contain" 
+                    />
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-dark-900">${usdcBalance}</div>
                 </div>
-                <div className="p-4 bg-dark-50 rounded-xl">
-                  <p className="text-xs text-dark-400 font-medium">USDC Balance</p>
-                  <p className="font-bold text-lg text-dark-900 mt-1">{usdcBalance} USDC</p>
+
+                <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-dark-400 uppercase tracking-wider">USDT Balance (AVAX)</span>
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" 
+                      alt="USDT" 
+                      className="w-5 h-5 object-contain" 
+                    />
+                  </div>
+                  <div className="text-2xl font-bold font-mono text-dark-900">${usdtBalance}</div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-display font-semibold text-dark-900 mb-3">Transaction History</h4>
+              {/* Transaction History Section */}
+              <div className="pt-4 border-t border-dark-100">
+                <h4 className="font-display font-semibold text-dark-900 mb-4">Escrow Payout History</h4>
                 {loadingHistory ? (
-                  <div className="flex items-center justify-center p-8 bg-dark-50 rounded-xl">
+                  <div className="text-center py-6">
                     <DotsLoader size="md" />
                   </div>
                 ) : history.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-dark-400 bg-dark-50 rounded-xl border border-dashed border-dark-200">
-                    No recent transactions on this wallet.
+                  <div className="text-center py-8 text-dark-400 text-sm">
+                    No transactions yet. Complete tours to receive escrow payouts.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-dark-150 bg-white">
-                    <table className="w-full text-sm">
-                      <thead className="bg-dark-50 border-b border-dark-150">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-dark-50 text-dark-400 text-xs uppercase font-medium">
                         <tr>
-                          <th className="text-left text-xs font-semibold text-dark-500 px-4 py-3">Date</th>
-                          <th className="text-left text-xs font-semibold text-dark-500 px-4 py-3">Type</th>
-                          <th className="text-left text-xs font-semibold text-dark-500 px-4 py-3">Tour</th>
-                          <th className="text-left text-xs font-semibold text-dark-500 px-4 py-3">Amount</th>
-                          <th className="text-left text-xs font-semibold text-dark-500 px-4 py-3">Status</th>
-                          <th className="text-left text-xs font-semibold text-dark-500 px-4 py-3">Explorer</th>
+                          <th className="px-4 py-3 rounded-l-xl">Tour</th>
+                          <th className="px-4 py-3">Date</th>
+                          <th className="px-4 py-3">Earnings (90%)</th>
+                          <th className="px-4 py-3">Escrow Status</th>
+                          <th className="px-4 py-3 rounded-r-xl">Receipt</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-dark-100">
                         {history.map((tx: any) => {
-                          const date = new Date(tx.bookingDate).toLocaleDateString();
-                          const isCompleted = tx.status === "COMPLETED";
-                          const amountVal = isCompleted 
-                            ? tx.totalPriceUSD * 0.90 
-                            : tx.totalPriceUSD;
+                          const guideEarnings = (Number(tx.totalPriceUSD) * 0.9).toFixed(2);
                           return (
                             <tr key={tx.id} className="hover:bg-dark-50/50">
-                              <td className="px-4 py-3 text-dark-600 font-mono text-xs">{date}</td>
-                              <td className="px-4 py-3 font-semibold">
-                                {isCompleted ? (
-                                  <span className="text-green-600">Payout Released</span>
-                                ) : (
-                                  <span className="text-blue-600">Escrow Locked</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-dark-800 font-medium truncate max-w-[180px]" title={tx.gig?.title}>
-                                {tx.gig?.title || "Unknown Tour"}
-                              </td>
-                              <td className="px-4 py-3 font-bold text-dark-900">
-                                +{amountVal.toFixed(2)} USDC
+                              <td className="px-4 py-3 font-medium text-dark-900">{tx.gig?.title || "Tour Booking"}</td>
+                              <td className="px-4 py-3 text-dark-500 text-xs">{new Date(tx.bookingDate).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 font-mono font-bold text-green-600">
+                                +${guideEarnings} USDC
                               </td>
                               <td className="px-4 py-3">
                                 <span className={`badge text-[10px] font-bold px-2 py-0.5 rounded-lg ${
@@ -383,27 +358,19 @@ export default function GuideWalletPage() {
                                     ? "bg-green-500/10 text-green-600 border border-green-500/20" 
                                     : "bg-blue-500/10 text-blue-600 border border-blue-500/20"
                                 }`}>
-                                  {tx.status === "COMPLETED" ? "RELEASED" : "SECURED"}
+                                  {tx.status === "COMPLETED" ? "RELEASED" : "ESCROW SECURED"}
                                 </span>
                               </td>
                               <td className="px-4 py-3">
                                 {tx.txHash && tx.txHash !== "N/A" && (
-                                  tx.txHash.startsWith("0xMOCK") ? (
-                                    <span className="text-[10px] text-dark-405 bg-dark-100 px-2 py-0.5 rounded-full">Sandbox</span>
-                                  ) : (
-                                    <a
-                                      href={
-                                        (tx.paymentNetwork || "").toLowerCase().includes("avalanche") || (tx.paymentNetwork || "").toLowerCase().includes("avax")
-                                          ? (process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" || process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet" ? `https://snowtrace.io/tx/${tx.txHash}` : `https://testnet.snowtrace.io/tx/${tx.txHash}`)
-                                          : (process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" ? `https://basescan.org/tx/${tx.txHash}` : `https://sepolia.basescan.org/tx/${tx.txHash}`)
-                                      }
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
-                                    >
-                                      View <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )
+                                  <a
+                                    href={`https://snowtrace.io/tx/${tx.txHash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                                  >
+                                    SnowTrace <ExternalLink className="w-3 h-3" />
+                                  </a>
                                 )}
                               </td>
                             </tr>
@@ -420,101 +387,77 @@ export default function GuideWalletPage() {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Wallet className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-display font-bold text-dark-900 text-lg mb-2">Connect Your Wallet</h3>
+              <h3 className="font-display font-bold text-dark-900 text-lg mb-2">Link Your Avalanche Payout Wallet</h3>
               <p className="text-dark-500 text-sm mb-6 max-w-md mx-auto">
-                Select your blockchain network and preferred wallet provider to receive payouts securely.
+                Connect your preferred Web3 wallet to register your Avalanche address. When tourists complete bookings, 90% of tour earnings will disburse directly to this wallet.
               </p>
 
-              {/* Network Selection Toggle */}
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <span className="text-sm font-bold text-slate-700 dark:text-dark-200">Network:</span>
-                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-dark-800 rounded-2xl border border-slate-200 dark:border-dark-700/80">
-                  <button
-                    type="button"
-                    onClick={() => setNetwork("avalanche")}
-                    className={`py-2 px-4 rounded-xl text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-                      network === "avalanche"
-                        ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
-                        : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
-                    }`}
-                  >
-                    <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain flex-shrink-0" />
-                    <span>Avalanche C-Chain</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNetwork("base")}
-                    className={`py-2 px-4 rounded-xl text-xs transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-                      network === "base"
-                        ? "bg-primary text-white shadow-md font-bold scale-[1.02]"
-                        : "text-slate-600 dark:text-dark-300 font-semibold hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-dark-700/60"
-                    }`}
-                  >
-                    <img src="https://icon2.cleanpng.com/ci2/gjg/xui/vzts09avk.webp" alt="Base" className="w-4 h-4 object-contain flex-shrink-0" />
-                    <span>Base L2</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Wallet Providers Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
                 {/* MetaMask */}
                 <button
                   onClick={() => handleConnect("metamask")}
                   disabled={connecting}
-                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group cursor-pointer"
+                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer"
                 >
                   {connecting && walletType === "metamask" ? (
-                    <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
+                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
                   ) : (
-                    <div className="w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/MetaMask_Fox.svg/960px-MetaMask_Fox.svg.png" alt="MetaMask Logo" className="w-12 h-12 object-contain" />
+                    <div className="w-10 h-10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/MetaMask_Fox.svg/960px-MetaMask_Fox.svg.png" alt="MetaMask Logo" className="w-10 h-10 object-contain" />
                     </div>
                   )}
-                  <span className="font-display font-semibold text-dark-900 text-sm">MetaMask</span>
-                  <span className="text-xs text-dark-400 mt-1">Connect MetaMask extension</span>
+                  <span className="font-display font-bold text-dark-900 text-sm">MetaMask</span>
+                  <span className="text-[11px] text-dark-400 mt-0.5">Browser / Mobile App</span>
+                </button>
+
+                {/* WalletConnect */}
+                <button
+                  onClick={() => handleConnect("walletconnect")}
+                  disabled={connecting}
+                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer"
+                >
+                  {connecting && walletType === "walletconnect" ? (
+                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
+                  ) : (
+                    <div className="w-10 h-10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <svg className="w-10 h-10" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="16" fill="#3B99FC"/>
+                        <path d="M9.8 12.8C13.2 9.4 18.8 9.4 22.2 12.8L22.8 13.4C23.1 13.7 23.1 14.1 22.8 14.4L21.4 15.8C21.3 15.9 21.0 15.9 20.9 15.8L20.0 14.9C17.8 12.7 14.2 12.7 12.0 14.9L11.0 15.8C10.9 15.9 10.7 15.9 10.5 15.8L9.2 14.4C8.9 14.1 8.9 13.7 9.2 13.4L9.8 12.8ZM25.0 15.6L26.2 16.8C26.5 17.1 26.5 17.5 26.2 17.8L20.8 23.2C20.5 23.5 20.1 23.5 19.8 23.2L16.0 19.4C15.9 19.3 15.8 19.3 15.7 19.4L11.9 23.2C11.6 23.5 11.2 23.5 10.9 23.2L5.5 17.8C5.2 17.5 5.2 17.1 5.5 16.8L6.7 15.6C7.0 15.3 7.4 15.3 7.7 15.6L11.5 19.4C11.6 19.5 11.7 19.5 11.8 19.4L15.6 15.6C15.9 15.3 16.3 15.3 16.6 15.6L20.4 19.4C20.5 19.5 20.6 19.5 20.7 19.4L24.5 15.6C24.8 15.3 25.0 15.3 25.0 15.6Z" fill="white"/>
+                      </svg>
+                    </div>
+                  )}
+                  <span className="font-display font-bold text-dark-900 text-sm">WalletConnect</span>
+                  <span className="text-[11px] text-dark-400 mt-0.5">Universal QR Connect</span>
                 </button>
 
                 {/* Coinbase Wallet */}
                 <button
                   onClick={() => handleConnect("coinbase")}
                   disabled={connecting}
-                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group cursor-pointer"
+                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer"
                 >
                   {connecting && walletType === "coinbase" ? (
-                    <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
+                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
                   ) : (
-                    <div className="w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                      <img src="https://s3-symbol-logo.tradingview.com/coinbase--600.png" alt="Coinbase Wallet Logo" className="w-12 h-12 object-contain rounded-xl" />
+                    <div className="w-10 h-10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <svg className="w-10 h-10" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="16" fill="#0052FF"/>
+                        <rect x="9" y="9" width="14" height="14" rx="3" fill="white"/>
+                        <rect x="12" y="12" width="8" height="8" rx="1.5" fill="#0052FF"/>
+                      </svg>
                     </div>
                   )}
-                  <span className="font-display font-semibold text-dark-900 text-sm">Coinbase Wallet</span>
-                  <span className="text-xs text-dark-400 mt-1">Connect Coinbase app</span>
-                </button>
-
-                {/* Solflare Wallet */}
-                <button
-                  onClick={() => handleConnect("solflare")}
-                  disabled={connecting}
-                  className="flex flex-col items-center justify-center p-6 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-lg transition-all group cursor-pointer"
-                >
-                  {connecting && walletType === "solflare" ? (
-                    <div className="h-12 flex items-center justify-center mb-4"><DotsLoader size="lg" /></div>
-                  ) : (
-                    <div className="w-12 h-12 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                      <img src="https://www.solflare.com/wp-content/uploads/2024/11/App-Icon.svg" alt="Solflare Wallet Logo" className="w-12 h-12 object-contain" />
-                    </div>
-                  )}
-                  <span className="font-display font-semibold text-dark-900 text-sm">Solflare Wallet</span>
-                  <span className="text-xs text-dark-400 mt-1">Connect Solflare EVM wallet</span>
+                  <span className="font-display font-bold text-dark-900 text-sm">Coinbase</span>
+                  <span className="text-[11px] text-dark-400 mt-0.5">Self-Custody App</span>
                 </button>
               </div>
 
-              <div className="mt-6 p-4 bg-accent/5 border border-accent/20 rounded-xl max-w-md mx-auto">
-                <div className="flex items-start gap-2 text-left">
-                  <AlertCircle className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-dark-500">
-                    Never share your private keys. Explomate will never ask for them. Transactions are verified directly via smart contracts.
+              <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-2xl max-w-md mx-auto">
+                <div className="flex items-start gap-2.5 text-left">
+                  <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-dark-600">
+                    Your wallet is securely registered on Avalanche C-Chain. Escrow releases will automatically deposit USDC earnings directly to this linked address.
                   </p>
                 </div>
               </div>

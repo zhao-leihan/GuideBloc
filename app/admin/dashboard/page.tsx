@@ -228,14 +228,14 @@ export default async function AdminDashboardPage() {
                     {treasuryTransactions.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="py-4 text-center text-dark-400">
-                          No recent transactions found on Base network for this wallet.
+                          No recent transactions found on Avalanche network for this wallet.
                         </td>
                       </tr>
                     ) : (
                       treasuryTransactions.map((tx, idx) => (
                         <tr key={idx} className="border-b border-dark-100/50 hover:bg-dark-50/50 transition-colors">
                           <td className="py-2 font-mono text-primary font-medium">
-                            <a href={`https://basescan.org/tx/${tx.hash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
+                            <a href={`https://snowtrace.io/tx/${tx.hash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
                               {tx.hash.substring(0, 10)}... <ExternalLink className="w-2.5 h-2.5" />
                             </a>
                           </td>

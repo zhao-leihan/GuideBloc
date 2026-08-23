@@ -122,35 +122,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Dynamic Multi-Chain RPC Query (Avalanche C-Chain or Base L2)
-    let rpcUrl = "https://api.avax.network/ext/bc/C/rpc";
-    if (selectedNet === "base") {
-      rpcUrl = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" 
-        ? "https://mainnet.base.org" 
-        : "https://sepolia.base.org";
-    } else {
-      rpcUrl = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji"
-        ? "https://api.avax-test.network/ext/bc/C/rpc"
-        : "https://api.avax.network/ext/bc/C/rpc";
-    }
+    // 4. Avalanche C-Chain RPC Query
+    const rpcUrl = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji"
+      ? "https://api.avax-test.network/ext/bc/C/rpc"
+      : "https://api.avax.network/ext/bc/C/rpc";
 
     const provider = new ethers.JsonRpcProvider(rpcUrl);
-
-    let receipt = await provider.getTransactionReceipt(cleanTxHash).catch(() => null);
-
-    // Fallback: If not found on selected RPC, check alternate RPC chain (Avalanche <-> Base)
-    if (!receipt) {
-      const altRpcUrl = selectedNet === "base" 
-        ? (process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" ? "https://api.avax-test.network/ext/bc/C/rpc" : "https://api.avax.network/ext/bc/C/rpc")
-        : (process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet" ? "https://mainnet.base.org" : "https://sepolia.base.org");
-      
-      const altProvider = new ethers.JsonRpcProvider(altRpcUrl);
-      receipt = await altProvider.getTransactionReceipt(cleanTxHash).catch(() => null);
-    }
+    const receipt = await provider.getTransactionReceipt(cleanTxHash).catch(() => null);
 
     if (!receipt) {
       return NextResponse.json(
-        { message: "Transaction receipt not found on-chain. Please ensure transaction has been confirmed on Avalanche or Base." },
+        { message: "Transaction receipt not found on Avalanche C-Chain. Please ensure transaction has been confirmed on SnowTrace." },
         { status: 404 }
       );
     }
@@ -296,7 +278,7 @@ export async function POST(req: Request) {
         bookingTime: booking.bookingTime || "09:00 AM",
         groupSize: booking.groupSize,
         totalPriceUSD: transferredAmountUSD,
-        paymentNetwork: selectedNet === "avalanche" ? "Avalanche C-Chain" : "Base L2 Network",
+        paymentNetwork: "Avalanche C-Chain",
         txHash: cleanTxHash,
         paymentMethod: "Exchange / Direct Crypto Transfer",
         gig: { title: booking.gig.title, location: booking.gig.location },

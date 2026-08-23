@@ -53,55 +53,25 @@ export interface PaymentParams {
   bookingId: string;
   amountUSD: number;
   token: "USDT" | "USDC";
-  network: SupportedNetwork;
+  network?: SupportedNetwork;
   guideWalletAddress: string;
   walletType?: "metamask" | "coinbase" | "solflare";
 }
 
 export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwork = "avalanche"): string {
-  if (network === "avalanche") {
-    const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
-    if (token === "USDC") {
-      return isAvaxTestnet 
-        ? "0xB819bE9925EcBefe8b7eAebe51f42360673ffC86" // Fuji Testnet USDC
-        : "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"; // Avalanche Mainnet Native USDC
-    } else {
-      return isAvaxTestnet
-        ? "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7" 
-        : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Avalanche Mainnet USDT
-    }
-  }
-
-  // Base L2 Fallback
-  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  
-  if (!isBaseMainnet && !isBaseSepolia) {
-    return localAddresses.usdc || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-  }
-
+  const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
   if (token === "USDC") {
-    return isBaseMainnet 
-      ? "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-      : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+    return isAvaxTestnet 
+      ? "0xB819bE9925EcBefe8b7eAebe51f42360673ffC86" // Fuji Testnet USDC
+      : "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"; // Avalanche Mainnet Native USDC
   } else {
-    return isBaseMainnet
-      ? "0x50c5725949A6F0c72E6C4a641F24049A91D18C41"
-      : "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+    return isAvaxTestnet
+      ? "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7" 
+      : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Avalanche Mainnet USDT
   }
 }
 
 export function getEscrowAddress(network: SupportedNetwork = "avalanche"): string {
-  if (network === "avalanche") {
-    return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
-  }
-  const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-  const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-  
-  if (!isBaseMainnet && !isBaseSepolia) {
-    return localAddresses.escrow || "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-  }
-
   return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
 }
 

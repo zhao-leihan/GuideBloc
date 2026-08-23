@@ -387,28 +387,11 @@ export default function PaymentModal({
           {/* Clean Order Summary & Network/Token Switcher */}
           <div className="mt-4 p-4 bg-dark-50 rounded-2xl border border-dark-100 space-y-3">
             
-            {/* Row 1: Network Selection */}
+            {/* Row 1: Network Display */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-[11px] font-bold text-dark-500 uppercase tracking-wider">Payment Network:</span>
-              <div className="bg-white p-1 rounded-xl flex items-center gap-1 border border-dark-200 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchNetwork("avalanche")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    selectedNetwork === "avalanche" ? "bg-primary text-white shadow-sm" : "text-dark-600 hover:text-dark-900"
-                  }`}
-                >
-                  {AvaxLogo} Avalanche C-Chain
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchNetwork("base")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    selectedNetwork === "base" ? "bg-primary text-white shadow-sm" : "text-dark-600 hover:text-dark-900"
-                  }`}
-                >
-                  {BaseLogo} Base L2
-                </button>
+              <div className="bg-white px-3 py-1.5 rounded-xl flex items-center gap-2 border border-dark-200 shadow-sm text-xs font-bold text-dark-900">
+                {AvaxLogo} Avalanche C-Chain (Mainnet)
               </div>
             </div>
 
@@ -688,12 +671,12 @@ export default function PaymentModal({
               </div>
               {txHash && (
                 <a
-                  href={selectedNetwork === "avalanche" ? `https://snowtrace.io/tx/${txHash}` : `https://basescan.org/tx/${txHash}`}
+                  href={`https://snowtrace.io/tx/${txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline font-mono flex items-center gap-1 font-semibold"
                 >
-                  View on {selectedNetwork === "avalanche" ? "SnowTrace Explorer" : "BaseScan Explorer"} <ExternalLink className="w-3 h-3" />
+                  View on SnowTrace Explorer <ExternalLink className="w-3 h-3" />
                 </a>
               )}
               <button onClick={onClose} className="w-full py-3 bg-dark-900 hover:bg-dark-800 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md">

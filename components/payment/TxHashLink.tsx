@@ -2,22 +2,23 @@ import { ExternalLink } from "lucide-react";
 
 interface TxHashLinkProps {
   hash: string;
-  explorer?: "polygon" | "base" | "ethereum";
+  explorer?: "avalanche" | "polygon" | "base" | "ethereum";
   className?: string;
 }
 
 const EXPLORERS: Record<string, string> = {
+  avalanche: "https://snowtrace.io",
   polygon: "https://amoy.polygonscan.com",
-  base: "https://basescan.org",
+  base: "https://snowtrace.io",
   ethereum: "https://etherscan.io",
 };
 
 export default function TxHashLink({
   hash,
-  explorer = "polygon",
+  explorer = "avalanche",
   className = "",
 }: TxHashLinkProps) {
-  const baseUrl = EXPLORERS[explorer] || EXPLORERS.polygon;
+  const baseUrl = EXPLORERS[explorer] || EXPLORERS.avalanche;
   const truncated = `${hash.slice(0, 10)}...${hash.slice(-8)}`;
 
   return (

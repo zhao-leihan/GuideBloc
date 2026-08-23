@@ -135,17 +135,7 @@ export default function AdminWalletPage() {
   };
 
   const getExplorerLink = (hash: string) => {
-    if (network === "base") {
-      const isBaseMainnet = process.env.NEXT_PUBLIC_BASE_NETWORK === "mainnet";
-      const isBaseSepolia = process.env.NEXT_PUBLIC_BASE_NETWORK === "sepolia";
-      if (!isBaseMainnet && !isBaseSepolia) {
-        return `http://localhost:8545`;
-      }
-      return isBaseMainnet ? `https://basescan.org/tx/${hash}` : `https://sepolia.basescan.org/tx/${hash}`;
-    }
-    return network === "celo" 
-      ? `https://celo-sepolia.blockscout.com/tx/${hash}`
-      : `https://amoy.polygonscan.com/tx/${hash}`;
+    return `https://snowtrace.io/tx/${hash}`;
   };
 
   return (

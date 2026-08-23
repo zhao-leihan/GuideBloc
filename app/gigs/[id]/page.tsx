@@ -1060,7 +1060,7 @@ export default function GigDetailPage() {
                 body: JSON.stringify({
                   status: "CONFIRMED",
                   txHash: hash,
-                  paymentNetwork: network === "base" ? "Base L2 Network" : "Avalanche C-Chain",
+                  paymentNetwork: "Avalanche C-Chain",
                 }),
               });
               if (!patchRes.ok) {
