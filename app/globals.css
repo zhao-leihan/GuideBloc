@@ -57,28 +57,28 @@
 
   /* Clean & Vibrant Badge Pills */
   .badge {
-    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-xs;
     background-color: #e8effe;
     color: #1d4ed8;
     border: 1px solid #bfdbfe;
   }
 
   .badge-primary {
-    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-xs;
     background-color: #e8effe;
     color: #1d4ed8;
     border: 1px solid #bfdbfe;
   }
 
   .badge-secondary {
-    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-xs;
     background-color: #fef3c7;
     color: #b45309;
     border: 1px solid #fde68a;
   }
 
   .badge-success {
-    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-xs;
     background-color: #dcfce7;
     color: #15803d;
     border: 1px solid #bbf7d0;

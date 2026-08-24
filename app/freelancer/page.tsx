@@ -213,7 +213,7 @@ export default function FreelancerPage() {
                   }
                 ].map((step) => (
                   <div key={step.step} className="flex gap-5 p-4 rounded-2xl bg-dark-50/70 border border-dark-100 hover:bg-white hover:shadow-md transition-all">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary font-display font-black text-lg flex items-center justify-center border border-primary/20 shadow-2xs">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary font-display font-black text-lg flex items-center justify-center border border-primary/20 shadow-xs">
                       {step.step}
                     </div>
                     <div>
