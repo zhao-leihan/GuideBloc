@@ -580,45 +580,53 @@ export default function GigDetailPage() {
               <p className="text-dark-600 leading-relaxed whitespace-pre-line">{gig.description}</p>
             </div>
 
-            {/* Languages */}
+            {/* Languages (Bulat & Modern Pill Style) */}
             {gig.languages?.length > 0 && (
               <div>
-                <h2 className="text-xl font-bold text-dark-900 mb-4">Languages</h2>
-                <div className="flex flex-wrap gap-2">
+                <h2 className="text-xl font-bold text-dark-900 mb-3 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-primary" /> Spoken Languages
+                </h2>
+                <div className="flex flex-wrap gap-2.5">
                   {gig.languages.map((lang: string) => (
-                    <span key={lang} className="badge badge-primary">{lang}</span>
+                    <span 
+                      key={lang} 
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/25 shadow-xs transition-all hover:scale-105"
+                    >
+                      <Globe className="w-3.5 h-3.5 opacity-70" />
+                      {lang}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Included/Excluded */}
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-5">
               {gig.included?.length > 0 && (
-                <div>
-                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-secondary" /> What&apos;s Included
+                <div className="p-5 bg-emerald-50/50 border border-emerald-500/20 rounded-2xl">
+                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2 text-emerald-700 text-base">
+                    <CheckCircle className="w-5 h-5 text-emerald-600" /> What&apos;s Included
                   </h3>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2.5">
                     {gig.included.map((item: string) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-dark-600">
-                        <CheckCircle className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
-                        {item}
+                      <li key={item} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
+                        <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
               {gig.excluded?.length > 0 && (
-                <div>
-                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2">
-                    <XCircle className="w-5 h-5 text-danger" /> Not Included
+                <div className="p-5 bg-red-50/50 border border-red-500/20 rounded-2xl">
+                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2 text-red-700 text-base">
+                    <XCircle className="w-5 h-5 text-red-500" /> Not Included
                   </h3>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2.5">
                     {gig.excluded.map((item: string) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-dark-600">
-                        <XCircle className="w-4 h-4 text-danger flex-shrink-0 mt-0.5" />
-                        {item}
+                      <li key={item} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
+                        <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
@@ -645,10 +653,17 @@ export default function GigDetailPage() {
             {/* Meeting Point */}
             {gig.meetingPoint && (
               <div>
-                <h2 className="text-xl font-bold text-dark-900 mb-3">Meeting Point</h2>
-                <div className="card p-4 flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-primary" />
-                  <span className="text-dark-700">{gig.meetingPoint}</span>
+                <h2 className="text-xl font-bold text-dark-900 mb-3 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary" /> Meeting Point
+                </h2>
+                <div className="p-4.5 bg-dark-50/80 border border-dark-200 rounded-2xl flex items-center gap-3.5 shadow-xs">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-dark-400 font-semibold uppercase tracking-wider">Designated Meetup Spot</p>
+                    <p className="text-sm font-bold text-dark-900 mt-0.5">{gig.meetingPoint}</p>
+                  </div>
                 </div>
               </div>
             )}
