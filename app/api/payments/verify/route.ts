@@ -301,7 +301,7 @@ export async function POST(req: Request) {
       status: "PAID",
       transferredAmountUSD,
       txHash: cleanTxHash,
-      message: "Payment successfully verified on-chain! Kuitansi PDF telah dikirim ke email kamu."
+      message: "Payment successfully verified on-chain! Your PDF receipt has been sent to your email."
     });
 
   } catch (error: any) {

@@ -67,13 +67,13 @@ export default function TermsOfServicePage() {
             </h2>
             <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl space-y-3 text-dark-800 dark:text-dark-200">
               <p className="font-semibold text-amber-700 dark:text-amber-300">
-                Penting / Important Notice:
+                Important Notice:
               </p>
               <p>
-                <strong>Explomate bertindak murni sebagai penyedia platform marketplace</strong> yang menghubungkan Wisatawan (Tourist) dengan Tour Guide independen. Explomate tidak memiliki, mengelola, atau mengoperasikan layanan tur fisik secara langsung.
+                <strong>Explomate operates solely as a marketplace platform provider</strong> connecting Tourists with independent Tour Guides. Explomate does not own, manage, or operate physical tour services directly.
               </p>
               <p>
-                Setiap risiko perjalanan, insiden, kecelakaan fisik, cedera, kerusakan barang, atau kerugian selama trip/tur berjalan <strong>sepenuhnya merupakan tanggung jawab pribadi antara Tour Guide dan Wisatawan (Tour Guide Responsibility)</strong>. Explomate sebagai penyedia platform marketplace terbebas dari segala bentuk gugatan hukum, klaim ganti rugi, atau tanggung jawab atas kecelakaan selama pelaksanaan perjalanan tur.
+                All travel risks, incidents, physical accidents, injuries, property damage, or losses occurring during any tour are <strong>solely and fully the personal responsibility of the Tour Guide and Tourist (Tour Guide & Traveler Responsibility)</strong>. Explomate, as a marketplace platform facilitator, is exempt and released from any legal claims, lawsuits, damages, or liabilities arising from accidents or unforeseen events during the execution of any tour.
               </p>
             </div>
           </div>

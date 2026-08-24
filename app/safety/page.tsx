@@ -50,7 +50,7 @@ export default function SafetyPage() {
               },
               {
                 title: "4. Marketplace Liability Disclaimer",
-                desc: "Explomate bertindak murni sebagai platform marketplace. Setiap insiden, kecelakaan fisik, atau hal tak terduga selama trip merupakan tanggung jawab penuh Tour Guide & Wisatawan, bukan tanggung jawab platform Explomate.",
+                desc: "Explomate operates solely as a marketplace platform connecting travelers with independent tour guides. Any travel incidents, physical injuries, or unforeseen circumstances during the tour are the direct and sole responsibility of the Tour Guide and Traveler, not the Explomate platform.",
                 icon: ShieldAlert,
                 color: "text-amber-500 bg-amber-500/10",
               },
