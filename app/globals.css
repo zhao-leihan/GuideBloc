@@ -55,14 +55,33 @@
     @apply w-full px-4 py-3 rounded-xl border border-dark-700 bg-dark-800 text-white placeholder:text-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary shadow-sm transition-all duration-300;
   }
 
-  /* Clean & Vibrant Badge Pills - Exact match with Gambar 2 */
-  .badge,
-  .badge-primary,
+  /* Clean & Vibrant Badge Pills */
+  .badge {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    background-color: #e8effe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .badge-primary {
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    background-color: #e8effe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
   .badge-secondary {
-    background-color: #e8effe !important;
-    color: #1d4ed8 !important;
-    border: 1px solid #bfdbfe !important;
-    font-weight: 700 !important;
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    background-color: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center justify-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold transition-all shadow-2xs;
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
   }
 
   /* Luxury Glassmorphism */

@@ -18,7 +18,8 @@ import {
   Users,
   Compass,
   Star,
-  Zap
+  Zap,
+  Globe
 } from "lucide-react";
 import { Crosshair2Icon } from "@radix-ui/react-icons";
 
@@ -104,13 +105,20 @@ export default function FreelancerPage() {
         </div>
       </section>
 
-      {/* Perks Grid (Light Theme Card Grid) */}
-      <section className="py-20">
+      {/* Perks Grid (Modern Vibrant Card Grid) */}
+      <section className="py-24 bg-gradient-to-b from-dark-50 via-white to-dark-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="badge badge-primary mb-3">Why Explomate?</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-dark-900 mb-4 font-display">Why Freelance with Us?</h2>
-            <p className="text-dark-500 text-base md:text-lg max-w-2xl mx-auto">Explomate is designed to give power back to local experts with modern technology.</p>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span>Why Explomate?</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
+              Why Freelance with Us?
+            </h2>
+            <p className="text-dark-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mt-3">
+              Explomate is designed to give power back to local experts with modern technology.
+            </p>
           </div>
 
           <motion.div 
@@ -123,29 +131,52 @@ export default function FreelancerPage() {
             {[
               {
                 icon: DollarSign,
-                color: "text-green-600 bg-green-500/10",
+                gradient: "from-emerald-500/15 via-emerald-500/5 to-transparent",
+                iconBg: "bg-emerald-50 text-emerald-600 border border-emerald-200/60",
+                badge: "Keep 90% Cut",
+                badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
                 title: "Keep 90% of Earnings",
                 desc: "Traditional agencies take up to 40% cut. With Explomate, platform commission is only 10%. You keep what is rightfully yours."
               },
               {
                 icon: Wallet,
-                color: "text-primary bg-primary/10",
+                gradient: "from-primary/15 via-primary/5 to-transparent",
+                iconBg: "bg-primary/10 text-primary border border-primary/20",
+                badge: "Avalanche C-Chain",
+                badgeColor: "bg-primary/10 text-primary border-primary/20",
                 title: "Instant Web3 Payouts",
                 desc: "No waiting for slow monthly bank wires. Payouts are settled immediately in USDT or USDC right to your linked crypto wallet."
               },
               {
                 icon: Calendar,
-                color: "text-secondary bg-secondary/10",
+                gradient: "from-amber-500/15 via-amber-500/5 to-transparent",
+                iconBg: "bg-amber-50 text-amber-600 border border-amber-200/60",
+                badge: "Total Freedom",
+                badgeColor: "bg-amber-50 text-amber-700 border-amber-200/60",
                 title: "Complete Flexibility",
                 desc: "You are the boss. Host tours whenever you want, set your own group limits, calendar rules, and custom tour pricing."
               }
             ].map((perk) => (
-              <motion.div key={perk.title} variants={itemVariants} className="card p-8 text-left hover:shadow-lg transition-all border border-dark-100 bg-white rounded-3xl group">
-                <div className={`w-14 h-14 rounded-2xl ${perk.color} flex items-center justify-center mb-6 group-hover:scale-105 transition-transform`}>
-                  <perk.icon className="w-7 h-7" />
+              <motion.div 
+                key={perk.title} 
+                variants={itemVariants} 
+                className="relative bg-white p-8 rounded-3xl border border-dark-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden"
+              >
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl ${perk.gradient} rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500`} />
+                <div className="flex items-center justify-between mb-6">
+                  <div className={`w-14 h-14 rounded-2xl ${perk.iconBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform duration-300`}>
+                    <perk.icon className="w-7 h-7" />
+                  </div>
+                  <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${perk.badgeColor}`}>
+                    {perk.badge}
+                  </span>
                 </div>
-                <h3 className="font-display font-bold text-xl text-dark-900 mb-3">{perk.title}</h3>
-                <p className="text-dark-500 text-sm leading-relaxed">{perk.desc}</p>
+                <h3 className="font-display font-bold text-xl text-dark-900 mb-2.5 tracking-tight group-hover:text-primary transition-colors">
+                  {perk.title}
+                </h3>
+                <p className="text-dark-500 text-sm leading-relaxed">
+                  {perk.desc}
+                </p>
               </motion.div>
             ))}
           </motion.div>
@@ -153,16 +184,17 @@ export default function FreelancerPage() {
       </section>
 
       {/* Meet Your Guide Step Section (Clean White Background) */}
-      <section className="py-20 bg-white border-y border-dark-100">
+      <section className="py-24 bg-white border-y border-dark-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Steps Left */}
             <div>
-              <div className="inline-flex items-center gap-2 text-secondary font-bold text-xs uppercase tracking-wider mb-2">
-                <Crosshair2Icon className="w-4 h-4" /> Simple Onboarding
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+                <Crosshair2Icon className="w-3.5 h-3.5 text-secondary" />
+                <span>Simple Onboarding</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-dark-900 mb-8 font-display">How to Start Earning</h2>
-              <div className="space-y-8">
+              <h2 className="text-3xl sm:text-4xl font-black text-dark-900 mb-8 font-display tracking-tight">How to Start Earning</h2>
+              <div className="space-y-6">
                 {[
                   {
                     step: "01",
@@ -180,12 +212,12 @@ export default function FreelancerPage() {
                     desc: "Coordinate details with tourists using our secure chat, guide them safely, and receive instant USDC/USDT directly to your wallet."
                   }
                 ].map((step) => (
-                  <div key={step.step} className="flex gap-5">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary font-display font-black text-lg flex items-center justify-center">
+                  <div key={step.step} className="flex gap-5 p-4 rounded-2xl bg-dark-50/70 border border-dark-100 hover:bg-white hover:shadow-md transition-all">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-primary/10 text-primary font-display font-black text-lg flex items-center justify-center border border-primary/20 shadow-2xs">
                       {step.step}
                     </div>
                     <div>
-                      <h3 className="font-display font-bold text-lg text-dark-900 mb-1">{step.title}</h3>
+                      <h3 className="font-display font-bold text-base text-dark-900 mb-1">{step.title}</h3>
                       <p className="text-dark-500 text-sm leading-relaxed">{step.desc}</p>
                     </div>
                   </div>
@@ -195,7 +227,7 @@ export default function FreelancerPage() {
 
             {/* Illustration Right */}
             <div className="relative">
-              <div className="relative rounded-3xl overflow-hidden border border-dark-100 shadow-xl bg-dark-50">
+              <div className="relative rounded-3xl overflow-hidden border border-dark-100 shadow-2xl bg-dark-50">
                 <img 
                   src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800" 
                   alt="Tour Guide Freelancer working on listing tours" 
@@ -224,7 +256,7 @@ export default function FreelancerPage() {
       </section>
 
       {/* Guide Showcase Section */}
-      <section className="py-20 bg-dark-50">
+      <section className="py-24 bg-dark-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Image Left */}
@@ -232,14 +264,17 @@ export default function FreelancerPage() {
               <img 
                 src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800" 
                 alt="Explomate Guide showing sights to tourists" 
-                className="relative rounded-3xl overflow-hidden border border-dark-100 shadow-xl w-full h-[420px] object-cover" 
+                className="relative rounded-3xl overflow-hidden border border-dark-100 shadow-2xl w-full h-[440px] object-cover" 
               />
             </div>
 
             {/* Content Right */}
             <div className="order-1 lg:order-2">
-              <span className="badge badge-primary mb-3">Authentic Experiences</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-dark-900 mb-6 font-display">Host Travelers Worldwide</h2>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+                <Globe className="w-3.5 h-3.5 text-primary" />
+                <span>Authentic Experiences</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 mb-6 font-display tracking-tight">Host Travelers Worldwide</h2>
               <p className="text-dark-600 text-base leading-relaxed mb-6">
                 Travelers are searching for raw, genuine experiences. They don&apos;t want commercial bus tours — they want to discover a city through the eyes of a passionate resident.
               </p>
@@ -250,7 +285,7 @@ export default function FreelancerPage() {
                   "Translate local dialects and introduce authentic culinary secrets",
                   "Build a trusted profile with verified, on-chain traveler reviews",
                 ].map((item) => (
-                  <div key={item} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-dark-100 shadow-xs">
+                  <div key={item} className="flex items-center gap-3 p-3.5 bg-white rounded-2xl border border-dark-100 shadow-xs hover:shadow-sm transition-all">
                     <CheckCircle className="w-5 h-5 text-secondary flex-shrink-0" />
                     <span className="text-dark-800 text-sm font-medium">{item}</span>
                   </div>

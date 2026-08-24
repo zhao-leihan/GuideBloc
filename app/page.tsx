@@ -244,60 +244,64 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-50 dark:bg-primary/20 dark:border-primary/40 border border-primary-200/60 text-xs font-bold uppercase tracking-wider escrow-badge-text">
-              <ShieldCheck className="w-4 h-4 escrow-badge-text" style={{ color: "#000000" }} />
-              <span className="font-bold escrow-badge-text" style={{ color: "#000000" }}>Decentralized Escrow Protection</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              <span>Decentralized Escrow Protection</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
               Why Travelers & Guides Trust Explomate
             </h2>
-            <p className="text-dark-500 text-base md:text-lg leading-relaxed">
+            <p className="text-dark-500 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
               We leverage Avalanche C-Chain smart contract technology to ensure 100% payout security, zero upfront payment risk, and seamless peer-to-peer travel.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Feature 1 */}
-            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+            <div className="relative p-8 rounded-3xl bg-white border border-dark-100/90 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/15 via-primary/5 to-transparent rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center mb-6 shadow-xs group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                 <Lock className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Smart Contract Escrow</h3>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display tracking-tight group-hover:text-primary transition-colors">Smart Contract Escrow</h3>
               <p className="text-dark-500 text-sm leading-relaxed">
                 Tour funds remain safely locked in a smart contract and are only released to the guide once you complete your trip.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+            <div className="relative p-8 rounded-3xl bg-white border border-dark-100/90 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-500/15 via-blue-500/5 to-transparent rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 border border-blue-200/60 flex items-center justify-center mb-6 shadow-xs group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                 <ShieldCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Zero Dispute Fraud</h3>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display tracking-tight group-hover:text-primary transition-colors">Zero Dispute Fraud</h3>
               <p className="text-dark-500 text-sm leading-relaxed">
                 Cryptographic transaction verification prevents fake payment receipts, chargeback scams, and unauthorized cancellations.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+            <div className="relative p-8 rounded-3xl bg-white border border-dark-100/90 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-500/15 via-emerald-500/5 to-transparent rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center mb-6 shadow-xs group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
                 <UserCheck className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Vetted Local Guides</h3>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display tracking-tight group-hover:text-primary transition-colors">Vetted Local Guides</h3>
               <p className="text-dark-500 text-sm leading-relaxed">
                 Every guide undergoes identity document verification (KTP/ID) and community reviews before taking bookings.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="p-8 rounded-3xl bg-dark-50/70 border border-dark-100 hover:border-primary/40 hover:bg-white hover:shadow-xl transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+            <div className="relative p-8 rounded-3xl bg-white border border-dark-100/90 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/15 via-amber-500/5 to-transparent rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500" />
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center mb-6 shadow-xs group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
                 <Coins className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display">Low 10% Platform Fee</h3>
+              <h3 className="text-xl font-bold text-dark-900 mb-2 font-display tracking-tight group-hover:text-primary transition-colors">Low 10% Platform Fee</h3>
               <p className="text-dark-500 text-sm leading-relaxed">
-                Guides keep 90% of their earnings with automatic Base stablecoin payouts directly to their Web3 EVM wallet.
+                Guides keep 90% of their earnings with automatic Avalanche stablecoin payouts directly to their Web3 EVM wallet.
               </p>
             </div>
           </div>

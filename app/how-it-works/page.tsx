@@ -26,24 +26,67 @@ export default function HowItWorksPage() {
       </section>
 
       {/* For Tourists */}
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-dark-900 mb-12 text-center flex items-center justify-center gap-3">
-            <GlobeIcon className="w-8 h-8 text-primary" /> For Tourists
-          </h2>
+      <section className="py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+              <GlobeIcon className="w-3.5 h-3.5 text-primary" />
+              <span>Tourist Experience</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
+              How It Works for Tourists
+            </h2>
+            <p className="text-dark-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mt-3">
+              Discover verified local experiences, book with crypto, and enjoy smart contract escrow protection.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Search, step: 1, title: "Discover Tours", desc: "Browse tours by destination, category, price, and rating. Read reviews from other travelers." },
-              { icon: Calendar, step: 2, title: "Book & Pay", desc: "Select your date and group size. Pay securely with USDT or USDC via crypto wallet." },
-              { icon: MapPin, step: 3, title: "Enjoy the Tour", desc: "Meet your guide, explore, and create memories. Leave a review after your experience." },
+              { 
+                icon: Search, 
+                step: "01", 
+                title: "Discover Tours", 
+                desc: "Browse authentic tours by destination, category, price, and verified reviews from real travelers.",
+                gradient: "from-primary/15 via-primary/5 to-transparent",
+                iconBg: "bg-primary/10 text-primary border border-primary/20"
+              },
+              { 
+                icon: Calendar, 
+                step: "02", 
+                title: "Book & Lock in Escrow", 
+                desc: "Select departure date and time slot. Pay seamlessly in USDT/USDC directly from your crypto wallet.",
+                gradient: "from-blue-500/15 via-blue-500/5 to-transparent",
+                iconBg: "bg-blue-50 text-blue-600 border border-blue-200/60"
+              },
+              { 
+                icon: MapPin, 
+                step: "03", 
+                title: "Meet Guide & Explore", 
+                desc: "Meet at designated meetup spot, experience unique local gems, and funds release once tour completes.",
+                gradient: "from-emerald-500/15 via-emerald-500/5 to-transparent",
+                iconBg: "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
+              },
             ].map((item) => (
-              <div key={item.step} className="card p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-8 h-8 text-primary" />
+              <div 
+                key={item.step} 
+                className="relative bg-white p-8 rounded-3xl border border-dark-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden"
+              >
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl ${item.gradient} rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500`} />
+                <div className="flex items-center justify-between mb-6">
+                  <div className={`w-14 h-14 rounded-2xl ${item.iconBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform duration-300`}>
+                    <item.icon className="w-7 h-7" />
+                  </div>
+                  <span className="text-xs font-black px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    Step {item.step}
+                  </span>
                 </div>
-                <span className="badge badge-primary mb-3">Step {item.step}</span>
-                <h3 className="font-display font-bold text-dark-900 text-lg mb-2">{item.title}</h3>
-                <p className="text-dark-500 text-sm">{item.desc}</p>
+                <h3 className="font-display font-bold text-xl text-dark-900 mb-2.5 tracking-tight group-hover:text-primary transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-dark-500 text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -51,24 +94,67 @@ export default function HowItWorksPage() {
       </section>
 
       {/* For Guides */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-dark-900 mb-12 text-center flex items-center justify-center gap-3">
-            <Crosshair2Icon className="w-8 h-8 text-secondary" /> For Tour Guides
-          </h2>
+      <section className="py-24 bg-white border-y border-dark-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+              <Crosshair2Icon className="w-3.5 h-3.5 text-secondary" />
+              <span>Guide Journey</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
+              How It Works for Tour Guides
+            </h2>
+            <p className="text-dark-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mt-3">
+              Share your passion, set your own schedule, and earn instant stablecoin payouts.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: MapPin, step: 1, title: "Create Your Gig", desc: "List your tour with photos, description, pricing, and availability. Set your own schedule." },
-              { icon: Users, step: 2, title: "Accept Bookings", desc: "Review incoming requests, accept or decline. Coordinate with tourists via chat." },
-              { icon: Wallet, step: 3, title: "Get Paid in Crypto", desc: "Receive USDT/USDC directly to your wallet. Platform commission is deducted automatically." },
+              { 
+                icon: MapPin, 
+                step: "01", 
+                title: "Create Your Gig", 
+                desc: "List your tour with photos, language options, designated meeting point, schedule, and custom inclusions.",
+                gradient: "from-secondary/15 via-secondary/5 to-transparent",
+                iconBg: "bg-secondary/10 text-secondary border border-secondary/20"
+              },
+              { 
+                icon: Users, 
+                step: "02", 
+                title: "Accept Bookings", 
+                desc: "Review incoming requests, coordinate details with tourists via encrypted chat, and prepare for departure.",
+                gradient: "from-amber-500/15 via-amber-500/5 to-transparent",
+                iconBg: "bg-amber-50 text-amber-600 border border-amber-200/60"
+              },
+              { 
+                icon: Wallet, 
+                step: "03", 
+                title: "Instant Web3 Payout", 
+                desc: "Receive 90% of booking fees in USDT/USDC directly to your linked wallet right after tour conclusion.",
+                gradient: "from-emerald-500/15 via-emerald-500/5 to-transparent",
+                iconBg: "bg-emerald-50 text-emerald-600 border border-emerald-200/60"
+              },
             ].map((item) => (
-              <div key={item.step} className="card p-8 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-8 h-8 text-secondary" />
+              <div 
+                key={item.step} 
+                className="relative bg-white p-8 rounded-3xl border border-dark-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden"
+              >
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl ${item.gradient} rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500`} />
+                <div className="flex items-center justify-between mb-6">
+                  <div className={`w-14 h-14 rounded-2xl ${item.iconBg} flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform duration-300`}>
+                    <item.icon className="w-7 h-7" />
+                  </div>
+                  <span className="text-xs font-black px-3 py-1 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
+                    Step {item.step}
+                  </span>
                 </div>
-                <span className="badge badge-secondary mb-3">Step {item.step}</span>
-                <h3 className="font-display font-bold text-dark-900 text-lg mb-2">{item.title}</h3>
-                <p className="text-dark-500 text-sm">{item.desc}</p>
+                <h3 className="font-display font-bold text-xl text-dark-900 mb-2.5 tracking-tight group-hover:text-primary transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-dark-500 text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>

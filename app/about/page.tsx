@@ -25,33 +25,42 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+      <section className="py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-dark-900 mb-4">Our Mission</h2>
-              <p className="text-dark-600 leading-relaxed mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+                <Globe className="w-3.5 h-3.5 text-primary" />
+                <span>Our Purpose</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 tracking-tight font-display mb-6">
+                Our Mission & Vision
+              </h2>
+              <p className="text-dark-600 leading-relaxed mb-5 text-base sm:text-lg">
                 Explomate was born from a simple idea: travel should be authentic, accessible, and fair for everyone.
                 We connect tourists directly with local tour guides, cutting out middlemen and using blockchain
                 technology to ensure secure, transparent payments.
               </p>
-              <p className="text-dark-600 leading-relaxed">
-                By leveraging USDT/USDC stablecoins, we enable instant cross-border payments without
-                high fees or banking barriers. Guides get paid fairly, tourists get authentic experiences,
+              <p className="text-dark-600 leading-relaxed text-base sm:text-lg">
+                By leveraging USDT/USDC stablecoins on Avalanche C-Chain, we enable instant cross-border payments without
+                high bank wire fees or geographical barriers. Guides get paid fairly, tourists get authentic experiences,
                 and everyone benefits from the trust that smart contracts provide.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               {[
-                { icon: Globe, title: "50+ Countries", desc: "Global coverage" },
-                { icon: Heart, title: "15,000+", desc: "Happy travelers" },
-                { icon: Shield, title: "100%", desc: "Escrow protected" },
-                { icon: Zap, title: "$2M+", desc: "Paid in crypto" },
+                { icon: Globe, title: "50+ Countries", desc: "Global coverage", gradient: "from-primary/15 via-primary/5 to-transparent", color: "bg-primary/10 text-primary border-primary/20" },
+                { icon: Heart, title: "15,000+", desc: "Happy travelers", gradient: "from-rose-500/15 via-rose-500/5 to-transparent", color: "bg-rose-50 text-rose-600 border-rose-200/60" },
+                { icon: Shield, title: "100%", desc: "Escrow protected", gradient: "from-emerald-500/15 via-emerald-500/5 to-transparent", color: "bg-emerald-50 text-emerald-600 border-emerald-200/60" },
+                { icon: Zap, title: "$2M+", desc: "Paid in crypto", gradient: "from-amber-500/15 via-amber-500/5 to-transparent", color: "bg-amber-50 text-amber-600 border-amber-200/60" },
               ].map((stat) => (
-                <div key={stat.title} className="card p-6 text-center">
-                  <stat.icon className="w-8 h-8 text-primary mx-auto mb-2" />
-                  <p className="text-xl font-bold text-dark-900">{stat.title}</p>
-                  <p className="text-sm text-dark-500">{stat.desc}</p>
+                <div key={stat.title} className="relative bg-white p-7 rounded-3xl border border-dark-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden text-center">
+                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${stat.gradient} rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500`} />
+                  <div className={`w-14 h-14 mx-auto mb-4 rounded-2xl ${stat.color} border flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform duration-300`}>
+                    <stat.icon className="w-7 h-7" />
+                  </div>
+                  <p className="text-2xl font-black text-dark-900 font-display tracking-tight">{stat.title}</p>
+                  <p className="text-xs font-semibold text-dark-500 mt-1">{stat.desc}</p>
                 </div>
               ))}
             </div>
@@ -59,21 +68,55 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-dark-900 mb-12 text-center">Our Values</h2>
+      <section className="py-24 bg-white border-y border-dark-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+              <Scale className="w-3.5 h-3.5 text-secondary" />
+              <span>Core Principles</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
+              Our Values & Standards
+            </h2>
+            <p className="text-dark-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mt-3">
+              Built on transparency, community empowerment, and state-of-the-art crypto escrow technology.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { Icon: GlobeIcon, title: "Authentic Experiences", desc: "Real local guides sharing their culture and expertise with travelers from around the world." },
-              { Icon: LockClosedIcon, title: "Trust & Security", desc: "Blockchain escrow ensures payments are protected. No middlemen, no hidden fees." },
-              { Icon: Scale, title: "Fair for Everyone", desc: "Low commission rates mean guides earn more. Transparent pricing means tourists pay fairly." },
+              { 
+                Icon: GlobeIcon, 
+                title: "Authentic Experiences", 
+                desc: "Real local guides sharing their culture, hidden spots, and unique expertise with travelers from around the world.",
+                gradient: "from-primary/15 via-primary/5 to-transparent",
+                color: "bg-primary/10 text-primary border border-primary/20"
+              },
+              { 
+                Icon: LockClosedIcon, 
+                title: "Trust & Security", 
+                desc: "Smart contract escrow guarantees your funds are protected. No middlemen, no chargebacks, and zero hidden fees.",
+                gradient: "from-blue-500/15 via-blue-500/5 to-transparent",
+                color: "bg-blue-50 text-blue-600 border border-blue-200/60"
+              },
+              { 
+                Icon: Scale, 
+                title: "Fair for Everyone", 
+                desc: "Low 10% platform commission means guides keep 90% of their earnings, while tourists pay direct transparent rates.",
+                gradient: "from-secondary/15 via-secondary/5 to-transparent",
+                color: "bg-secondary/10 text-secondary border border-secondary/20"
+              },
             ].map((value) => (
-              <div key={value.title} className="text-center">
-                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <value.Icon className="w-7 h-7 text-primary" />
+              <div 
+                key={value.title} 
+                className="relative bg-dark-50/70 p-8 rounded-3xl border border-dark-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgb(29,78,216,0.08)] hover:bg-white hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden"
+              >
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl ${value.gradient} rounded-bl-full pointer-events-none transition-transform group-hover:scale-125 duration-500`} />
+                <div className={`w-14 h-14 mb-6 rounded-2xl ${value.color} flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform duration-300`}>
+                  <value.Icon className="w-7 h-7" />
                 </div>
-                <h3 className="font-display font-bold text-dark-900 text-lg mb-2">{value.title}</h3>
-                <p className="text-dark-500 text-sm">{value.desc}</p>
+                <h3 className="font-display font-bold text-xl text-dark-900 mb-2.5 tracking-tight group-hover:text-primary transition-colors">{value.title}</h3>
+                <p className="text-dark-500 text-sm leading-relaxed">{value.desc}</p>
               </div>
             ))}
           </div>
