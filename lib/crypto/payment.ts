@@ -443,7 +443,8 @@ export async function initiatePayment({
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
   const escrowAddress = getEscrowAddress(network);
 
-  const amount = ethers.parseUnits(amountUSD.toFixed(6), 6);
+  const safeAmountStr = (Math.round(Number(amountUSD) * 100) / 100).toFixed(2);
+  const amount = ethers.parseUnits(safeAmountStr, 6);
 
   // Step 1: Approve escrow contract to spend tokens
   const approveTx = await tokenContract.approve(escrowAddress, amount);
@@ -495,7 +496,8 @@ export async function payBoostFee(
   const tokenAddress = getTokenAddress(token, network);
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
   
-  const amount = ethers.parseUnits(amountUSD.toFixed(6), 6);
+  const safeAmountStr = (Math.round(Number(amountUSD) * 100) / 100).toFixed(2);
+  const amount = ethers.parseUnits(safeAmountStr, 6);
   const treasuryAddress = process.env.NEXT_PUBLIC_PLATFORM_TREASURY || process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE";
 
   const tx = await tokenContract.transfer(treasuryAddress, amount);

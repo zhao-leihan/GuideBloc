@@ -81,11 +81,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const client_price = gig.client_price || gig.priceUSD;
-    const guide_price = gig.guide_price || (client_price * 0.90);
-    const platform_fee = gig.platform_fee || (client_price - guide_price);
+    const client_price = Math.round((gig.client_price || gig.priceUSD) * 100) / 100;
+    const guide_price = Math.round((gig.guide_price || (client_price * 0.90)) * 100) / 100;
+    const platform_fee = Math.round((gig.platform_fee || (client_price - guide_price)) * 100) / 100;
 
-    const totalPriceUSD = client_price * data.groupSize;
+    const totalPriceUSD = Math.round(client_price * data.groupSize * 100) / 100;
 
     const booking = await prisma.booking.create({
       data: {

@@ -427,7 +427,8 @@ export default function GigDetailPage() {
     );
   }
 
-  const totalPrice = gig.priceUSD * groupSize;
+  const effectivePrice = gig.client_price || gig.priceUSD;
+  const totalPrice = Math.round(effectivePrice * groupSize * 100) / 100;
 
   return (
     <div className="min-h-screen bg-dark-50">

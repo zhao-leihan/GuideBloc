@@ -256,10 +256,11 @@ export async function backendCreateBooking(
 
   const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, wallet);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI_FULL, wallet);
-  const amount = ethers.parseUnits(amountUSD.toFixed(6), 6);
+  const safeAmountStr = (Math.round(Number(amountUSD) * 100) / 100).toFixed(2);
+  const amount = ethers.parseUnits(safeAmountStr, 6);
 
   console.log(
-    `[Backend CreateBooking] Funding escrow for booking ${bookingId}: ${amountUSD} ${token} on ${network}`
+    `[Backend CreateBooking] Funding escrow for booking ${bookingId}: ${safeAmountStr} ${token} on ${network}`
   );
 
   try {

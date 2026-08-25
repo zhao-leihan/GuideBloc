@@ -234,9 +234,12 @@ export default function PaymentModal({
       return;
     }
 
+    const numAmount = Number(amount) || 0;
+    const safeAmountStr = (Math.round(numAmount * 100) / 100).toFixed(2);
+
     const currentAcc = connectedAccounts.find(a => a.address.toLowerCase() === selectedAccountAddress.toLowerCase());
-    if (currentAcc && currentAcc.usdcBalance < amount) {
-      toast.error(`Insufficient balance. Required: ${amount.toFixed(2)} ${selectedToken}.`);
+    if (currentAcc && currentAcc.usdcBalance < numAmount) {
+      toast.error(`Insufficient balance. Required: ${safeAmountStr} ${selectedToken}.`);
       return;
     }
 
@@ -253,7 +256,7 @@ export default function PaymentModal({
       ];
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-      const amountUnits = ethers.parseUnits(amount.toString(), 6);
+      const amountUnits = ethers.parseUnits(safeAmountStr, 6);
 
       setVerifyStage(2);
       const tx = await tokenContract.transfer(escrowAddress, amountUnits);
@@ -264,7 +267,7 @@ export default function PaymentModal({
       setVerifyStage(3);
       setTxHash(receipt.hash);
 
-      await fetch("/api/payments/verify", {
+      const verifyRes = await fetch("/api/payments/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -273,7 +276,15 @@ export default function PaymentModal({
           token: selectedToken,
           network: selectedNetwork
         })
-      }).catch(err => console.warn("Backend verify API non-blocking warning:", err));
+      }).catch(err => {
+        console.warn("Backend verify API non-blocking warning:", err);
+        return null;
+      });
+
+      if (verifyRes) {
+        const verifyData = await verifyRes.json().catch(() => ({}));
+        console.log("Backend verification status:", verifyData);
+      }
 
       toast.dismiss(toastId);
       setStep("success");

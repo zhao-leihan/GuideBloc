@@ -135,9 +135,9 @@ export async function POST(req: Request) {
     // Guide wants to earn guide_price.
     // Client price paid by tourist is client_price = guide_price / 0.90
     // Platform fee is platform_fee = client_price - guide_price
-    const guide_price = parseFloat(data.guide_price || data.priceUSD || "0");
-    const client_price = guide_price / 0.90;
-    const platform_fee = client_price - guide_price;
+    const guide_price = Math.round(parseFloat(data.guide_price || data.priceUSD || "0") * 100) / 100;
+    const client_price = Math.round((guide_price / 0.90) * 100) / 100;
+    const platform_fee = Math.round((client_price - guide_price) * 100) / 100;
 
     const gig = await prisma.gig.create({
       data: {
