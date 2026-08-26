@@ -1065,6 +1065,7 @@ export default function GigDetailPage() {
         gigTitle={gig?.title || "Tour Experience"}
         bookingDate={bookingDate}
         bookingId={currentBookingId || (gig ? `BK_${gig.id.slice(-6)}` : undefined)}
+        guideAddress={gig?.guide?.walletAddress || undefined}
         onConfirm={async (hash, network) => {
           setTxHash(hash);
           const toastId = toast.loading("Confirming booking on-chain and generating receipt...");

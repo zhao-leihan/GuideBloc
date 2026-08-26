@@ -236,6 +236,14 @@ export async function POST(req: Request) {
       }
     });
 
+    // Confirm booking on smart contract if funded in Escrow contract
+    try {
+      const { backendConfirmBooking } = await import("@/lib/crypto/backend");
+      await backendConfirmBooking(bookingId, "avalanche");
+    } catch (confirmErr: any) {
+      console.warn("[Verify API] On-chain confirm warning:", confirmErr.message);
+    }
+
     // Create Platform Revenue Log (10% Platform Commission) only if not already recorded
     // Note: A second revenue record will be created on COMPLETED with the actual release hash.
     // This records the initial payment verification to have full audit chain.

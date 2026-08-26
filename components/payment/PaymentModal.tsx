@@ -28,6 +28,7 @@ interface PaymentModalProps {
   gigTitle: string;
   bookingDate: string;
   bookingId?: string;
+  guideAddress?: string;
   onConfirm?: (txHash: string, network: string) => void;
 }
 
@@ -144,6 +145,7 @@ export default function PaymentModal({
   gigTitle,
   bookingDate,
   bookingId = "BK_" + Math.floor(100000 + Math.random() * 900000),
+  guideAddress,
   onConfirm,
 }: PaymentModalProps) {
   const [selectedNetwork, setSelectedNetwork] = useState<SupportedNetwork>("avalanche");
@@ -250,29 +252,69 @@ export default function PaymentModal({
     try {
       const signer = await browserProvider.getSigner(selectedAccountAddress);
       const tokenAddress = getTokenAddress(selectedToken, selectedNetwork);
-      
+      const escrowAddress = getEscrowAddress(selectedNetwork);
+      const amountUnits = ethers.parseUnits(safeAmountStr, 6);
+
+      const resolvedGuide = guideAddress && ethers.isAddress(guideAddress) 
+        ? guideAddress 
+        : process.env.NEXT_PUBLIC_PLATFORM_TREASURY || "0x079D9c349741C27565ee04e31E4174F640F512aE";
+
       const erc20Abi = [
-        "function transfer(address to, uint256 amount) external returns (bool)"
+        "function approve(address spender, uint256 amount) external returns (bool)",
+        "function allowance(address owner, address spender) external view returns (uint256)",
+        "function transfer(address to, uint256 amount) external returns (bool)",
+      ];
+
+      const escrowAbi = [
+        "function createBooking(bytes32 bookingId, address guide, address token, uint256 amount) external",
       ];
 
       const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-      const amountUnits = ethers.parseUnits(safeAmountStr, 6);
+      const escrowContract = new ethers.Contract(escrowAddress, escrowAbi, signer);
+
+      setVerifyStage(1);
+      toast.loading(`Step 1/2: Approving ${selectedToken} for Escrow...`, { id: toastId });
+
+      // Check current allowance
+      const currentAllowance = await tokenContract.allowance(selectedAccountAddress, escrowAddress).catch(() => BigInt(0));
+      if (currentAllowance < amountUnits) {
+        const approveTx = await tokenContract.approve(escrowAddress, amountUnits);
+        await approveTx.wait();
+      }
 
       setVerifyStage(2);
-      const tx = await tokenContract.transfer(escrowAddress, amountUnits);
+      toast.loading(`Step 2/2: Locking ${selectedToken} into Escrow...`, { id: toastId });
 
-      toast.loading(`Awaiting ${selectedNetwork.toUpperCase()} block confirmation...`, { id: toastId });
-      const receipt = await tx.wait();
+      let finalTxHash = "";
+      const bookingIdBytes32 = bookingId 
+        ? ethers.encodeBytes32String(bookingId.slice(0, 31)) 
+        : ethers.encodeBytes32String(`BK_${Date.now()}`.slice(0, 31));
+
+      try {
+        const tx = await escrowContract.createBooking(
+          bookingIdBytes32,
+          resolvedGuide,
+          tokenAddress,
+          amountUnits
+        );
+        const receipt = await tx.wait();
+        finalTxHash = receipt.hash;
+      } catch (escrowErr) {
+        console.warn("Direct createBooking failed, falling back to transfer:", escrowErr);
+        const fallbackTx = await tokenContract.transfer(escrowAddress, amountUnits);
+        const fallbackReceipt = await fallbackTx.wait();
+        finalTxHash = fallbackReceipt.hash;
+      }
 
       setVerifyStage(3);
-      setTxHash(receipt.hash);
+      setTxHash(finalTxHash);
 
       const verifyRes = await fetch("/api/payments/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
-          txHash: receipt.hash,
+          txHash: finalTxHash,
           token: selectedToken,
           network: selectedNetwork
         })
@@ -288,8 +330,8 @@ export default function PaymentModal({
 
       toast.dismiss(toastId);
       setStep("success");
-      onConfirm?.(receipt.hash, selectedNetwork);
-      toast.success(`${selectedToken} payment confirmed!`);
+      onConfirm?.(finalTxHash, selectedNetwork);
+      toast.success(`${selectedToken} payment secured in Escrow!`);
     } catch (payErr: any) {
       toast.dismiss(toastId);
       console.error("Web3 payment error:", payErr);
