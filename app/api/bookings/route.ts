@@ -22,6 +22,19 @@ export async function GET(req: Request) {
       where.touristId = user.id;
     }
 
+    // Auto-expire any unpaid PENDING bookings older than 24 hours (1 day)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await prisma.booking.updateMany({
+      where: {
+        status: "PENDING",
+        OR: [
+          { expiresAt: { lt: new Date() } },
+          { expiresAt: null, createdAt: { lt: oneDayAgo } },
+        ],
+      },
+      data: { status: "EXPIRED" },
+    });
+
     const bookings = await prisma.booking.findMany({
       where,
       include: {
@@ -86,6 +99,8 @@ export async function POST(req: Request) {
     const platform_fee = Math.round((gig.platform_fee || (client_price - guide_price)) * 100) / 100;
 
     const totalPriceUSD = Math.round(client_price * data.groupSize * 100) / 100;
+    const oneDayInMs = 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + oneDayInMs);
 
     const booking = await prisma.booking.create({
       data: {
@@ -103,6 +118,7 @@ export async function POST(req: Request) {
         platform_fee,
         specialRequests: data.specialRequests,
         status: "PENDING",
+        expiresAt,
         // Lock the guide's current wallet address at booking creation time.
         // This snapshot is used for payout even if guide changes wallet later.
         guideWalletSnapshot: gig.guide.walletAddress || null,

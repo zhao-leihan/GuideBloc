@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { formatCurrency } from "@/lib/utils";
-import { Wallet, ArrowDownRight, ArrowUpRight, CheckCircle2, History, AlertCircle } from "lucide-react";
+import { Wallet, ArrowDownRight, ArrowUpRight, CheckCircle2, History, AlertCircle, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 
 type Transaction = {
@@ -11,8 +11,30 @@ type Transaction = {
   title: string;
   amount: string;
   status: string;
+  rawStatus?: string;
   createdAt: string;
+  expiresAt?: string;
 };
+
+function formatRemainingTime(expiresAt?: string, createdAt?: string): string {
+  const target = expiresAt
+    ? new Date(expiresAt).getTime()
+    : createdAt
+    ? new Date(createdAt).getTime() + 24 * 60 * 60 * 1000
+    : 0;
+
+  if (!target) return "";
+  const diff = target - Date.now();
+  if (diff <= 0) return "Expired";
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) {
+    return `${hours}h ${mins}m left`;
+  }
+  return `${mins}m left`;
+}
 
 type GuideStats = {
   totalEarnings: number;
@@ -153,11 +175,19 @@ export default function GuideEarningsPage() {
                                 {formatCurrency(feeAmount)}
                               </td>
                               <td className="px-6 py-4">
-                                <span className={`badge ${
-                                  tx.status === "Released" ? "badge-secondary" : "bg-yellow-500/10 text-yellow-600"
-                                }`}>
-                                  {tx.status === "Released" ? "PAID" : "PENDING"}
-                                </span>
+                                <div className="flex flex-col gap-1 items-start">
+                                  <span className={`badge ${
+                                    tx.status === "Released" ? "badge-secondary" : "bg-yellow-500/10 text-yellow-600"
+                                  }`}>
+                                    {tx.status === "Released" ? "PAID" : "PENDING"}
+                                  </span>
+                                  {tx.status !== "Released" && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                      <Clock className="w-2.5 h-2.5 text-amber-600" />
+                                      {formatRemainingTime(tx.expiresAt, tx.createdAt)}
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );

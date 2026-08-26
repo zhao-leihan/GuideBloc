@@ -24,7 +24,30 @@ type RecentTx = {
   title: string;
   amount: string;
   status: string;
+  rawStatus?: string;
+  createdAt?: string;
+  expiresAt?: string;
 };
+
+function formatRemainingTime(expiresAt?: string, createdAt?: string): string {
+  const target = expiresAt
+    ? new Date(expiresAt).getTime()
+    : createdAt
+    ? new Date(createdAt).getTime() + 24 * 60 * 60 * 1000
+    : 0;
+
+  if (!target) return "";
+  const diff = target - Date.now();
+  if (diff <= 0) return "Expired";
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) {
+    return `${hours}h ${mins}m left`;
+  }
+  return `${mins}m left`;
+}
 
 type GuideStats = {
   totalEarnings: number;
@@ -244,24 +267,47 @@ export default function GuideOverviewPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {stats.recentTransactions.map((tx) => (
-                            <div key={tx.id} className="flex items-center justify-between p-3 rounded-xl bg-dark-50 border border-dark-100">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                  tx.status === "Released" ? "bg-secondary/10" : "bg-yellow-500/10"
-                                }`}>
-                                  <TrendingUp className={`w-4 h-4 ${
-                                    tx.status === "Released" ? "text-secondary" : "text-yellow-600"
-                                  }`} />
+                          {stats.recentTransactions.map((tx) => {
+                            const isPending = tx.status === "Pending" || tx.rawStatus === "PENDING";
+                            const timeLeft = isPending ? formatRemainingTime(tx.expiresAt, tx.createdAt) : null;
+
+                            return (
+                              <div key={tx.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-dark-50 border border-dark-100 hover:bg-white hover:shadow-xs transition-all">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                                    tx.status === "Released" 
+                                      ? "bg-emerald-500/10 text-emerald-600" 
+                                      : isPending 
+                                      ? "bg-amber-500/10 text-amber-600" 
+                                      : "bg-blue-500/10 text-blue-600"
+                                  }`}>
+                                    <TrendingUp className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-dark-900 text-sm leading-snug">{tx.title}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className={`text-[11px] font-semibold ${
+                                        tx.status === "Released" 
+                                          ? "text-emerald-600" 
+                                          : isPending 
+                                          ? "text-amber-600" 
+                                          : "text-blue-600"
+                                      }`}>
+                                        {tx.status}
+                                      </span>
+                                      {isPending && timeLeft && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-500/15 border border-amber-500/25 px-2 py-0.5 rounded-full">
+                                          <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
+                                          {timeLeft}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="font-medium text-dark-900 text-sm">{tx.title}</p>
-                                  <p className="text-xs text-dark-500">{tx.status}</p>
-                                </div>
+                                <span className="font-bold text-sm font-mono text-dark-900">{tx.amount}</span>
                               </div>
-                              <span className="font-medium text-sm text-dark-900">{tx.amount}</span>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>

@@ -21,14 +21,31 @@ export async function GET() {
     });
     const gigIds = gigs.map(g => g.id);
 
+    // Auto-expire any unpaid PENDING bookings older than 24 hours (1 day)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    await prisma.booking.updateMany({
+      where: {
+        gigId: { in: gigIds },
+        status: "PENDING",
+        OR: [
+          { expiresAt: { lt: new Date() } },
+          { expiresAt: null, createdAt: { lt: oneDayAgo } },
+        ],
+      },
+      data: { status: "EXPIRED" },
+    });
+
     // 2. Fetch bookings for these gigs
     const bookings = await prisma.booking.findMany({
-      where: { gigId: { in: gigIds } },
+      where: { 
+        gigId: { in: gigIds },
+        status: { not: "EXPIRED" }
+      },
       include: {
         tourist: { select: { name: true } },
         gig: { select: { title: true } }
       },
-      orderBy: { bookingDate: "desc" }
+      orderBy: { createdAt: "desc" }
     });
 
     // 3. Calculate statistics
@@ -36,7 +53,7 @@ export async function GET() {
     const completedBookings = bookings.filter(b => b.status === "COMPLETED");
     const totalEarnings = completedBookings.reduce((sum, b) => sum + (b.guide_price || (b.totalPriceUSD * 0.90)), 0);
 
-    // Pending Release: CONFIRMED or PENDING bookings
+    // Pending Release: CONFIRMED bookings held in smart contract escrow
     const pendingBookings = bookings.filter(b => b.status === "CONFIRMED" || b.status === "PENDING");
     const pendingRelease = pendingBookings.reduce((sum, b) => sum + (b.guide_price || (b.totalPriceUSD * 0.90)), 0);
 
@@ -66,15 +83,17 @@ export async function GET() {
         status: b.status,
       }));
 
-    // Recent Transactions
+    // Recent Transactions (Active & completed, excluding expired)
     const recentTransactions = bookings
       .slice(0, 5)
       .map(b => ({
         id: b.id,
         title: b.gig.title,
         amount: `$${b.totalPriceUSD.toFixed(2)} USDT`,
-        status: b.status === "COMPLETED" ? "Released" : b.status === "CANCELLED" ? "Cancelled" : "Pending",
-        createdAt: b.createdAt
+        status: b.status === "COMPLETED" ? "Released" : b.status === "CANCELLED" ? "Cancelled" : b.status === "CONFIRMED" ? "Escrow Secured" : "Pending",
+        rawStatus: b.status,
+        createdAt: b.createdAt,
+        expiresAt: b.expiresAt ? b.expiresAt.toISOString() : new Date(new Date(b.createdAt).getTime() + 24 * 60 * 60 * 1000).toISOString(),
       }));
 
     return NextResponse.json({

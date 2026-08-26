@@ -18,6 +18,26 @@ const statusColors: Record<string, string> = {
   DISPUTED: "bg-purple-500/10 text-purple-600",
 };
 
+function formatRemainingTime(expiresAt?: string, createdAt?: string): string {
+  const target = expiresAt
+    ? new Date(expiresAt).getTime()
+    : createdAt
+    ? new Date(createdAt).getTime() + 24 * 60 * 60 * 1000
+    : 0;
+
+  if (!target) return "";
+  const diff = target - Date.now();
+  if (diff <= 0) return "Expired";
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) {
+    return `${hours}h ${mins}m left`;
+  }
+  return `${mins}m left`;
+}
+
 export default function GuideBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -208,7 +228,15 @@ export default function GuideBookingsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`badge text-xs ${statusColors[b.status] || "bg-dark-100"}`}>{b.status.replace("_", " ")}</span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span className={`badge text-xs ${statusColors[b.status] || "bg-dark-100"}`}>{b.status.replace("_", " ")}</span>
+                            {b.status === "PENDING" && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                                <Clock className="w-2.5 h-2.5 text-amber-600" />
+                                {formatRemainingTime(b.expiresAt, b.createdAt)}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-1">

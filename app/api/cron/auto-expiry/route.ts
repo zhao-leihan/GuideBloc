@@ -4,17 +4,20 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 /**
- * Cron Job Endpoint to auto-expire PENDING bookings older than 30 minutes.
+ * Cron Job Endpoint to auto-expire PENDING bookings older than 24 hours (1 day).
  * Logs expired bookings to payment_audit_logs.
  */
 export async function GET(req: Request) {
   try {
-    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const expiredBookings = await prisma.booking.findMany({
       where: {
         status: "PENDING",
-        createdAt: { lt: thirtyMinsAgo }
+        OR: [
+          { expiresAt: { lt: new Date() } },
+          { expiresAt: null, createdAt: { lt: oneDayAgo } },
+        ],
       },
       select: { id: true }
     });
@@ -37,7 +40,7 @@ export async function GET(req: Request) {
         bookingId: id,
         source: "CRON_EXPIRY",
         status: "EXPIRED",
-        errorMessage: "Booking auto-expired after 30 minutes inactivity."
+        errorMessage: "Booking auto-expired after 24 hours inactivity."
       }))
     });
 

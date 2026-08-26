@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
+import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2, ShieldCheck, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
@@ -14,6 +14,26 @@ import { useRouter } from "next/navigation";
 import MeetInterface from "@/components/meet/MeetInterface";
 import TourVerificationModal from "@/components/verification/TourVerificationModal";
 import TipModal from "@/components/payment/TipModal";
+
+function formatRemainingTime(expiresAt?: string, createdAt?: string): string {
+  const target = expiresAt
+    ? new Date(expiresAt).getTime()
+    : createdAt
+    ? new Date(createdAt).getTime() + 24 * 60 * 60 * 1000
+    : 0;
+
+  if (!target) return "";
+  const diff = target - Date.now();
+  if (diff <= 0) return "Expired";
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) {
+    return `${hours}h ${mins}m left`;
+  }
+  return `${mins}m left`;
+}
 
 export default function TouristBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -85,6 +105,8 @@ export default function TouristBookingsPage() {
           participants: b.participants || [],
           tourist: b.tourist || null,
           hasReviewed: b.reviews?.some((r: any) => r.reviewerId === userId) || false,
+          createdAt: b.createdAt,
+          expiresAt: b.expiresAt,
         }));
         setBookings(mapped);
       }
@@ -572,11 +594,17 @@ export default function TouristBookingsPage() {
             filteredBookings.map((booking) => (
               <div key={booking.id} className="card p-6 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center !overflow-visible">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <h3 className="text-xl font-bold text-dark-900">{booking.tourName}</h3>
                     <span className={`badge text-xs font-bold px-2.5 py-1 rounded-lg ${getStatusBadgeStyle(booking.status)}`}>
                       {booking.status}
                     </span>
+                    {booking.status === "PENDING" && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 rounded-lg">
+                        <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                        Expires in {formatRemainingTime(booking.expiresAt, booking.createdAt)}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="flex flex-wrap gap-4 text-sm text-dark-500">
