@@ -38,6 +38,7 @@ export async function GET(req: Request) {
     const bookings = await prisma.booking.findMany({
       where,
       include: {
+        escrowPayout: true,
         reviews: {
           select: { id: true, reviewerId: true }
         },

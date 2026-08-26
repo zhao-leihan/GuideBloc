@@ -1,10 +1,10 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
+import { connectWallet, getTokenBalance, claimGuideEarnings, SupportedNetwork } from "@/lib/crypto/payment";
 import DotsLoader from "@/components/ui/DotsLoader";
 import toast from "react-hot-toast";
 
@@ -29,6 +29,7 @@ export default function GuideWalletPage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
 
   // Helper to load pure on-chain balances for address (No DB fallback)
   const loadBalances = useCallback(async (address: string, chain: SupportedNetwork) => {
@@ -212,6 +213,51 @@ export default function GuideWalletPage() {
     }
   };
 
+  const handleClaimEarnings = async (bookingId: string, amountUSD: string) => {
+    if (!walletAddress) {
+      toast.error("Please connect your payout wallet first");
+      await handleConnect("metamask");
+      return;
+    }
+
+    setClaimingId(bookingId);
+    const toastId = toast.loading(`Confirming claim of $${amountUSD} USDC in MetaMask...`);
+
+    try {
+      // Step 1: Execute on-chain claim via smart contract
+      const txHash = await claimGuideEarnings(bookingId, network);
+
+      toast.loading("Recording payout on-chain...", { id: toastId });
+
+      // Step 2: Record in backend database
+      const res = await fetch(`/api/bookings/${bookingId}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ txHash }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.warn("Backend claim sync notice:", err);
+      }
+
+      toast.dismiss(toastId);
+      toast.success(`🎉 $${amountUSD} USDC successfully claimed to your wallet!`);
+
+      // Step 3: Refresh history & balances
+      await fetchHistory();
+      if (walletAddress) {
+        await loadBalances(walletAddress, network);
+      }
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      console.error("Claim error:", error);
+      toast.error(error.reason || error.message || "Failed to claim earnings from escrow");
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
   const formatAddress = (addr: string) => {
     if (!addr) return "";
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
@@ -319,9 +365,40 @@ export default function GuideWalletPage() {
                 </div>
               </div>
 
+              {/* Unclaimed Tour Earnings Banner */}
+              {(() => {
+                const unclaimedList = history.filter((b: any) => b.status === "COMPLETED" && !b.escrowPayout);
+                const totalUnclaimed = unclaimedList.reduce((sum: number, b: any) => sum + (Number(b.totalPriceUSD) * 0.9), 0).toFixed(2);
+                if (Number(totalUnclaimed) <= 0) return null;
+
+                return (
+                  <div className="p-5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-primary/10 border border-emerald-500/20 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                        <Sparkles className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-display font-bold text-dark-900 text-base">Unclaimed Tour Earnings Ready</h4>
+                        <p className="text-xs text-dark-500">You have completed tours with funds secured in Escrow ready to withdraw to your MetaMask.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 self-end sm:self-auto">
+                      <div className="text-right">
+                        <div className="text-xl font-mono font-bold text-emerald-600">+${totalUnclaimed} USDC</div>
+                        <div className="text-[11px] text-dark-400 font-medium">{unclaimedList.length} tour(s) ready to claim</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Transaction History Section */}
               <div className="pt-4 border-t border-dark-100">
-                <h4 className="font-display font-semibold text-dark-900 mb-4">Escrow Payout History</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-display font-semibold text-dark-900">Escrow Payout History</h4>
+                  <span className="text-xs text-dark-400">Avalanche C-Chain Escrow Smart Contract</span>
+                </div>
+
                 {loadingHistory ? (
                   <div className="text-center py-6">
                     <DotsLoader size="md" />
@@ -338,13 +415,16 @@ export default function GuideWalletPage() {
                           <th className="px-4 py-3 rounded-l-xl">Tour</th>
                           <th className="px-4 py-3">Date</th>
                           <th className="px-4 py-3">Earnings (90%)</th>
-                          <th className="px-4 py-3">Escrow Status</th>
+                          <th className="px-4 py-3">Escrow Payout Action</th>
                           <th className="px-4 py-3 rounded-r-xl">Receipt</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-dark-100">
                         {history.map((tx: any) => {
                           const guideEarnings = (Number(tx.totalPriceUSD) * 0.9).toFixed(2);
+                          const isClaimed = Boolean(tx.escrowPayout);
+                          const canClaim = tx.status === "COMPLETED" && !isClaimed;
+
                           return (
                             <tr key={tx.id} className="hover:bg-dark-50/50">
                               <td className="px-4 py-3 font-medium text-dark-900">{tx.gig?.title || "Tour Booking"}</td>
@@ -353,18 +433,38 @@ export default function GuideWalletPage() {
                                 +${guideEarnings} USDC
                               </td>
                               <td className="px-4 py-3">
-                                <span className={`badge text-[10px] font-bold px-2 py-0.5 rounded-lg ${
-                                  tx.status === "COMPLETED" 
-                                    ? "bg-green-500/10 text-green-600 border border-green-500/20" 
-                                    : "bg-blue-500/10 text-blue-600 border border-blue-500/20"
-                                }`}>
-                                  {tx.status === "COMPLETED" ? "RELEASED" : "ESCROW SECURED"}
-                                </span>
+                                {canClaim ? (
+                                  <button
+                                    onClick={() => handleClaimEarnings(tx.id, guideEarnings)}
+                                    disabled={claimingId === tx.id}
+                                    className="btn-primary text-xs py-1.5 px-3 rounded-xl inline-flex items-center gap-1.5 font-bold shadow-sm hover:scale-[1.02] transition-all cursor-pointer"
+                                  >
+                                    {claimingId === tx.id ? (
+                                      <>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        Claiming...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        Claim +${guideEarnings} USDC
+                                      </>
+                                    )}
+                                  </button>
+                                ) : (
+                                  <span className={`badge text-[10px] font-bold px-2.5 py-1 rounded-lg ${
+                                    isClaimed || tx.status === "COMPLETED"
+                                      ? "bg-green-500/10 text-green-600 border border-green-500/20" 
+                                      : "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+                                  }`}>
+                                    {isClaimed ? "CLAIMED (DISBURSED)" : tx.status === "COMPLETED" ? "READY TO CLAIM" : "ESCROW SECURED"}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-4 py-3">
                                 {tx.txHash && tx.txHash !== "N/A" && (
                                   <a
-                                    href={`https://snowtrace.io/tx/${tx.txHash}`}
+                                    href={`https://snowtrace.io/tx/${tx.escrowPayout?.releaseHash || tx.txHash}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"

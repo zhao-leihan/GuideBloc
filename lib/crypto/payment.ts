@@ -463,6 +463,20 @@ export async function initiatePayment({
   return receipt.hash;
 }
 
+export async function claimGuideEarnings(bookingId: string, network: SupportedNetwork = "avalanche"): Promise<string> {
+  const { provider } = await connectWallet(network);
+  const signer = await provider.getSigner();
+  const escrowAddress = getEscrowAddress(network);
+  const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
+
+  const tx = await escrow.claimEarnings(ethers.encodeBytes32String(bookingId.slice(0, 31)));
+  const receipt = await tx.wait();
+  if (!receipt || !receipt.hash) {
+    throw new Error("Claim transaction succeeded but hash is missing");
+  }
+  return receipt.hash;
+}
+
 export async function releaseToGuide(bookingId: string, network: SupportedNetwork = "avalanche"): Promise<string> {
   const { provider } = await connectWallet(network);
   const signer = await provider.getSigner();

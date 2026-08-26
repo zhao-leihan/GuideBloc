@@ -124,9 +124,17 @@ export default function GuideEarningsPage() {
 
             {/* Automated Payout History */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <History className="w-5 h-5 text-dark-500" />
-                <h2 className="text-lg font-bold text-dark-900">Automated Payout History</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <History className="w-5 h-5 text-dark-500" />
+                  <h2 className="text-lg font-bold text-dark-900">Automated Payout History</h2>
+                </div>
+                <a
+                  href="/dashboard/guide/wallet"
+                  className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
+                >
+                  Manage & Claim in Wallet →
+                </a>
               </div>
               
               <div className="card overflow-hidden">
