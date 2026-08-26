@@ -453,7 +453,7 @@ export async function initiatePayment({
   // Step 2: Call escrow to lock funds
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
   const payTx = await escrow.createBooking(
-    ethers.encodeBytes32String(bookingId),
+    ethers.encodeBytes32String(bookingId.slice(0, 31)),
     guideWalletAddress,
     tokenAddress,
     amount
@@ -469,7 +469,7 @@ export async function releaseToGuide(bookingId: string, network: SupportedNetwor
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
 
-  const tx = await escrow.releaseToGuide(ethers.encodeBytes32String(bookingId));
+  const tx = await escrow.releaseToGuide(ethers.encodeBytes32String(bookingId.slice(0, 31)));
   const receipt = await tx.wait();
   return receipt.hash;
 }
@@ -480,7 +480,7 @@ export async function refundTourist(bookingId: string, network: SupportedNetwork
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
 
-  const tx = await escrow.refundTourist(ethers.encodeBytes32String(bookingId));
+  const tx = await escrow.refundTourist(ethers.encodeBytes32String(bookingId.slice(0, 31)));
   const receipt = await tx.wait();
   return receipt.hash;
 }

@@ -120,7 +120,7 @@ export async function backendReleaseToGuide(
   const escrowAddress = getEscrowAddress(network);
 
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, wallet);
-  const bookingIdBytes32 = ethers.encodeBytes32String(bookingId);
+  const bookingIdBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
 
   console.log(
     `[Backend Release] Releasing booking ${bookingId} on ${network} escrow: ${escrowAddress}`
@@ -158,7 +158,7 @@ export async function backendRefundTourist(
   const escrowAddress = getEscrowAddress(network);
 
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, wallet);
-  const bookingIdBytes32 = ethers.encodeBytes32String(bookingId);
+  const bookingIdBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
 
   console.log(
     `[Backend Refund] Refunding booking ${bookingId} on ${network} escrow: ${escrowAddress}`
@@ -196,7 +196,7 @@ export async function backendConfirmBooking(
   const escrowAddress = getEscrowAddress(network);
 
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, wallet);
-  const bookingIdBytes32 = ethers.encodeBytes32String(bookingId);
+  const bookingIdBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
 
   console.log(
     `[Backend Confirm] Confirming booking ${bookingId} on ${network} escrow: ${escrowAddress}`
@@ -273,7 +273,7 @@ export async function backendCreateBooking(
       await approveTx.wait();
 
       // Step 2: Lock funds in escrow
-      const bookingIdBytes32 = ethers.encodeBytes32String(bookingId);
+      const bookingIdBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
       console.log(
         `[Backend CreateBooking] Creating on-chain booking ${bookingId}`
       );
