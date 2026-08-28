@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Wallet, ArrowRightLeft, Copy, ExternalLink, RefreshCw, Send, Loader2, ArrowUpRight } from "lucide-react";
+import { Wallet, ArrowRightLeft, Copy, ExternalLink, RefreshCw, Send, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import { ethers } from "ethers";
+import { getTokenAddress } from "@/lib/crypto/payment";
 
-interface CustodianStatus {
+interface TreasuryStatus {
   address: string;
   usdcBalance: string;
   usdtBalance: string;
@@ -15,15 +17,19 @@ interface CustodianStatus {
   isDbFallback?: boolean;
 }
 
+const ERC20_ABI = [
+  "function transfer(address to, uint256 amount) external returns (bool)",
+];
+
 export default function AdminWalletPage() {
   const network = "avalanche";
-  const [status, setStatus] = useState<CustodianStatus | null>(null);
+  const [status, setStatus] = useState<TreasuryStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [transferring, setTransferring] = useState(false);
 
   // Transfer Form State
   const [recipient, setRecipient] = useState("");
-  const [token, setToken] = useState<"USDC" | "USDT" | "NATIVE">("USDC");
+  const [token, setToken] = useState<"USDC" | "NATIVE">("USDC");
   const [amount, setAmount] = useState("");
 
   // History State
@@ -43,7 +49,7 @@ export default function AdminWalletPage() {
         const data = await res.json();
         setStatus(data);
       } else {
-        toast.error("Failed to retrieve custodian wallet balances");
+        toast.error("Failed to retrieve treasury wallet balances");
       }
     } catch (err) {
       console.error(err);
@@ -68,6 +74,13 @@ export default function AdminWalletPage() {
     }
   };
 
+  const copyAddress = () => {
+    if (status?.address) {
+      navigator.clipboard.writeText(status.address);
+      toast.success("Treasury address copied to clipboard");
+    }
+  };
+
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!recipient.trim() || !amount || Number(amount) <= 0) {
@@ -75,45 +88,52 @@ export default function AdminWalletPage() {
       return;
     }
 
+    if (typeof window === "undefined" || !(window as any).ethereum) {
+      toast.error("MetaMask extension not detected. Please install MetaMask to sign.");
+      return;
+    }
+
     setTransferring(true);
-    const loadId = toast.loading(`Broadcasting transfer of ${amount} ${token} on-chain...`);
+    const loadId = toast.loading(`Confirm transfer of ${amount} ${token} in MetaMask...`);
 
     try {
-      const res = await fetch("/api/admin/wallet/transfer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientAddress: recipient,
-          token,
-          amount: Number(amount),
-          network
-        })
-      });
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+      const signerAddress = await signer.getAddress();
+
+      if (status?.address && signerAddress.toLowerCase() !== status.address.toLowerCase()) {
+        toast.error(`Please switch MetaMask account to Treasury: ${formatAddress(status.address)}`, { id: loadId });
+        setTransferring(false);
+        return;
+      }
+
+      let tx;
+      if (token === "NATIVE") {
+        tx = await signer.sendTransaction({
+          to: recipient,
+          value: ethers.parseEther(amount.toString()),
+        });
+      } else {
+        const tokenAddress = getTokenAddress("USDC", "avalanche");
+        const contract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+        const parsedAmount = ethers.parseUnits(Number(amount).toFixed(6), 6);
+        tx = await contract.transfer(recipient, parsedAmount);
+      }
+
+      toast.loading("Waiting for on-chain block confirmation...", { id: loadId });
+      await tx.wait();
 
       toast.dismiss(loadId);
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        toast.success(`Successfully transferred ${amount} ${token}!`);
-        setRecipient("");
-        setAmount("");
-        fetchStatus(); // Reload balances
-      } else {
-        toast.error(data.message || "Failed to execute transfer");
-      }
+      toast.success(`Successfully transferred ${amount} ${token}`);
+      setRecipient("");
+      setAmount("");
+      fetchStatus();
     } catch (err: any) {
       toast.dismiss(loadId);
-      console.error(err);
-      toast.error(err.message || "Error executing transfer");
+      console.error("Transfer error:", err);
+      toast.error(err.reason || err.message || "Failed to execute transfer");
     } finally {
       setTransferring(false);
-    }
-  };
-
-  const copyAddress = () => {
-    if (status?.address) {
-      navigator.clipboard.writeText(status.address);
-      toast.success("Custodian address copied to clipboard!");
     }
   };
 
@@ -122,12 +142,8 @@ export default function AdminWalletPage() {
     return `${addr.substring(0, 8)}...${addr.substring(addr.length - 6)}`;
   };
 
-  const getNetworkLabel = (net: string) => {
-    return "Avalanche C-Chain";
-  };
-
   const getExplorerLink = (hash: string) => {
-    return `https://snowtrace.io/tx/${hash}`;
+    return `https://testnet.snowtrace.io/tx/${hash}`;
   };
 
   return (
@@ -136,7 +152,7 @@ export default function AdminWalletPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-dark-900">Platform Treasury Wallet</h1>
-            <p className="text-dark-500">Manage contract owner custodian funds without MetaMask (server-signed execution)</p>
+            <p className="text-dark-500">Non-custodial destination wallet that receives 10% platform commission directly on-chain</p>
           </div>
           <button
             onClick={() => {
@@ -144,7 +160,7 @@ export default function AdminWalletPage() {
               fetchHistory();
             }}
             disabled={loadingStatus}
-            className="btn-ghost flex items-center gap-2 text-dark-600 hover:text-dark-900 transition-colors"
+            className="btn-ghost flex items-center gap-2 text-dark-600 hover:text-dark-900 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loadingStatus ? "animate-spin" : ""}`} />
             Refresh
@@ -156,7 +172,7 @@ export default function AdminWalletPage() {
           <span className="text-sm font-semibold text-dark-700">Active Blockchain:</span>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-dark-200 shadow-sm text-xs font-bold text-dark-900">
             <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain" />
-            Avalanche C-Chain (Mainnet)
+            Avalanche Fuji Testnet (Chain ID: 43113)
           </div>
         </div>
 
@@ -167,11 +183,11 @@ export default function AdminWalletPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center">
-                    <Wallet className="w-6 h-6 text-secondary" />
+                    <ShieldCheck className="w-6 h-6 text-secondary" />
                   </div>
                   <div>
-                    <h3 className="font-display font-bold text-dark-900 text-lg">Custodian Wallet</h3>
-                    <p className="text-xs text-dark-400 capitalize">{getNetworkLabel(network)}</p>
+                    <h3 className="font-display font-bold text-dark-900 text-lg">Admin Treasury (Non-Custodial)</h3>
+                    <p className="text-xs text-dark-400">Directly Controlled via Owner MetaMask</p>
                   </div>
                 </div>
               </div>
@@ -185,52 +201,59 @@ export default function AdminWalletPage() {
                 <>
                   <div className="p-4 bg-dark-50 rounded-2xl flex items-center justify-between">
                     <div>
-                      <p className="text-xs text-dark-400 font-medium">Wallet Address</p>
+                      <p className="text-xs text-dark-400 font-medium">Treasury Wallet Address</p>
                       <p className="font-mono text-sm text-dark-900 font-bold mt-0.5">{formatAddress(status.address)}</p>
                     </div>
-                    <button
-                      onClick={copyAddress}
-                      className="p-2 hover:bg-dark-100 rounded-xl text-dark-500 hover:text-dark-900 transition-colors"
-                      title="Copy Wallet Address"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={copyAddress}
+                        className="p-2 hover:bg-dark-100 rounded-xl text-dark-500 hover:text-dark-900 transition-colors cursor-pointer"
+                        title="Copy Wallet Address"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <a
+                        href={`https://testnet.snowtrace.io/address/${status.address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 hover:bg-dark-100 rounded-xl text-dark-500 hover:text-dark-900 transition-colors"
+                        title="View on Snowtrace"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
                   </div>
 
-                  {/* DB Fallback Warning Banner */}
+                  {/* DB Fallback Banner */}
                   {(status as any).isDbFallback && (
                     <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                      <span className="text-amber-500 text-base leading-tight">⚠️</span>
+                      <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-semibold">Balance shown from DB Ledger</p>
-                        <p className="text-amber-700 mt-0.5">Live on-chain balance is 0. The value displayed is a sum of recorded revenues in the database — it may not reflect the actual on-chain wallet balance if there were sync failures.</p>
+                        <p className="text-amber-700 mt-0.5">Live RPC response unavailable. Showing ledger total.</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
-                      <p className="text-xs text-dark-400 font-semibold">USDC Balance</p>
-                      <p className="font-bold text-xl text-dark-950 mt-1">{Number(status.usdcBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })} USDC</p>
+                      <p className="text-xs text-dark-400 font-semibold">Treasury USDC Balance</p>
+                      <p className="font-bold text-xl text-dark-950 mt-1 font-mono">{Number(status.usdcBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })} USDC</p>
                     </div>
                     <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
-                      <p className="text-xs text-dark-400 font-semibold">USDT Balance</p>
-                      <p className="font-bold text-xl text-dark-950 mt-1">{Number(status.usdtBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })} USDT</p>
-                    </div>
-                    <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
-                      <p className="text-xs text-dark-400 font-semibold">Native Gas Balance (AVAX)</p>
-                      <p className="font-bold text-xl text-dark-950 mt-1">{Number(status.nativeBalance).toLocaleString(undefined, { maximumFractionDigits: 4 })} AVAX</p>
+                      <p className="text-xs text-dark-400 font-semibold">Treasury AVAX Gas</p>
+                      <p className="font-bold text-xl text-dark-950 mt-1 font-mono">{Number(status.nativeBalance).toFixed(4)} AVAX</p>
                     </div>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Platform Revenue List */}
+            {/* Treasury Receipts Log */}
             <div className="card p-6 space-y-4">
               <div>
-                <h3 className="font-display font-bold text-dark-900 text-lg">Treasury Receipts (All Time)</h3>
-                <p className="text-xs text-dark-500">Live database audit log of platform earnings forwarded to this address</p>
+                <h3 className="font-display font-bold text-dark-900 text-lg">Treasury Receipts</h3>
+                <p className="text-xs text-dark-500">Live ledger of 10% commission revenue automatically routed to your Treasury address</p>
               </div>
 
               {loadingHistory ? (
@@ -239,7 +262,7 @@ export default function AdminWalletPage() {
                 </div>
               ) : transactions.length === 0 ? (
                 <div className="p-8 text-center text-sm text-dark-400 bg-dark-50 rounded-2xl border border-dashed border-dark-200">
-                  No revenue transactions recorded.
+                  No revenue transactions recorded yet.
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-dark-150 bg-white">
@@ -259,25 +282,19 @@ export default function AdminWalletPage() {
                           <td className="px-4 py-3 text-dark-600 font-mono text-xs">{tx.date}</td>
                           <td className="px-4 py-3 font-semibold text-dark-900">{tx.source}</td>
                           <td className="px-4 py-3 text-dark-500 text-xs truncate max-w-[150px]">{tx.ref}</td>
-                          <td className={`px-4 py-3 font-bold ${
-                            tx.amount < 0 ? "text-red-600" : "text-green-600"
-                          }`}>
-                            {tx.amount < 0 ? "-" : "+"}{Math.abs(tx.amount).toFixed(2)} USDT
+                          <td className="px-4 py-3 font-bold text-emerald-600 font-mono">
+                            +{Math.abs(tx.amount).toFixed(2)} USDC
                           </td>
                           <td className="px-4 py-3">
                             {tx.fullHash && tx.fullHash !== "N/A" && (
-                              tx.fullHash.startsWith("0xMOCK") ? (
-                                <span className="text-[10px] text-dark-400 bg-dark-100 px-2 py-0.5 rounded-full">Sandbox</span>
-                              ) : (
-                                <a
-                                  href={getExplorerLink(tx.fullHash)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
-                                >
-                                  View <ExternalLink className="w-3 h-3" />
-                                </a>
-                              )
+                              <a
+                                href={getExplorerLink(tx.fullHash)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                              >
+                                View <ExternalLink className="w-3 h-3" />
+                              </a>
                             )}
                           </td>
                         </tr>
@@ -289,26 +306,26 @@ export default function AdminWalletPage() {
             </div>
           </div>
 
-          {/* Transfer Funds Panel */}
+          {/* Transfer Funds Panel (MetaMask Client-Signed) */}
           <div className="card p-6 space-y-6 flex flex-col justify-start h-fit">
             <div>
               <h3 className="font-display font-bold text-dark-900 text-lg flex items-center gap-2">
                 <ArrowRightLeft className="w-5 h-5 text-primary" />
-                Transfer Funds
+                Transfer Treasury Funds
               </h3>
-              <p className="text-xs text-dark-500 mt-1">Send funds directly to any external wallet. Signs automatically using private key credentials.</p>
+              <p className="text-xs text-dark-500 mt-1">Directly signed from your Treasury MetaMask wallet. Zero server custody.</p>
             </div>
 
             <form onSubmit={handleTransfer} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-dark-700 block mb-1.5">Asset Token</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["USDC", "USDT", "NATIVE"] as const).map((t) => (
+                <div className="grid grid-cols-2 gap-2">
+                  {(["USDC", "NATIVE"] as const).map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => setToken(t)}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold text-center transition-all ${
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
                         token === t
                           ? "border-primary bg-primary/5 text-primary"
                           : "border-dark-200 text-dark-600 hover:border-dark-350"
@@ -321,14 +338,14 @@ export default function AdminWalletPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-dark-700 block mb-1.5">Recipient Wallet Address</label>
+                <label className="text-xs font-semibold text-dark-700 block mb-1.5">Destination Wallet Address</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. 0xba75...9f61"
+                  placeholder="0x..."
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
-                  className="input-field font-mono text-sm w-full"
+                  className="input-field font-mono text-xs w-full"
                 />
               </div>
 
@@ -342,7 +359,7 @@ export default function AdminWalletPage() {
                     placeholder="0.00"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="input-field w-full pr-16"
+                    className="input-field w-full pr-16 text-sm font-mono"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-dark-400">
                     {token === "NATIVE" ? "AVAX" : token}
@@ -353,17 +370,17 @@ export default function AdminWalletPage() {
               <button
                 type="submit"
                 disabled={transferring || loadingStatus}
-                className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
+                className="btn-primary w-full flex items-center justify-center gap-2 mt-2 cursor-pointer font-bold"
               >
                 {transferring ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Executing...
+                    Signing in MetaMask...
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Send Transfer
+                    Transfer via MetaMask
                   </>
                 )}
               </button>
