@@ -166,8 +166,7 @@ export async function PATCH(
       },
     });
 
-    // ─── CONFIRMED: Generate PDF Receipt & Send Email to Tourist ─────────────
-    if (status === "CONFIRMED") {
+    if (status === "CONFIRMED" && booking.status !== "CONFIRMED" && booking.status !== "PAID") {
       try {
         const { generateReceiptPdf } = await import("@/lib/receipt");
         const { triggerBookingSuccessEmail } = await import("@/lib/email");
@@ -265,49 +264,19 @@ export async function PATCH(
         await prisma.mail.create({
           data: {
             recipientId: booking.touristId,
-            subject: "❌ Booking Cancelled & Escrow Refunded",
+            subject: "Booking Cancelled & Escrow Refunded",
             body: `Your booking for "${booking.gig.title}" has been cancelled. The locked contract balance of ${booking.totalPriceUSD} USDC has been refunded to your wallet address.`,
           },
         });
         await prisma.mail.create({
           data: {
             recipientId: booking.gig.guideId,
-            subject: "❌ Booking Cancelled",
+            subject: "Booking Cancelled",
             body: `The booking for your tour "${booking.gig.title}" has been cancelled. The escrow balance has been returned to the tourist.`,
           },
         });
       } catch (mailErr) {
         console.error("Failed to write cancellation notification emails:", mailErr);
-      }
-    }
-
-    // ─── CONFIRMED: Send receipt email ───────────────────
-    if (status === "CONFIRMED") {
-
-      // Send PDF receipt email
-      try {
-        const fullBooking = await prisma.booking.findUnique({
-          where: { id: params.id },
-          include: {
-            gig: { select: { title: true, location: true } },
-            tourist: { select: { name: true, email: true } },
-          },
-        });
-
-        if (fullBooking) {
-          const { generateReceiptPdf } = await import("@/lib/receipt");
-          const { triggerBookingSuccessEmail } = await import("@/lib/email");
-          const pdfBuffer = generateReceiptPdf(fullBooking as any);
-          await triggerBookingSuccessEmail(
-            fullBooking.id,
-            fullBooking.tourist.email,
-            fullBooking.gig.title,
-            fullBooking.totalPriceUSD,
-            pdfBuffer
-          );
-        }
-      } catch (err) {
-        console.error("Failed to generate/email PDF receipt:", err);
       }
     }
 
