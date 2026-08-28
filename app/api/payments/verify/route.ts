@@ -156,7 +156,7 @@ export async function POST(req: Request) {
 
     // 5. Parse Log Event: Check ERC-20 Transfer to Treasury or Escrow Address
     const expectedTreasury = (process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE").toLowerCase();
-    const expectedEscrowAvalanche = (process.env.NEXT_PUBLIC_ESCROW_ADDRESS_AVALANCHE || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8").toLowerCase();
+    const expectedEscrowAvalanche = (process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2").toLowerCase();
     const expectedEscrowBase = (process.env.NEXT_PUBLIC_ESCROW_ADDRESS_BASE || "0x8A74C711B3207611C76b4d6d305C930BE8326902").toLowerCase();
 
     let totalTransferredUnits = BigInt(0);
