@@ -59,11 +59,11 @@ export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwor
   const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
   if (token === "USDC") {
     return isAvaxTestnet 
-      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0x153a513FBF3A779A36881C635530bFA912bAf0C7") // Fuji Testnet MockUSDC
+      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0xfdCB2cd113201C61E44D937B2ee0E1541B61f0fC") // Fuji Testnet USD Coin (USDC)
       : "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"; // Avalanche Mainnet Native USDC
   } else {
     return isAvaxTestnet
-      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0x153a513FBF3A779A36881C635530bFA912bAf0C7") 
+      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0xfdCB2cd113201C61E44D937B2ee0E1541B61f0fC") 
       : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Avalanche Mainnet USDT
   }
 }
