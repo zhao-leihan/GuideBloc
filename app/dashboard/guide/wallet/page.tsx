@@ -242,7 +242,7 @@ export default function GuideWalletPage() {
       }
 
       toast.dismiss(toastId);
-      toast.success(`🎉 $${amountUSD} USDC successfully claimed to your wallet!`);
+      toast.success(`$${amountUSD} USDC successfully claimed to your wallet.`);
 
       // Step 3: Refresh history & balances
       await fetchHistory();

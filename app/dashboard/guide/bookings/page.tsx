@@ -270,9 +270,9 @@ export default function GuideBookingsPage() {
                                  <button
                                    onClick={() => setVerificationBookingModal(b)}
                                    className="btn-ghost text-xs px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer"
-                                   title="3-Step Safe Verification Protocol"
+                                   title="Complete Tour & Disburse Escrow"
                                  >
-                                   <ShieldCheck className="w-3.5 h-3.5" /> Verify (QR+GPS)
+                                   <ShieldCheck className="w-3.5 h-3.5" /> Complete & Disburse Escrow
                                  </button>
                                  <button
                                    onClick={() => setActiveMeetBooking(b)}

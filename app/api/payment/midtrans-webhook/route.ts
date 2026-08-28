@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createHash } from "crypto";
-import { backendCreateBooking } from "@/lib/crypto/backend";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -121,52 +120,16 @@ export async function POST(req: Request) {
       });
     }
 
-    const chainNetwork = "avalanche"; // Primary network — adjust if needed
+    const txHash = `MIDTRANS-${order_id}`;
 
-    let txHash: string;
-    try {
-      // ✅ FIX: backendCreateBooking now THROWS on failure — no more silent mock fallback
-      txHash = await backendCreateBooking(
-        booking.id,
-        booking.totalPriceUSD,
-        guideWallet,
-        "USDC",
-        chainNetwork
-      );
-    } catch (chainErr: any) {
-      console.error(
-        `[Midtrans Webhook] On-chain escrow funding FAILED for booking ${booking.id}:`,
-        chainErr.message
-      );
-
-      // Write audit log — booking stays PENDING so admin can retry manually
-      await prisma.paymentAuditLog.create({
-        data: {
-          bookingId: booking.id,
-          txHash: null,
-          source: "MIDTRANS_WEBHOOK",
-          status: "FAILED",
-          errorMessage: chainErr.message,
-        },
-      }).catch(() => {});
-
-      // DO NOT update booking to CONFIRMED if on-chain failed
-      // Return 200 to prevent Midtrans from retrying (the payment itself was valid)
-      // Admin will need to manually retry escrow funding
-      return NextResponse.json({
-        message:
-          "Payment received but on-chain escrow funding failed. Admin manual retry required.",
-      });
-    }
-
-    // On-chain success — now update DB
+    // Update DB to PAID
     try {
       await prisma.booking.update({
         where: { id: booking.id },
         data: {
           status: "CONFIRMED",
           txHash,
-          paymentNetwork: chainNetwork,
+          paymentNetwork: "midtrans",
         },
       });
 

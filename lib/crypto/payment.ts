@@ -33,11 +33,15 @@ const ERC20_ABI = [
 ];
 
 const ESCROW_ABI = [
+  "function deposit(bytes32 bookingId, address guide, address token, uint256 amount) external",
+  "function release(bytes32 bookingId) external",
+  "function refund(bytes32 bookingId) external",
+  "function emergencyRescue(address token, address to, uint256 amount) external",
+  "function getBooking(bytes32 bookingId) external view returns (tuple(address tourist, address guide, address token, uint256 amount, uint8 status))",
   "function createBooking(bytes32 bookingId, address guide, address token, uint256 amount) external",
   "function releaseToGuide(bytes32 bookingId) external",
   "function refundTourist(bytes32 bookingId) external",
   "function claimEarnings(bytes32 bookingId) external",
-  "function getBooking(bytes32 bookingId) external view returns (tuple(address tourist, address guide, address token, uint256 amount, uint8 status))",
 ];
 
 export type SupportedNetwork = "avalanche";
@@ -55,17 +59,17 @@ export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwor
   const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
   if (token === "USDC") {
     return isAvaxTestnet 
-      ? "0xB819bE9925EcBefe8b7eAebe51f42360673ffC86" // Fuji Testnet USDC
+      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0x153a513FBF3A779A36881C635530bFA912bAf0C7") // Fuji Testnet MockUSDC
       : "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"; // Avalanche Mainnet Native USDC
   } else {
     return isAvaxTestnet
-      ? "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7" 
+      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0x153a513FBF3A779A36881C635530bFA912bAf0C7") 
       : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Avalanche Mainnet USDT
   }
 }
 
 export function getEscrowAddress(network: SupportedNetwork = "avalanche"): string {
-  return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8";
+  return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2";
 }
 
 export type SupportedWalletType = 
@@ -378,12 +382,19 @@ export async function initiatePayment({
 
   // Step 2: Call escrow to lock funds
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
-  const payTx = await escrow.createBooking(
-    ethers.encodeBytes32String(bookingId.slice(0, 31)),
-    guideWalletAddress,
-    tokenAddress,
-    amount
-  );
+  const bookingBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
+
+  let payTx;
+  try {
+    // V2 pure deposit
+    payTx = await escrow.deposit(bookingBytes32, guideWalletAddress, tokenAddress, amount);
+  } catch (depErr: any) {
+    if (depErr?.message?.includes("is not a function") || depErr?.data === "0x") {
+      payTx = await escrow.createBooking(bookingBytes32, guideWalletAddress, tokenAddress, amount);
+    } else {
+      throw depErr;
+    }
+  }
 
   const receipt = await payTx.wait();
   return receipt.hash;
@@ -394,8 +405,16 @@ export async function claimGuideEarnings(bookingId: string, network: SupportedNe
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
+  const bookingBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
 
-  const tx = await escrow.claimEarnings(ethers.encodeBytes32String(bookingId.slice(0, 31)));
+  let tx;
+  try {
+    // V2 pure atomic release
+    tx = await escrow.release(bookingBytes32);
+  } catch (err: any) {
+    tx = await escrow.claimEarnings(bookingBytes32);
+  }
+
   const receipt = await tx.wait();
   if (!receipt || !receipt.hash) {
     throw new Error("Claim transaction succeeded but hash is missing");
@@ -408,8 +427,15 @@ export async function releaseToGuide(bookingId: string, network: SupportedNetwor
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
+  const bookingBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
 
-  const tx = await escrow.releaseToGuide(ethers.encodeBytes32String(bookingId.slice(0, 31)));
+  let tx;
+  try {
+    tx = await escrow.release(bookingBytes32);
+  } catch (err: any) {
+    tx = await escrow.releaseToGuide(bookingBytes32);
+  }
+
   const receipt = await tx.wait();
   return receipt.hash;
 }
@@ -419,8 +445,15 @@ export async function refundTourist(bookingId: string, network: SupportedNetwork
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
+  const bookingBytes32 = ethers.encodeBytes32String(bookingId.slice(0, 31));
 
-  const tx = await escrow.refundTourist(ethers.encodeBytes32String(bookingId.slice(0, 31)));
+  let tx;
+  try {
+    tx = await escrow.refund(bookingBytes32);
+  } catch (err: any) {
+    tx = await escrow.refundTourist(bookingBytes32);
+  }
+
   const receipt = await tx.wait();
   return receipt.hash;
 }

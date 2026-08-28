@@ -54,16 +54,7 @@ export async function POST(req: Request) {
     }
 
     if (action === "MUTUAL_CONFIRM") {
-      // Step 1: On-Chain Escrow Release via backend custodian (Option B: Auto-Disbursement)
-      let releaseHash: string | null = null;
-      try {
-        const { backendReleaseToGuide } = await import("@/lib/crypto/backend");
-        releaseHash = await backendReleaseToGuide(booking.id, "avalanche");
-        console.log(`[Verify API] On-chain release successful! Tx Hash: ${releaseHash}`);
-      } catch (chainErr: any) {
-        console.warn("[Verify API] On-chain release notice/fallback:", chainErr.message);
-        releaseHash = booking.txHash;
-      }
+      const releaseHash = body.txHash || booking.txHash || null;
 
       // Step 2: Atomic DB records for booking, payout, and commission
       const commissionAmount = booking.platform_fee ?? booking.totalPriceUSD * 0.1;

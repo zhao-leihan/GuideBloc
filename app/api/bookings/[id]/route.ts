@@ -200,133 +200,64 @@ export async function PATCH(
       }
     }
 
-    // ─── COMPLETED: Release escrow on-chain, then record earnings ───────────
+    // ─── COMPLETED: Record earnings and release hash ───────────
     if (status === "COMPLETED") {
-      const bookingTxHash = booking.txHash;
-      const chainNetwork = (booking.paymentNetwork as any) || "avalanche";
+      const releaseHash = isRealTxHash(txHash) ? txHash : (booking.txHash || null);
 
-      if (isRealTxHash(bookingTxHash)) {
-        // Step 1: Release on-chain FIRST — this is the source of truth
-        let releaseHash: string | null = null;
-        try {
-          const { backendReleaseToGuide } = await import("@/lib/crypto/backend");
-          releaseHash = await backendReleaseToGuide(booking.id, chainNetwork);
-          console.log(`[Escrow Release] On-chain release successful! Tx Hash: ${releaseHash}`);
-        } catch (chainErr: any) {
-          console.warn("[Escrow Release] On-chain release fallback:", chainErr.message);
-          releaseHash = bookingTxHash;
-        }
+      const commissionAmount =
+        booking.platform_fee ?? booking.totalPriceUSD * 0.1;
+      const guideAmount = booking.totalPriceUSD - commissionAmount;
 
-        // Step 2: Record all DB changes atomically AFTER on-chain success
-        const commissionAmount =
-          booking.platform_fee ?? booking.totalPriceUSD * 0.1;
-        const guideAmount = booking.totalPriceUSD - commissionAmount;
+      const guideWallet =
+        booking.guideWalletSnapshot ||
+        booking.gig.guide.walletAddress ||
+        "unknown";
 
-        // Resolve guide wallet: prefer booking snapshot, fall back to current profile
-        const guideWallet =
-          booking.guideWalletSnapshot ||
-          booking.gig.guide.walletAddress ||
-          "unknown";
-
-        try {
-          await prisma.$transaction([
-            // Update booking with the release hash
-            prisma.booking.update({
-              where: { id: booking.id },
-              data: { txHash: releaseHash },
-            }),
-            // Create EscrowPayout record — full audit trail of guide earnings
-            prisma.escrowPayout.create({
-              data: {
-                bookingId: booking.id,
-                guideId: booking.gig.guide.id,
-                guideWallet,
-                guideAmountUSD: guideAmount,
-                commissionAmountUSD: commissionAmount,
-                releaseHash,
-                status: "COMPLETED",
-              },
-            }),
-            // Create PlatformRevenue with the RELEASE hash (not the original payment hash)
-            prisma.platformRevenue.create({
-              data: {
-                source: "BOOKING_COMMISSION",
-                amountUSDT: commissionAmount,
-                txHash: releaseHash,
-                referenceId: booking.id,
-              },
-            }),
-          ]);
-          console.log(
-            `[Escrow Release] DB records created. Guide: ${guideAmount} USDC, Commission: ${commissionAmount} USDC`
-          );
-        } catch (dbErr: any) {
-          // On-chain release succeeded but DB write failed — critical, log prominently
-          console.error(
-            `[Escrow Release] CRITICAL: On-chain release (${releaseHash}) succeeded but DB write failed! Booking: ${booking.id}`,
-            dbErr
-          );
-          // Do not return error to client — on-chain is the source of truth.
-          // The EscrowPayout can be reconciled manually from chain events.
-        }
-      } else {
-        // Booking has no real on-chain txHash (mock/manual) — skip on-chain release
-        // but still record the commission in the DB ledger
-        console.warn(
-          `[Escrow Release] Booking ${booking.id} has no real on-chain txHash. Skipping chain release, recording DB-only revenue.`
-        );
-        const commissionAmount =
-          booking.platform_fee ?? booking.totalPriceUSD * 0.1;
-
-        try {
-          await prisma.platformRevenue.create({
+      try {
+        await prisma.$transaction([
+          prisma.booking.update({
+            where: { id: booking.id },
+            data: { txHash: releaseHash },
+          }),
+          prisma.escrowPayout.create({
+            data: {
+              bookingId: booking.id,
+              guideId: booking.gig.guide.id,
+              guideWallet,
+              guideAmountUSD: guideAmount,
+              commissionAmountUSD: commissionAmount,
+              releaseHash,
+              status: "COMPLETED",
+            },
+          }),
+          prisma.platformRevenue.create({
             data: {
               source: "BOOKING_COMMISSION",
               amountUSDT: commissionAmount,
-              txHash: "MANUAL_OFF_CHAIN",
+              txHash: releaseHash,
               referenceId: booking.id,
             },
-          });
-        } catch (dbErr) {
-          console.error("[Revenue] Failed to create off-chain revenue record:", dbErr);
-        }
-
-        // Log this as an audit warning
-        try {
-          await prisma.paymentAuditLog.create({
-            data: {
-              bookingId: booking.id,
-              txHash: bookingTxHash,
-              source: "BOOKING_COMPLETE_NO_CHAIN",
-              status: "SKIPPED_MOCK",
-              errorMessage:
-                "Booking completed without a real on-chain txHash. No escrow release performed.",
-            },
-          });
-        } catch (_) {}
+          }),
+        ]);
+        console.log(
+          `[Escrow Release] DB records created. Guide: ${guideAmount} USDC, Commission: ${commissionAmount} USDC`
+        );
+      } catch (dbErr: any) {
+        console.error(
+          `[Escrow Release] Failed to write DB records for booking: ${booking.id}`,
+          dbErr
+        );
       }
     }
 
-    // ─── CANCELLED: Refund escrow on-chain ──────────────────────────────────
+    // ─── CANCELLED: Refund record update ──────────────────────────────────
     if (status === "CANCELLED") {
-      if (isRealTxHash(booking.txHash)) {
-        try {
-          const { backendRefundTourist } = await import("@/lib/crypto/backend");
-          const chainNetwork = (booking.paymentNetwork as any) || "avalanche";
-          const refundHash = await backendRefundTourist(booking.id, chainNetwork);
-          console.log(`[Escrow Refund] On-chain refund successful! Tx Hash: ${refundHash}`);
-
-          await prisma.booking.update({
-            where: { id: booking.id },
-            data: { txHash: refundHash },
-          });
-        } catch (chainErr: any) {
-          console.error("[Escrow Refund] Failed on-chain refund:", chainErr.message);
-          return NextResponse.json(
-            { message: `Failed to refund escrow on-chain: ${chainErr.message}` },
-            { status: 500 }
-          );
-        }
+      const refundHash = isRealTxHash(txHash) ? txHash : booking.txHash;
+      if (refundHash) {
+        await prisma.booking.update({
+          where: { id: booking.id },
+          data: { txHash: refundHash },
+        });
       }
 
       // Notifications for both parties
@@ -350,27 +281,8 @@ export async function PATCH(
       }
     }
 
-    // ─── CONFIRMED: Confirm on-chain + send receipt email ───────────────────
+    // ─── CONFIRMED: Send receipt email ───────────────────
     if (status === "CONFIRMED") {
-      if (isRealTxHash(txHash)) {
-        try {
-          const { backendConfirmBooking } = await import("@/lib/crypto/backend");
-          const chainNetwork = paymentNetwork || "avalanche";
-          const confirmHash = await backendConfirmBooking(
-            params.id,
-            chainNetwork as any
-          );
-          console.log(
-            `[Escrow Confirm] On-chain confirm successful! Tx Hash: ${confirmHash}`
-          );
-        } catch (chainErr: any) {
-          // Non-fatal: DB status is already updated; just log the chain failure
-          console.error(
-            "[Escrow Confirm] Failed on-chain confirm:",
-            chainErr.message
-          );
-        }
-      }
 
       // Send PDF receipt email
       try {
