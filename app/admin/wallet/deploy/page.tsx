@@ -6,7 +6,7 @@ import { ShieldCheck, Rocket, CheckCircle2, ExternalLink, Loader2, AlertTriangle
 import { ethers } from "ethers";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import escrowArtifact from "@/artifacts/contracts/ExplomateEscrowV2.sol/ExplomateEscrowV2.json";
+import escrowArtifact from "@/lib/crypto/escrowArtifact";
 
 export default function DeployEscrowPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
