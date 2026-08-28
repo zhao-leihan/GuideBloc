@@ -45,31 +45,31 @@ export default function WalletConnectButton({
       });
       const chainId = parseInt(chainIdHex, 16);
 
-      // Switch to Polygon if not already
-      if (chainId !== 137) {
+      // Switch to Avalanche C-Chain if not already
+      if (chainId !== 43114) {
         try {
           await (window as any).ethereum.request({
             method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x89" }], // Polygon
+            params: [{ chainId: "0xa86a" }], // Avalanche C-Chain
           });
         } catch {
-          // Add Polygon network
+          // Add Avalanche C-Chain network
           await (window as any).ethereum.request({
             method: "wallet_addEthereumChain",
             params: [
               {
-                chainId: "0x89",
-                chainName: "Polygon Mainnet",
-                rpcUrls: ["https://polygon-rpc.com"],
-                nativeCurrency: { name: "MATIC", symbol: "MATIC", decimals: 18 },
-                blockExplorerUrls: ["https://polygonscan.com"],
+                chainId: "0xa86a",
+                chainName: "Avalanche C-Chain",
+                rpcUrls: ["https://api.avax.network/ext/bc/C/rpc"],
+                nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+                blockExplorerUrls: ["https://snowtrace.io"],
               },
             ],
           });
         }
       }
 
-      setWallet({ address: accounts[0], chainId: 137, isConnected: true });
+      setWallet({ address: accounts[0], chainId: 43114, isConnected: true });
       onConnect?.(accounts[0]);
     } catch (err) {
       console.error("Wallet connection failed:", err);
@@ -123,12 +123,12 @@ export default function WalletConnectButton({
             Copy Address
           </button>
           <a
-            href={`https://polygonscan.com/address/${wallet.address}`}
+            href={`https://snowtrace.io/address/${wallet.address}`}
             target="_blank"
             rel="noopener noreferrer"
             className="block px-3 py-2 text-sm text-dark-700 hover:bg-dark-50 rounded-lg"
           >
-            View on Polygonscan
+            View on SnowTrace
           </a>
           <hr className="my-1 border-dark-100" />
           <button

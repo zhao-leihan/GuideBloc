@@ -25,13 +25,6 @@ if (typeof window !== "undefined") {
   window.dispatchEvent(new Event("eip6963:requestProvider"));
 }
 
-const USDT_POLYGON = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Dummy Amoy USDT
-const USDC_POLYGON = localAddresses.usdc || "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"; // Localhost MockUSDC
-const USDC_CELO = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"; 
-
-const ESCROW_POLYGON = localAddresses.escrow || "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"; // Localhost Escrow
-const ESCROW_CELO = process.env.NEXT_PUBLIC_ESCROW_ADDRESS_CELO || process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "";
-
 const ERC20_ABI = [
   "function approve(address spender, uint256 amount) external returns (bool)",
   "function balanceOf(address account) external view returns (uint256)",
@@ -55,7 +48,7 @@ export interface PaymentParams {
   token: "USDT" | "USDC";
   network?: SupportedNetwork;
   guideWalletAddress: string;
-  walletType?: "metamask" | "coinbase" | "solflare";
+  walletType?: SupportedWalletType;
 }
 
 export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwork = "avalanche"): string {
@@ -78,12 +71,6 @@ export function getEscrowAddress(network: SupportedNetwork = "avalanche"): strin
 export type SupportedWalletType = 
   | "metamask" 
   | "coinbase" 
-  | "trust" 
-  | "rainbow" 
-  | "okx" 
-  | "phantom" 
-  | "zerion" 
-  | "solflare"
   | "walletconnect";
 
 export interface WalletAccountDetails {
@@ -118,24 +105,6 @@ export function openMobileWalletDeepLink(walletType: SupportedWalletType): boole
     case "coinbase":
       deepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(currentUrl)}`;
       break;
-    case "trust":
-      deepLink = `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(currentUrl)}`;
-      break;
-    case "rainbow":
-      deepLink = `https://rainbow.me/dapp?url=${encodeURIComponent(currentUrl)}`;
-      break;
-    case "phantom":
-      deepLink = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
-      break;
-    case "okx":
-      deepLink = `okx://wallet/dapp/details?dappUrl=${encodeURIComponent(currentUrl)}`;
-      break;
-    case "zerion":
-      deepLink = `https://wallet.zerion.io/dapp/${hostPath}`;
-      break;
-    case "solflare":
-      deepLink = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}`;
-      break;
   }
 
   if (deepLink) {
@@ -162,12 +131,6 @@ export async function connectWallet(
       const name = detail.info.name.toLowerCase();
       if (walletType === "metamask") return rdns === "io.metamask" || rdns.includes("metamask") || name.includes("metamask");
       if (walletType === "coinbase") return rdns === "com.coinbase.wallet" || rdns.includes("coinbase") || name.includes("coinbase");
-      if (walletType === "trust") return rdns.includes("trust") || name.includes("trust");
-      if (walletType === "rainbow") return rdns.includes("rainbow") || name.includes("rainbow");
-      if (walletType === "okx") return rdns.includes("okx") || name.includes("okx");
-      if (walletType === "phantom") return rdns.includes("phantom") || name.includes("phantom");
-      if (walletType === "zerion") return rdns.includes("zerion") || name.includes("zerion");
-      if (walletType === "solflare") return rdns.includes("solflare") || name.includes("solflare");
       if (walletType === "walletconnect") return rdns.includes("walletconnect") || name.includes("walletconnect");
       return false;
     };
@@ -221,41 +184,6 @@ export async function connectWallet(
         if (!rawProvider && eth.providers) rawProvider = eth.providers.find((p: any) => p.isCoinbaseWallet);
         if (!rawProvider && (eth.isCoinbaseWallet || eth.isCoinbase)) rawProvider = eth;
       }
-    } else if (walletType === "trust") {
-      rawProvider = (window as any).trustwallet || (window as any).trustWallet;
-      if (!rawProvider && eth) {
-        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isTrust || p.isTrustWallet);
-        if (!rawProvider && (eth.isTrust || eth.isTrustWallet)) rawProvider = eth;
-      }
-    } else if (walletType === "rainbow") {
-      if (eth) {
-        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isRainbow);
-        if (!rawProvider && eth.isRainbow) rawProvider = eth;
-      }
-    } else if (walletType === "okx") {
-      rawProvider = (window as any).okxwallet;
-      if (!rawProvider && eth) {
-        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isOkxWallet || p.isOKExWallet);
-        if (!rawProvider && (eth.isOkxWallet || eth.isOKExWallet)) rawProvider = eth;
-      }
-    } else if (walletType === "phantom") {
-      rawProvider = (window as any).phantom?.ethereum;
-      if (!rawProvider && eth) {
-        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isPhantom);
-        if (!rawProvider && eth.isPhantom) rawProvider = eth;
-      }
-    } else if (walletType === "zerion") {
-      rawProvider = (window as any).zerionWallet || (window as any).zerion;
-      if (!rawProvider && eth) {
-        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isZerion);
-        if (!rawProvider && eth.isZerion) rawProvider = eth;
-      }
-    } else if (walletType === "solflare") {
-      rawProvider = (window as any).solflare?.ethereum || (window as any).solflare;
-      if (!rawProvider && eth) {
-        if (eth.providers) rawProvider = eth.providers.find((p: any) => p.isSolflare);
-        if (!rawProvider && eth.isSolflare) rawProvider = eth;
-      }
     } else if (walletType === "walletconnect") {
       rawProvider = (window as any).walletConnectProvider || (window as any).ethereum;
     }
@@ -278,11 +206,9 @@ export async function connectWallet(
       ? "MetaMask" 
       : walletType === "coinbase" 
         ? "Coinbase Wallet" 
-        : walletType === "solflare" 
-          ? "Solflare Wallet" 
-          : walletType 
-            ? walletType.charAt(0).toUpperCase() + walletType.slice(1)
-            : "Web3 Crypto";
+        : walletType === "walletconnect"
+          ? "WalletConnect"
+          : "Web3 Crypto";
     throw new Error(`${walletName} extension is not detected. Please install ${walletName} or use a supported wallet.`);
   }
 

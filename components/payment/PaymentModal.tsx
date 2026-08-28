@@ -80,45 +80,6 @@ const WalletLogos: Record<string, React.ReactNode> = {
       <rect x="12" y="12" width="8" height="8" rx="1.5" fill="#0052FF"/>
     </svg>
   ),
-  trust: (
-    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#0500FF"/>
-      <path d="M16 6L7 11V17C7 22.5 10.8 27.6 16 29C21.2 27.6 25 22.5 25 17V11L16 6Z" fill="#3375BB"/>
-      <path d="M16 8L9 11.9V16.8C9 21.1 12 25 16 26.1V8Z" fill="white"/>
-    </svg>
-  ),
-  rainbow: (
-    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#1C1C1E"/>
-      <path d="M7 23C7 18.0294 11.0294 14 16 14C20.9706 14 25 18.0294 25 23" stroke="#FF453A" strokeWidth="3.5" strokeLinecap="round"/>
-      <path d="M10 23C10 19.6863 12.6863 17 16 17C19.3137 17 22 19.6863 22 23" stroke="#FF9F0A" strokeWidth="3.5" strokeLinecap="round"/>
-      <path d="M13 23C13 21.3431 14.3431 20 16 20C17.6569 20 19 21.3431 19 23" stroke="#30D158" strokeWidth="3.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  okx: (
-    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="16" fill="#000000"/>
-      <rect x="7" y="7" width="6" height="6" fill="white"/>
-      <rect x="19" y="7" width="6" height="6" fill="white"/>
-      <rect x="13" y="13" width="6" height="6" fill="white"/>
-      <rect x="7" y="19" width="6" height="6" fill="white"/>
-      <rect x="19" y="19" width="6" height="6" fill="white"/>
-    </svg>
-  ),
-  phantom: (
-    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#AB9FF2"/>
-      <path d="M22.5 16.5C22.5 12.9101 19.5899 10 16 10C12.4101 10 9.5 12.9101 9.5 16.5C9.5 20.0899 12.4101 23 16 23C16.8 23 17.5 22.8 18.2 22.5L20 24L21.5 22.5L20 21C21.5 19.8 22.5 18.2 22.5 16.5Z" fill="white"/>
-      <circle cx="13.5" cy="15.5" r="1.5" fill="#AB9FF2"/>
-      <circle cx="18.5" cy="15.5" r="1.5" fill="#AB9FF2"/>
-    </svg>
-  ),
-  zerion: (
-    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#2962FF"/>
-      <path d="M8 10H24L14 18H24V22H8L18 14H8V10Z" fill="white"/>
-    </svg>
-  ),
 };
 
 const WALLET_OPTIONS: {
@@ -130,11 +91,6 @@ const WALLET_OPTIONS: {
   { id: "metamask", name: "MetaMask", desc: "Popular Web3 Extension & Mobile App", badge: "Popular" },
   { id: "walletconnect", name: "WalletConnect", desc: "Connect any mobile or desktop wallet via QR", badge: "Universal" },
   { id: "coinbase", name: "Coinbase Wallet", desc: "Self-Custody Web3 & Mobile Wallet", badge: "Recommended" },
-  { id: "trust", name: "Trust Wallet", desc: "Multi-Chain Crypto Mobile App" },
-  { id: "rainbow", name: "Rainbow Wallet", desc: "Simple & modern EVM mobile wallet" },
-  { id: "okx", name: "OKX Wallet", desc: "Multi-Chain Web3 & Exchange Wallet" },
-  { id: "phantom", name: "Phantom (EVM)", desc: "Multi-Chain Solana & EVM Wallet" },
-  { id: "zerion", name: "Zerion Wallet", desc: "Smart Web3 Portfolio & DeFi Wallet" },
 ];
 
 export default function PaymentModal({

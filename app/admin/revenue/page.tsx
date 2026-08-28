@@ -82,7 +82,7 @@ export default function AdminRevenuePage() {
               {[
                 { label: "Total Revenue (All Time)", value: `${data.totalRevenue.toLocaleString()} USDT`, change: "Total accumulated" },
                 { label: "This Month", value: `${data.thisMonthRevenue.toLocaleString()} USDT`, change: "Current billing cycle" },
-                { label: "Platform Wallet (Treasury)", value: `${data.totalRevenue.toLocaleString()} USDT`, change: "Polygon Network" },
+                { label: "Platform Wallet (Treasury)", value: `${data.totalRevenue.toLocaleString()} USDT`, change: "Avalanche C-Chain" },
               ].map((stat) => (
                 <div key={stat.label} className="card p-5">
                   <DollarSign className="w-5 h-5 text-secondary mb-2" />
@@ -154,7 +154,7 @@ export default function AdminRevenuePage() {
                           <td className="py-3">
                             {tx.fullHash ? (
                               <a 
-                                href={`https://polygonscan.com/tx/${tx.fullHash}`} 
+                                href={`https://snowtrace.io/tx/${tx.fullHash}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="font-mono text-xs text-primary hover:underline flex items-center gap-1"
