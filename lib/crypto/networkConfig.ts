@@ -27,8 +27,8 @@ export const NETWORKS = {
     
     // Fuji Smart Contract Addresses
     escrowContractAddress: "0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2",
-    usdcTokenAddress: "0xfdCB2cd113201C61E44D937B2ee0E1541B61f0fC",
-    usdtTokenAddress: "0xfdCB2cd113201C61E44D937B2ee0E1541B61f0fC",
+    usdcTokenAddress: "0x73b083E0F7a2B57bd877Fe6D84A376e13E9aE4E8",
+    usdtTokenAddress: "0x73b083E0F7a2B57bd877Fe6D84A376e13E9aE4E8",
     treasuryAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
   },
 
