@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import localAddresses from "../../local-addresses.json";
+import { getNetworkConfig } from "./networkConfig";
 
 interface EIP6963ProviderDetail {
   info: {
@@ -56,20 +57,17 @@ export interface PaymentParams {
 }
 
 export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwork = "avalanche"): string {
-  const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
+  const cfg = getNetworkConfig();
   if (token === "USDC") {
-    return isAvaxTestnet 
-      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0xfdCB2cd113201C61E44D937B2ee0E1541B61f0fC") // Fuji Testnet USD Coin (USDC)
-      : "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"; // Avalanche Mainnet Native USDC
+    return process.env.NEXT_PUBLIC_USDC_ADDRESS || cfg.usdcTokenAddress;
   } else {
-    return isAvaxTestnet
-      ? (process.env.NEXT_PUBLIC_USDC_ADDRESS || "0xfdCB2cd113201C61E44D937B2ee0E1541B61f0fC") 
-      : "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7"; // Avalanche Mainnet USDT
+    return process.env.NEXT_PUBLIC_USDT_ADDRESS || cfg.usdtTokenAddress;
   }
 }
 
 export function getEscrowAddress(network: SupportedNetwork = "avalanche"): string {
-  return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2";
+  const cfg = getNetworkConfig();
+  return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || cfg.escrowContractAddress;
 }
 
 export type SupportedWalletType = 
@@ -235,15 +233,12 @@ export async function connectWallet(
     throw new Error("No connected Web3 accounts found.");
   }
 
-  const isAvaxMainnet =
-    process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-    process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-  
-  const chainIdHex = isAvaxMainnet ? "0xa86a" : "0xa869"; // 43114 vs 43113
-  const chainName = isAvaxMainnet ? "Avalanche C-Chain" : "Avalanche Fuji Testnet";
-  const rpcUrl = isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc";
-  const nativeCurrency = { name: "AVAX", symbol: "AVAX", decimals: 18 };
-  const blockExplorer = isAvaxMainnet ? "https://snowtrace.io" : "https://testnet.snowtrace.io";
+  const cfg = getNetworkConfig();
+  const chainIdHex = cfg.chainIdHex;
+  const chainName = cfg.name;
+  const rpcUrl = cfg.rpcUrl;
+  const nativeCurrency = cfg.nativeCurrency;
+  const blockExplorer = cfg.explorerUrl;
 
   try {
     await provider.send("wallet_switchEthereumChain", [{ chainId: chainIdHex }]);
@@ -324,13 +319,8 @@ export async function fetchConnectedAccountsDetails(
 }
 
 export async function getTokenBalance(token: "USDT" | "USDC", address: string, network: SupportedNetwork = "avalanche"): Promise<string> {
-  const isAvaxMainnet =
-    process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-    process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-
-  const rpcUrl = isAvaxMainnet 
-    ? "https://api.avax.network/ext/bc/C/rpc" 
-    : "https://api.avax-test.network/ext/bc/C/rpc";
+  const cfg = getNetworkConfig();
+  const rpcUrl = cfg.rpcUrl;
 
   try {
     const provider = new ethers.JsonRpcProvider(rpcUrl);

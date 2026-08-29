@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -75,11 +76,10 @@ export default async function AdminDashboardPage() {
   let treasuryBalance = "0.0000";
   let treasuryTransactions: any[] = [];
 
+  const cfg = getNetworkConfig();
+
   try {
-    const isAvaxMainnet =
-      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-    const rpcUrl = isAvaxMainnet ? "https://api.avax.network/ext/bc/C/rpc" : "https://api.avax-test.network/ext/bc/C/rpc";
+    const rpcUrl = cfg.rpcUrl;
     const rpcResponse = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -103,9 +103,7 @@ export default async function AdminDashboardPage() {
   }
 
   try {
-    const isAvaxMainnet =
-      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
+    const isAvaxMainnet = cfg.networkKey === "mainnet";
     const scanUrl = isAvaxMainnet
       ? `https://api.snowtrace.io/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`
       : `https://api-testnet.snowtrace.io/api?module=account&action=txlist&address=${treasuryAddress}&startblock=0&endblock=99999999&page=1&offset=5&sort=desc`;

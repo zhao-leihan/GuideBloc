@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { ethers } from "ethers";
 import { getTokenAddress, SupportedNetwork } from "@/lib/crypto/payment";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +23,12 @@ export async function GET(req: Request) {
     }
 
     const network: SupportedNetwork = "avalanche";
-    const isAvaxTestnet = process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "fuji" || process.env.NEXT_PUBLIC_AVAX_NETWORK === "fuji";
-    const rpcUrl = isAvaxTestnet 
-      ? "https://api.avax-test.network/ext/bc/C/rpc" 
-      : "https://api.avax.network/ext/bc/C/rpc";
+    const cfg = getNetworkConfig();
+    const rpcUrl = cfg.rpcUrl;
 
-    // Treasury Address configured in environment
-    const treasuryAddress = process.env.TREASURY_ADDRESS || "0x079D9c349741C27565ee04e31E4174F640F512aE";
-    const escrowAddress = process.env.NEXT_PUBLIC_ESCROW_ADDRESS || "0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2";
+    // Treasury Address configured in environment or network config
+    const treasuryAddress = process.env.TREASURY_ADDRESS || cfg.treasuryAddress;
+    const escrowAddress = process.env.NEXT_PUBLIC_ESCROW_ADDRESS || cfg.escrowContractAddress;
 
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const address = treasuryAddress;

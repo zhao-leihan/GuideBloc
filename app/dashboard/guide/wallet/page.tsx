@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { connectWallet, getTokenBalance, claimGuideEarnings, SupportedNetwork } from "@/lib/crypto/payment";
 import DotsLoader from "@/components/ui/DotsLoader";
 import toast from "react-hot-toast";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-500/10 text-yellow-600",
@@ -264,7 +265,7 @@ export default function GuideWalletPage() {
   };
 
   const getExplorerUrl = (address: string) => {
-    return `https://snowtrace.io/address/${address}`;
+    return `${getNetworkConfig().explorerUrl}/address/${address}`;
   };
 
   return (
@@ -289,7 +290,7 @@ export default function GuideWalletPage() {
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-dark-900">Payout Wallet Linked & Active</h3>
-                    <p className="text-xs text-dark-400">Network: Avalanche C-Chain (Mainnet)</p>
+                    <p className="text-xs text-dark-400">Network: {getNetworkConfig().name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

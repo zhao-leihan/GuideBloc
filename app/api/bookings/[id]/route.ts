@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { recalculateGigRankingScore } from "@/lib/ranking";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 // Helper: returns true if a txHash represents a real on-chain transaction
 function isRealTxHash(hash: string | null | undefined): boolean {
@@ -15,12 +16,7 @@ function isRealTxHash(hash: string | null | undefined): boolean {
 
 // Helper: dynamically resolve the correct RPC URL for a given network string
 function getRpcUrl(network?: string | null): string {
-  const isMainnet =
-    process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-    process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-  return isMainnet
-    ? "https://api.avax.network/ext/bc/C/rpc"
-    : "https://api.avax-test.network/ext/bc/C/rpc";
+  return getNetworkConfig().rpcUrl;
 }
 
 export async function PATCH(

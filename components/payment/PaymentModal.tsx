@@ -19,6 +19,7 @@ import {
   getEscrowAddress
 } from "@/lib/crypto/payment";
 import { ethers } from "ethers";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -392,7 +393,7 @@ export default function PaymentModal({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-[11px] font-bold text-dark-500 uppercase tracking-wider">Payment Network:</span>
               <div className="bg-white px-3 py-1.5 rounded-xl flex items-center gap-2 border border-dark-200 shadow-sm text-xs font-bold text-dark-900">
-                {AvaxLogo} Avalanche C-Chain (Mainnet)
+                {AvaxLogo} {getNetworkConfig().badgeLabel}
               </div>
             </div>
 

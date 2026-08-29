@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
 import DotsLoader from "@/components/ui/DotsLoader";
 import toast from "react-hot-toast";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 export default function TouristWalletPage() {
   const { data: session, update: updateSession } = useSession();
@@ -209,7 +210,7 @@ export default function TouristWalletPage() {
   };
 
   const getExplorerUrl = (address: string) => {
-    return `https://snowtrace.io/address/${address}`;
+    return `${getNetworkConfig().explorerUrl}/address/${address}`;
   };
 
   return (
@@ -234,7 +235,7 @@ export default function TouristWalletPage() {
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-dark-900">Wallet Connected</h3>
-                    <p className="text-xs text-dark-400">Network: Avalanche C-Chain (Mainnet)</p>
+                    <p className="text-xs text-dark-400">Network: {getNetworkConfig().name}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

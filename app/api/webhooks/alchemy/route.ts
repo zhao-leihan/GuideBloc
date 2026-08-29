@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { prisma } from "@/lib/prisma";
 import { triggerBookingSuccessEmail } from "@/lib/email";
 import { generateReceiptPdf } from "@/lib/receipt";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +16,10 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
-    const signature = req.headers.get("x-alchemy-signature") || req.headers.get("x-signature") || "";
+    const signature = req.headers.get("x-alchemy-signature") || "";
+    const signingKey = process.env.ALCHEMY_WEBHOOK_SIGNING_KEY;
 
-    // 1. Verify HMAC SHA-256 Webhook Signature
-    const signingKey = process.env.ALCHEMY_WEBHOOK_SIGNING_KEY || process.env.WEBHOOK_SIGNING_KEY;
+    // 1. Validate Webhook Authenticity (HMAC SHA-256)
     if (signingKey) {
       const hmac = crypto.createHmac("sha256", signingKey);
       const computedSignature = hmac.update(rawBody).digest("hex");
@@ -31,14 +32,9 @@ export async function POST(req: Request) {
     const payload = JSON.parse(rawBody);
     const logs = payload.event?.activity || payload.logs || [];
 
-    // Avalanche C-Chain RPC for independent on-chain cross-checking
-    const isAvaxMainnet =
-      process.env.NEXT_PUBLIC_AVAX_NETWORK === "mainnet" ||
-      process.env.NEXT_PUBLIC_AVALANCHE_NETWORK === "mainnet";
-    const rpcUrl = isAvaxMainnet 
-      ? "https://api.avax.network/ext/bc/C/rpc" 
-      : "https://api.avax-test.network/ext/bc/C/rpc";
-    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    // Dynamic RPC for independent on-chain cross-checking
+    const cfg = getNetworkConfig();
+    const provider = new ethers.JsonRpcProvider(cfg.rpcUrl);
 
     for (const logItem of logs) {
       const txHash = logItem.hash || logItem.transactionHash;
