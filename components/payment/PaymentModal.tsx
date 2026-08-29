@@ -223,6 +223,7 @@ export default function PaymentModal({
       ];
 
       const escrowAbi = [
+        "function deposit(bytes32 bookingId, address guide, address token, uint256 amount) external",
         "function createBooking(bytes32 bookingId, address guide, address token, uint256 amount) external",
       ];
 
@@ -248,7 +249,7 @@ export default function PaymentModal({
         : ethers.encodeBytes32String(`BK_${Date.now()}`.slice(0, 31));
 
       try {
-        const tx = await escrowContract.createBooking(
+        const tx = await escrowContract.deposit(
           bookingIdBytes32,
           resolvedGuide,
           tokenAddress,
@@ -257,10 +258,16 @@ export default function PaymentModal({
         const receipt = await tx.wait();
         finalTxHash = receipt.hash;
       } catch (escrowErr) {
-        console.warn("Direct createBooking failed, falling back to transfer:", escrowErr);
-        const fallbackTx = await tokenContract.transfer(escrowAddress, amountUnits);
-        const fallbackReceipt = await fallbackTx.wait();
-        finalTxHash = fallbackReceipt.hash;
+        console.warn("deposit failed, trying createBooking or transfer fallback:", escrowErr);
+        try {
+          const tx2 = await escrowContract.createBooking(bookingIdBytes32, resolvedGuide, tokenAddress, amountUnits);
+          const receipt2 = await tx2.wait();
+          finalTxHash = receipt2.hash;
+        } catch (err2) {
+          const fallbackTx = await tokenContract.transfer(escrowAddress, amountUnits);
+          const fallbackReceipt = await fallbackTx.wait();
+          finalTxHash = fallbackReceipt.hash;
+        }
       }
 
       setVerifyStage(3);
