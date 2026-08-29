@@ -58,16 +58,12 @@ export interface PaymentParams {
 
 export function getTokenAddress(token: "USDT" | "USDC", network: SupportedNetwork = "avalanche"): string {
   const cfg = getNetworkConfig();
-  if (token === "USDC") {
-    return process.env.NEXT_PUBLIC_USDC_ADDRESS || cfg.usdcTokenAddress;
-  } else {
-    return process.env.NEXT_PUBLIC_USDT_ADDRESS || cfg.usdtTokenAddress;
-  }
+  return token === "USDC" ? cfg.usdcTokenAddress : cfg.usdtTokenAddress;
 }
 
 export function getEscrowAddress(network: SupportedNetwork = "avalanche"): string {
   const cfg = getNetworkConfig();
-  return process.env.NEXT_PUBLIC_ESCROW_ADDRESS || cfg.escrowContractAddress;
+  return cfg.escrowContractAddress;
 }
 
 export type SupportedWalletType = 

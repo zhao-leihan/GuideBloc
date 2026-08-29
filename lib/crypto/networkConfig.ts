@@ -55,9 +55,6 @@ export const NETWORKS = {
 } as const;
 
 export function getNetworkConfig() {
-  const envNet = process.env.NEXT_PUBLIC_AVAX_NETWORK || process.env.NEXT_PUBLIC_AVALANCHE_NETWORK;
-  if (envNet === "mainnet" || envNet === "fuji") {
-    return NETWORKS[envNet];
-  }
+  // ACTIVE_NETWORK is the absolute single source of truth
   return NETWORKS[ACTIVE_NETWORK];
 }
