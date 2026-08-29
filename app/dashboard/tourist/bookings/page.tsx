@@ -657,13 +657,13 @@ export default function TouristBookingsPage() {
                     )}
 
                     {/* Primary Complete Tour Action */}
-                    {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
+                    {(booking.status === "FUNDED" || booking.status === "CONFIRMED" || booking.status === "PAID") && (
                       <button 
-                        onClick={() => setCompletionBooking(booking)}
-                        disabled={isProcessing === booking.id}
-                        className="bg-primary hover:bg-primary-hover text-white font-bold py-2 px-3 rounded-xl text-xs whitespace-nowrap cursor-pointer flex items-center justify-center shadow-md shadow-primary-500/10 transition-all active:scale-95 duration-200 hover:-translate-y-0.5"
+                        onClick={() => setVerificationBookingModal(booking)}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3.5 rounded-xl text-xs whitespace-nowrap cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95 duration-200 hover:-translate-y-0.5"
+                        title="Confirm Tour & Release Escrow to Guide"
                       >
-                        Complete Tour
+                        <ShieldCheck className="w-3.5 h-3.5" /> Release Escrow to Guide
                       </button>
                     )}
 
@@ -717,30 +717,6 @@ export default function TouristBookingsPage() {
                               >
                                 <MessageSquare className="w-3.5 h-3.5 text-dark-400" /> Chat with Guide
                               </button>
-
-                              {(booking.status === "FUNDED" || booking.status === "CONFIRMED") && (
-                                <>
-                                  <button
-                                    onClick={() => {
-                                      setVerificationBookingModal(booking);
-                                      setOpenDropdownId(null);
-                                    }}
-                                    className="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-emerald-950/40 flex items-center gap-2 cursor-pointer font-bold transition-colors"
-                                  >
-                                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Safe Verification (QR+GPS)
-                                  </button>
-
-                                  <button
-                                    onClick={() => {
-                                      setActiveMeetBooking(booking);
-                                      setOpenDropdownId(null);
-                                    }}
-                                    className="w-full text-left px-4 py-2.5 text-xs text-blue-400 hover:bg-blue-950/40 flex items-center gap-2 cursor-pointer font-bold transition-colors"
-                                  >
-                                    <Compass className="w-3.5 h-3.5 text-blue-400" /> GPS Meetup Radar
-                                  </button>
-                                </>
-                              )}
 
                               {["CANCELLED", "REJECTED"].includes(booking.status) && (
                                 <button

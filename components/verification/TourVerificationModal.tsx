@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { 
-  ShieldCheck, Lock, X, Loader2, CheckCircle2, Camera
+  ShieldCheck, X, Loader2, CheckCircle2, Camera, Info, Check
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -22,9 +22,10 @@ export default function TourVerificationModal({
   onClose,
   onSuccess,
 }: TourVerificationModalProps) {
-  const [photoUrl, setPhotoUrl] = useState<string>("");
+  const isGuide = userRole === "GUIDE";
+  const [photoUrl, setPhotoUrl] = useState<string>(booking?.proofPhoto || "");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [isReleasingEscrow, setIsReleasingEscrow] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const totalPrice = booking?.totalPriceUSD || 0;
@@ -42,56 +43,87 @@ export default function TourVerificationModal({
 
     try {
       setPhotoUrl(URL.createObjectURL(file));
-      toast.success("Tour proof photo uploaded successfully.");
+      toast.success("Tour proof photo selected successfully.");
     } catch (err) {
-      toast.error("Failed to upload proof photo.");
+      toast.error("Failed to process photo.");
     } finally {
       setUploadingPhoto(false);
     }
   };
 
-  const handleConfirmAndRelease = async () => {
-    setIsReleasingEscrow(true);
-    const toastId = toast.loading("Processing escrow disbursement from smart contract...");
+  const handleAction = async () => {
+    setIsProcessing(true);
 
-    try {
-      let txHash = booking.txHash;
+    if (isGuide) {
+      // Guide flow: ZERO MetaMask, ZERO Gas Fee. Pure Web completion.
+      const toastId = toast.loading("Submitting tour completion...");
+      try {
+        const res = await fetch("/api/bookings/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            action: "GUIDE_COMPLETE",
+            proofPhoto: photoUrl || "TOUR_COMPLETED_BY_GUIDE",
+          }),
+        });
 
-      // Call on-chain release via user MetaMask (strictly enforced)
-      txHash = await releaseToGuide(booking.id, "avalanche");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to submit completion status");
+        }
 
-      // Update backend database atomically
-      const res = await fetch("/api/bookings/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId: booking.id,
-          action: "MUTUAL_CONFIRM",
-          txHash,
-          proofPhoto: photoUrl || null,
-        }),
-      });
+        setIsSuccess(true);
+        toast.dismiss(toastId);
+        toast.success("Tour marked as completed. Awaiting tourist escrow release.");
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to update status in database");
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 1200);
+      } catch (err: any) {
+        toast.dismiss(toastId);
+        console.error("Guide completion error:", err);
+        toast.error(err.message || "Failed to submit tour completion.");
+      } finally {
+        setIsProcessing(false);
       }
+    } else {
+      // Tourist flow: On-chain release via Tourist MetaMask (Tourist pays tiny ~Rp 150 gas fee)
+      const toastId = toast.loading("Processing escrow disbursement from smart contract...");
+      try {
+        const txHash = await releaseToGuide(booking.id, "avalanche");
 
-      setIsSuccess(true);
-      toast.dismiss(toastId);
-      toast.success("Tour completed. Escrow funds successfully disbursed.");
+        const res = await fetch("/api/bookings/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId: booking.id,
+            action: "TOURIST_RELEASE",
+            txHash,
+          }),
+        });
 
-      setTimeout(() => {
-        onSuccess();
-        onClose();
-      }, 1200);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to update booking status");
+        }
 
-    } catch (err: any) {
-      toast.dismiss(toastId);
-      console.error("Release error:", err);
-      toast.error(err.message || "Failed to disburse escrow funds.");
-    } finally {
-      setIsReleasingEscrow(false);
+        setIsSuccess(true);
+        toast.dismiss(toastId);
+        toast.success("Escrow funds successfully disbursed to Guide.");
+
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 1200);
+      } catch (err: any) {
+        toast.dismiss(toastId);
+        console.error("Tourist release error:", err);
+        toast.error(err.message || "Failed to release escrow funds.");
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -106,7 +138,7 @@ export default function TourVerificationModal({
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-dark-800 text-dark-400 hover:text-white transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full bg-dark-800 text-dark-400 hover:text-white transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -118,10 +150,12 @@ export default function TourVerificationModal({
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">
-              Tour Completion & Escrow Disbursement
+              {isGuide ? "Tour Completion Confirmation" : "Confirm Tour & Release Escrow"}
             </h2>
             <p className="text-xs text-dark-400">
-              Confirm tour completion to release escrow funds directly to recipient wallets.
+              {isGuide 
+                ? "Mark tour as finished. Your 90% payout will be sent directly to your wallet." 
+                : "Release escrow funds from smart contract directly to your guide."}
             </p>
           </div>
         </div>
@@ -129,7 +163,7 @@ export default function TourVerificationModal({
         {/* Financial Distribution Card */}
         <div className="bg-dark-850 border border-dark-750 p-4 rounded-2xl space-y-3">
           <div className="flex items-center justify-between text-xs text-dark-400 pb-2 border-b border-dark-750">
-            <span>Tour</span>
+            <span>Tour Experience</span>
             <span className="font-semibold text-white truncate max-w-[220px]">
               {booking?.gig?.title || "Tour Booking"}
             </span>
@@ -149,61 +183,81 @@ export default function TourVerificationModal({
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-emerald-400">Guide Net Earnings (90%)</span>
-            <span className="font-mono font-bold text-emerald-400">+${guideEarnings.toFixed(2)} USDC</span>
+            <span className="font-mono font-bold text-emerald-400">+{guideEarnings.toFixed(2)} USDC</span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
             <span className="text-blue-400">Platform Fee (10%)</span>
-            <span className="font-mono font-bold text-blue-400">+${commission.toFixed(2)} USDC</span>
+            <span className="font-mono font-bold text-blue-400">+{commission.toFixed(2)} USDC</span>
           </div>
         </div>
 
-        {/* Photo Proof Upload */}
-        <div className="space-y-2">
-          <label className="block text-xs font-bold text-dark-300 uppercase tracking-wider">
-            Tour Documentation Photo (Optional)
-          </label>
-          <div className="border border-dashed border-dark-700 hover:border-dark-500 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-dark-800/40 relative">
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handlePhotoUpload}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-            />
-            {photoUrl ? (
-              <div className="flex items-center justify-center gap-2 text-emerald-400 text-xs font-bold">
-                <CheckCircle2 className="w-4 h-4" />
-                Proof photo selected successfully
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-1.5 text-dark-400">
-                <Camera className="w-6 h-6 text-dark-400" />
-                <span className="text-xs">Click to select tour documentation photo</span>
-              </div>
-            )}
+        {/* Guide Notice Box */}
+        {isGuide && (
+          <div className="flex items-start gap-2.5 p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl text-xs text-emerald-300">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
+            <div>
+              <p className="font-bold text-emerald-200">Zero Gas Fee Guarantee</p>
+              <p className="text-emerald-400/90 mt-0.5">
+                You do not need crypto or gas fees to claim your earnings. Your +${guideEarnings.toFixed(2)} USDC payout is automatically transferred directly to your payout wallet.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Photo Proof Upload (Optional for Guide) */}
+        {isGuide && (
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-dark-300 uppercase tracking-wider">
+              Tour Documentation Photo (Optional)
+            </label>
+            <div className="border border-dashed border-dark-700 hover:border-dark-500 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-dark-800/40 relative">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handlePhotoUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+              {photoUrl ? (
+                <div className="flex items-center justify-center gap-2 text-emerald-400 text-xs font-bold">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Proof photo selected
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-dark-400">
+                  <Camera className="w-6 h-6 text-dark-400" />
+                  <span className="text-xs">Click to select documentation photo</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Action Button */}
         <button
-          onClick={handleConfirmAndRelease}
-          disabled={isReleasingEscrow || isSuccess}
+          onClick={handleAction}
+          disabled={isProcessing || isSuccess}
           className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isReleasingEscrow ? (
+          {isProcessing ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Disbursing Escrow Funds...
+              {isGuide ? "Submitting Completion..." : "Disbursing Escrow via MetaMask..."}
             </>
           ) : isSuccess ? (
             <>
               <CheckCircle2 className="w-5 h-5" />
-              Tour Completed Successfully
+              {isGuide ? "Tour Marked as Completed" : "Escrow Released Successfully"}
+            </>
+          ) : isGuide ? (
+            <>
+              <Check className="w-5 h-5" />
+              Mark Tour as Completed (Zero Gas)
             </>
           ) : (
             <>
               <ShieldCheck className="w-5 h-5" />
-              Complete Tour & Disburse Escrow Funds
+              Release ${guideEarnings.toFixed(2)} USDC to Guide
             </>
           )}
         </button>

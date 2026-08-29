@@ -53,7 +53,23 @@ export async function POST(req: Request) {
       });
     }
 
-    if (action === "MUTUAL_CONFIRM") {
+    if (action === "GUIDE_COMPLETE") {
+      const proof = body.proofPhoto || photoProof || "TOUR_COMPLETED_BY_GUIDE";
+      const updatedBooking = await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          proofPhoto: proof,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Tour marked as completed by Guide. Awaiting Tourist escrow release confirmation.",
+        booking: updatedBooking,
+      });
+    }
+
+    if (action === "MUTUAL_CONFIRM" || action === "TOURIST_RELEASE") {
       const releaseHash = body.txHash || booking.txHash || null;
 
       // Step 2: Atomic DB records for booking, payout, and commission
@@ -107,9 +123,8 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
-        step: 3,
         status: "COMPLETED",
-        message: "Safe Tour Verification Completed! Escrow Funds (0x37DA...E8C8) Released to Guide & Admin.",
+        message: "Tour completed! Escrow funds released directly to Guide wallet (90%) and Platform Treasury (10%).",
         booking: updatedBooking,
         releaseHash,
       });

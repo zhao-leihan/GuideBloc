@@ -258,21 +258,20 @@ export default function GuideBookingsPage() {
                             )}
                             {(b.status === "CONFIRMED" || b.status === "FUNDED" || b.status === "PAID") && (
                               <>
-                                <button
-                                  onClick={() => handleUpdateStatus(b.id, "COMPLETED")}
-                                  className="btn-ghost text-xs px-2.5 py-1.5 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white rounded-lg font-medium"
-                                  title="Complete Tour"
-                                >
-                                  Complete Tour
-                                </button>
-                                 <button
-                                   onClick={() => setVerificationBookingModal(b)}
-                                   className="btn-ghost text-xs px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer"
-                                   title="Complete Tour & Disburse Escrow"
-                                 >
-                                   <ShieldCheck className="w-3.5 h-3.5" /> Complete & Disburse Escrow
-                                 </button>
-                               </>
+                                {b.proofPhoto ? (
+                                  <span className="text-xs px-2.5 py-1.5 bg-amber-500/10 text-amber-600 rounded-lg font-bold flex items-center gap-1">
+                                    <Clock className="w-3.5 h-3.5" /> Awaiting Tourist Release
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => setVerificationBookingModal(b)}
+                                    className="btn-ghost text-xs px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer"
+                                    title="Mark Tour as Completed"
+                                  >
+                                    <ShieldCheck className="w-3.5 h-3.5" /> Mark Tour Completed
+                                  </button>
+                                )}
+                              </>
                             )}
                           </div>
                         </td>
