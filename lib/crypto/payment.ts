@@ -68,6 +68,7 @@ export function getEscrowAddress(network: SupportedNetwork = "avalanche"): strin
 
 export type SupportedWalletType = 
   | "metamask" 
+  | "core"
   | "coinbase" 
   | "walletconnect";
 
@@ -97,6 +98,9 @@ export function openMobileWalletDeepLink(walletType: SupportedWalletType): boole
   
   let deepLink = "";
   switch (walletType) {
+    case "core":
+      deepLink = `https://core.app/`;
+      break;
     case "metamask":
       deepLink = `https://metamask.app.link/dapp/${hostPath}`;
       break;
@@ -127,6 +131,7 @@ export async function connectWallet(
     const match = (detail: EIP6963ProviderDetail) => {
       const rdns = detail.info.rdns.toLowerCase();
       const name = detail.info.name.toLowerCase();
+      if (walletType === "core") return rdns === "app.core.extension" || rdns === "app.core" || rdns.includes("core") || name.includes("core");
       if (walletType === "metamask") return rdns === "io.metamask" || rdns.includes("metamask") || name.includes("metamask");
       if (walletType === "coinbase") return rdns === "com.coinbase.wallet" || rdns.includes("coinbase") || name.includes("coinbase");
       if (walletType === "walletconnect") return rdns.includes("walletconnect") || name.includes("walletconnect");
@@ -169,7 +174,9 @@ export async function connectWallet(
   // 2. Fallback to standard provider checks if EIP-6963 didn't find the provider
   if (!rawProvider) {
     const eth = (window as any).ethereum;
-    if (walletType === "metamask") {
+    if (walletType === "core") {
+      rawProvider = (window as any).avalanche || (eth?.isAvalanche ? eth : null);
+    } else if (walletType === "metamask") {
       if (eth) {
         if (eth.providerMap) rawProvider = eth.providerMap.get("MetaMask");
         if (!rawProvider && eth.providers) rawProvider = eth.providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet);
@@ -200,13 +207,15 @@ export async function connectWallet(
         throw new Error(`Opening ${walletType} app on mobile...`);
       }
     }
-    const walletName = walletType === "metamask" 
-      ? "MetaMask" 
-      : walletType === "coinbase" 
-        ? "Coinbase Wallet" 
-        : walletType === "walletconnect"
-          ? "WalletConnect"
-          : "Web3 Crypto";
+    const walletName = walletType === "core"
+      ? "Core Wallet"
+      : walletType === "metamask" 
+        ? "MetaMask" 
+        : walletType === "coinbase" 
+          ? "Coinbase Wallet" 
+          : walletType === "walletconnect"
+            ? "WalletConnect"
+            : "Web3 Crypto";
     throw new Error(`${walletName} extension is not detected. Please install ${walletName} or use a supported wallet.`);
   }
 

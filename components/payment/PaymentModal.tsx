@@ -59,8 +59,16 @@ const AvaxLogo = (
   />
 );
 
-// High-Definition Official Web3 Wallet Logos
 const WalletLogos: Record<string, React.ReactNode> = {
+  core: (
+    <div className="w-7 h-7 rounded-xl bg-dark-950 flex items-center justify-center p-1 flex-shrink-0">
+      <img 
+        src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" 
+        alt="Core Wallet" 
+        className="w-4 h-4 object-contain" 
+      />
+    </div>
+  ),
   metamask: (
     <img 
       src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" 
@@ -89,9 +97,10 @@ const WALLET_OPTIONS: {
   desc: string;
   badge?: string;
 }[] = [
+  { id: "core", name: "Core Wallet", desc: "Official Avalanche • Free Gas Sponsored", badge: "⚡ Free Gas" },
   { id: "metamask", name: "MetaMask", desc: "Popular Web3 Extension & Mobile App", badge: "Popular" },
+  { id: "coinbase", name: "Coinbase Wallet", desc: "Self-Custody Web3 & Mobile Wallet" },
   { id: "walletconnect", name: "WalletConnect", desc: "Connect any mobile or desktop wallet via QR", badge: "Universal" },
-  { id: "coinbase", name: "Coinbase Wallet", desc: "Self-Custody Web3 & Mobile Wallet", badge: "Recommended" },
 ];
 
 export default function PaymentModal({
@@ -479,6 +488,21 @@ export default function PaymentModal({
                     <ChevronRight className="w-4 h-4 text-dark-300 group-hover:text-primary transition-colors flex-shrink-0" />
                   </button>
                 ))}
+              </div>
+
+              {/* Marketing Callout: Core Wallet Free Gas Fee */}
+              <div className="p-3.5 bg-gradient-to-r from-red-500/10 via-amber-500/10 to-emerald-500/10 border border-amber-500/30 rounded-2xl flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-600 flex-shrink-0 mt-0.5">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                </div>
+                <div className="text-xs">
+                  <p className="font-bold text-dark-900 flex items-center gap-1.5">
+                    Zero Gas Fee with Core Wallet <span className="text-[10px] bg-emerald-500/20 text-emerald-700 px-1.5 py-0.5 rounded-full font-extrabold">Ava Labs Sponsored</span>
+                  </p>
+                  <p className="text-dark-500 mt-0.5 leading-relaxed">
+                    Pay using <strong>Core Wallet</strong> (official Avalanche wallet) and toggle <em>&quot;Get free gas&quot;</em> to enjoy sponsored zero-gas transactions on Avalanche C-Chain!
+                  </p>
+                </div>
               </div>
 
               {/* Auxiliary Quick Actions */}

@@ -1,10 +1,10 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck, PlusCircle } from "lucide-react";
+import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck, PlusCircle, Sparkles } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { connectWallet, getTokenBalance, SupportedNetwork } from "@/lib/crypto/payment";
+import { connectWallet, getTokenBalance, SupportedNetwork, SupportedWalletType } from "@/lib/crypto/payment";
 import DotsLoader from "@/components/ui/DotsLoader";
 import toast from "react-hot-toast";
 import { getNetworkConfig, getExplorerTxLink, getExplorerAddressLink, importUsdcToMetaMask } from "@/lib/crypto/networkConfig";
@@ -17,7 +17,7 @@ export default function TouristWalletPage() {
   const [usdtBalance, setUsdtBalance] = useState("0.00");
   const [usdcBalance, setUsdcBalance] = useState("0.00");
   const [connecting, setConnecting] = useState(false);
-  const [walletType, setWalletType] = useState<"metamask" | "coinbase" | "walletconnect" | null>(null);
+  const [walletType, setWalletType] = useState<SupportedWalletType | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -134,7 +134,7 @@ export default function TouristWalletPage() {
     }
   };
 
-  const handleConnect = async (providerType: "metamask" | "coinbase" | "walletconnect") => {
+  const handleConnect = async (providerType: SupportedWalletType) => {
     setConnecting(true);
     setWalletType(providerType);
     const toastId = toast.loading(`Connecting to ${providerType}...`);
@@ -390,7 +390,27 @@ export default function TouristWalletPage() {
               </p>
 
               {/* Wallet Providers Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                {/* Core Wallet (Official Avalanche) */}
+                <button
+                  onClick={() => handleConnect("core")}
+                  disabled={connecting}
+                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer relative"
+                >
+                  <span className="absolute top-2 right-2 text-[9px] font-extrabold bg-emerald-500/15 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                    ⚡ Free Gas
+                  </span>
+                  {connecting && walletType === "core" ? (
+                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-dark-950 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform p-2">
+                      <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" alt="Core Wallet Logo" className="w-6 h-6 object-contain" />
+                    </div>
+                  )}
+                  <span className="font-display font-bold text-dark-900 text-sm">Core Wallet</span>
+                  <span className="text-[11px] text-dark-400 mt-0.5">Ava Labs • Official</span>
+                </button>
+
                 {/* MetaMask */}
                 <button
                   onClick={() => handleConnect("metamask")}
@@ -405,27 +425,7 @@ export default function TouristWalletPage() {
                     </div>
                   )}
                   <span className="font-display font-bold text-dark-900 text-sm">MetaMask</span>
-                  <span className="text-[11px] text-dark-400 mt-0.5">Browser / Mobile App</span>
-                </button>
-
-                {/* WalletConnect */}
-                <button
-                  onClick={() => handleConnect("walletconnect")}
-                  disabled={connecting}
-                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer"
-                >
-                  {connecting && walletType === "walletconnect" ? (
-                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
-                  ) : (
-                    <div className="w-10 h-10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <svg className="w-10 h-10" viewBox="0 0 32 32" fill="none">
-                        <circle cx="16" cy="16" r="16" fill="#3B99FC"/>
-                        <path d="M9.8 12.8C13.2 9.4 18.8 9.4 22.2 12.8L22.8 13.4C23.1 13.7 23.1 14.1 22.8 14.4L21.4 15.8C21.3 15.9 21.0 15.9 20.9 15.8L20.0 14.9C17.8 12.7 14.2 12.7 12.0 14.9L11.0 15.8C10.9 15.9 10.7 15.9 10.5 15.8L9.2 14.4C8.9 14.1 8.9 13.7 9.2 13.4L9.8 12.8ZM25.0 15.6L26.2 16.8C26.5 17.1 26.5 17.5 26.2 17.8L20.8 23.2C20.5 23.5 20.1 23.5 19.8 23.2L16.0 19.4C15.9 19.3 15.8 19.3 15.7 19.4L11.9 23.2C11.6 23.5 11.2 23.5 10.9 23.2L5.5 17.8C5.2 17.5 5.2 17.1 5.5 16.8L6.7 15.6C7.0 15.3 7.4 15.3 7.7 15.6L11.5 19.4C11.6 19.5 11.7 19.5 11.8 19.4L15.6 15.6C15.9 15.3 16.3 15.3 16.6 15.6L20.4 19.4C20.5 19.5 20.6 19.5 20.7 19.4L24.5 15.6C24.8 15.3 25.0 15.3 25.0 15.6Z" fill="white"/>
-                      </svg>
-                    </div>
-                  )}
-                  <span className="font-display font-bold text-dark-900 text-sm">WalletConnect</span>
-                  <span className="text-[11px] text-dark-400 mt-0.5">Universal QR Connect</span>
+                  <span className="text-[11px] text-dark-400 mt-0.5">Browser / Mobile</span>
                 </button>
 
                 {/* Coinbase Wallet */}
@@ -448,6 +448,37 @@ export default function TouristWalletPage() {
                   <span className="font-display font-bold text-dark-900 text-sm">Coinbase</span>
                   <span className="text-[11px] text-dark-400 mt-0.5">Self-Custody App</span>
                 </button>
+
+                {/* WalletConnect */}
+                <button
+                  onClick={() => handleConnect("walletconnect")}
+                  disabled={connecting}
+                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer"
+                >
+                  {connecting && walletType === "walletconnect" ? (
+                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
+                  ) : (
+                    <div className="w-10 h-10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <svg className="w-10 h-10" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="16" fill="#3B99FC"/>
+                        <path d="M9.8 12.8C13.2 9.4 18.8 9.4 22.2 12.8L22.8 13.4C23.1 13.7 23.1 14.1 22.8 14.4L21.4 15.8C21.3 15.9 21.0 15.9 20.9 15.8L20.0 14.9C17.8 12.7 14.2 12.7 12.0 14.9L11.0 15.8C10.9 15.9 10.7 15.9 10.5 15.8L9.2 14.4C8.9 14.1 8.9 13.7 9.2 13.4L9.8 12.8ZM25.0 15.6L26.2 16.8C26.5 17.1 26.5 17.5 26.2 17.8L20.8 23.2C20.5 23.5 20.1 23.5 19.8 23.2L16.0 19.4C15.9 19.3 15.8 19.3 15.7 19.4L11.9 23.2C11.6 23.5 11.2 23.5 10.9 23.2L5.5 17.8C5.2 17.5 5.2 17.1 5.5 16.8L6.7 15.6C7.0 15.3 7.4 15.3 7.7 15.6L11.5 19.4C11.6 19.5 11.7 19.5 11.8 19.4L15.6 15.6C15.9 15.3 16.3 15.3 16.6 15.6L20.4 19.4C20.5 19.5 20.6 19.5 20.7 19.4L24.5 15.6C24.8 15.3 25.0 15.3 25.0 15.6Z" fill="white"/>
+                      </svg>
+                    </div>
+                  )}
+                  <span className="font-display font-bold text-dark-900 text-sm">WalletConnect</span>
+                  <span className="text-[11px] text-dark-400 mt-0.5">Universal QR</span>
+                </button>
+              </div>
+
+              {/* Marketing Callout: Core Wallet Free Gas */}
+              <div className="mt-6 p-3.5 bg-gradient-to-r from-red-500/10 via-amber-500/10 to-emerald-500/10 border border-amber-500/30 rounded-2xl max-w-xl mx-auto text-left flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-bold text-dark-900">Recommended for Avalanche: Core Wallet by Ava Labs</p>
+                  <p className="text-dark-500 mt-0.5 leading-relaxed">
+                    Enjoy sponsored zero-gas transactions on Avalanche C-Chain with official Ava Labs Core Wallet.
+                  </p>
+                </div>
               </div>
 
               <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-2xl max-w-md mx-auto">
