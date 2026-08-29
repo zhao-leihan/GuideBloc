@@ -7,6 +7,7 @@ import {
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { releaseToGuide } from "@/lib/crypto/payment";
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 interface TourVerificationModalProps {
   booking: any;
@@ -56,12 +57,8 @@ export default function TourVerificationModal({
     try {
       let txHash = booking.txHash;
 
-      // Call on-chain release via user MetaMask
-      try {
-        txHash = await releaseToGuide(booking.id, "avalanche");
-      } catch (chainErr: any) {
-        console.warn("Client on-chain release notice:", chainErr.message);
-      }
+      // Call on-chain release via user MetaMask (strictly enforced)
+      txHash = await releaseToGuide(booking.id, "avalanche");
 
       // Update backend database atomically
       const res = await fetch("/api/bookings/verify", {
@@ -135,6 +132,13 @@ export default function TourVerificationModal({
             <span>Tour</span>
             <span className="font-semibold text-white truncate max-w-[220px]">
               {booking?.gig?.title || "Tour Booking"}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-xs pb-2 border-b border-dark-750">
+            <span className="text-dark-400">Blockchain Network</span>
+            <span className="font-semibold text-emerald-400">
+              {getNetworkConfig().badgeLabel}
             </span>
           </div>
 

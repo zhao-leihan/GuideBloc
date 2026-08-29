@@ -229,28 +229,46 @@ export async function connectWallet(
     throw new Error("No connected Web3 accounts found.");
   }
 
-  const cfg = getNetworkConfig();
-  const chainIdHex = cfg.chainIdHex;
-  const chainName = cfg.name;
-  const rpcUrl = cfg.rpcUrl;
-  const nativeCurrency = cfg.nativeCurrency;
-  const blockExplorer = cfg.explorerUrl;
-
-  try {
-    await provider.send("wallet_switchEthereumChain", [{ chainId: chainIdHex }]);
-  } catch (switchError: any) {
-    if (switchError.code === 4902) {
-      await provider.send("wallet_addEthereumChain", [{
-        chainId: chainIdHex,
-        chainName,
-        rpcUrls: [rpcUrl],
-        nativeCurrency,
-        blockExplorerUrls: [blockExplorer],
-      }]);
-    }
-  }
+  await ensureCorrectChain(provider);
 
   return { address: accounts[0], provider, rawProvider };
+}
+
+/**
+ * Strictly verifies and enforces the correct blockchain network.
+ * Prompts user to switch or add network in MetaMask, and verifies before continuing.
+ */
+export async function ensureCorrectChain(provider: ethers.BrowserProvider): Promise<void> {
+  const cfg = getNetworkConfig();
+  const currentNetwork = await provider.getNetwork();
+  const currentChainId = Number(currentNetwork.chainId);
+
+  if (currentChainId !== cfg.chainIdDecimal) {
+    try {
+      await provider.send("wallet_switchEthereumChain", [{ chainId: cfg.chainIdHex }]);
+    } catch (switchError: any) {
+      if (switchError.code === 4902 || switchError?.data?.originalError?.code === 4902) {
+        await provider.send("wallet_addEthereumChain", [{
+          chainId: cfg.chainIdHex,
+          chainName: cfg.name,
+          rpcUrls: [cfg.rpcUrl],
+          nativeCurrency: cfg.nativeCurrency,
+          blockExplorerUrls: [cfg.explorerUrl],
+        }]);
+      } else {
+        throw new Error(
+          `Please switch MetaMask to ${cfg.name} (Chain ID: ${cfg.chainIdDecimal}) before proceeding.`
+        );
+      }
+    }
+
+    const verifiedNetwork = await provider.getNetwork();
+    if (Number(verifiedNetwork.chainId) !== cfg.chainIdDecimal) {
+      throw new Error(
+        `Active network is still Chain ID ${Number(verifiedNetwork.chainId)}. Please switch to ${cfg.name} (Chain ID: ${cfg.chainIdDecimal}) in MetaMask.`
+      );
+    }
+  }
 }
 
 export async function fetchConnectedAccountsDetails(
@@ -410,6 +428,7 @@ export async function claimGuideEarnings(bookingId: string, network: SupportedNe
 
 export async function releaseToGuide(bookingId: string, network: SupportedNetwork = "avalanche"): Promise<string> {
   const { provider } = await connectWallet(network);
+  await ensureCorrectChain(provider);
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);
@@ -419,7 +438,12 @@ export async function releaseToGuide(bookingId: string, network: SupportedNetwor
   try {
     tx = await escrow.release(bookingBytes32);
   } catch (err: any) {
-    tx = await escrow.releaseToGuide(bookingBytes32);
+    console.warn("escrow.release direct call failed, trying fallback:", err);
+    try {
+      tx = await escrow.releaseToGuide(bookingBytes32);
+    } catch (err2: any) {
+      throw new Error(err.reason || err.message || "Smart contract release transaction failed.");
+    }
   }
 
   const receipt = await tx.wait();
@@ -428,6 +452,7 @@ export async function releaseToGuide(bookingId: string, network: SupportedNetwor
 
 export async function refundTourist(bookingId: string, network: SupportedNetwork = "avalanche"): Promise<string> {
   const { provider } = await connectWallet(network);
+  await ensureCorrectChain(provider);
   const signer = await provider.getSigner();
   const escrowAddress = getEscrowAddress(network);
   const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, signer);

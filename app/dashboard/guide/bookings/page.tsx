@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Calendar, CheckCircle, XCircle, Clock, Eye, Compass, X, Star, Loader2, ShieldCheck } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, Clock, Eye, X, Star, Loader2, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import DotsLoader from "@/components/ui/DotsLoader";
 import { useSession } from "next-auth/react";
-import MeetInterface from "@/components/meet/MeetInterface";
 import TourVerificationModal from "@/components/verification/TourVerificationModal";
 
 const statusColors: Record<string, string> = {
@@ -41,7 +40,6 @@ function formatRemainingTime(expiresAt?: string, createdAt?: string): string {
 export default function GuideBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeMeetBooking, setActiveMeetBooking] = useState<any | null>(null);
   const [verificationBookingModal, setVerificationBookingModal] = useState<any | null>(null);
   const { data: session } = useSession();
 
@@ -274,13 +272,6 @@ export default function GuideBookingsPage() {
                                  >
                                    <ShieldCheck className="w-3.5 h-3.5" /> Complete & Disburse Escrow
                                  </button>
-                                 <button
-                                   onClick={() => setActiveMeetBooking(b)}
-                                   className="btn-ghost text-xs px-2.5 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg font-medium flex items-center gap-1 cursor-pointer"
-                                   title="Open Meetup Radar"
-                                 >
-                                   <Compass className="w-3.5 h-3.5" /> Radar
-                                 </button>
                                </>
                             )}
                           </div>
@@ -413,27 +404,7 @@ export default function GuideBookingsPage() {
         </div>
       )}
 
-      {/* Meetup Radar Overlay Modal */}
-      {activeMeetBooking && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg bg-dark-900 rounded-3xl overflow-hidden shadow-2xl border border-dark-850 animate-in zoom-in duration-200">
-            <button 
-              onClick={() => setActiveMeetBooking(null)}
-              className="absolute top-4 right-4 text-dark-400 hover:text-white p-2 hover:bg-dark-800 rounded-full transition-colors z-20 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="p-1">
-              <MeetInterface 
-                bookingId={activeMeetBooking.id}
-                role="GUIDE"
-                otherPartyName={activeMeetBooking.tourist?.name || "Tourist"}
-                otherPartyAvatar={activeMeetBooking.tourist?.avatar}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* 3-Step Safe Verification Protocol Modal (QR + GPS + Mutual Confirm) */}
       {verificationBookingModal && (
