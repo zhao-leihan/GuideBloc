@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { DollarSign, TrendingUp, ExternalLink } from "lucide-react";
 import { ClipboardIcon, CardStackIcon, RocketIcon, TokensIcon } from "@radix-ui/react-icons";
 import toast from "react-hot-toast";
+import { getExplorerTxLink } from "@/lib/crypto/networkConfig";
 
 interface SourceBreakdown {
   source: string;
@@ -154,7 +155,7 @@ export default function AdminRevenuePage() {
                           <td className="py-3">
                             {tx.fullHash ? (
                               <a 
-                                href={`https://snowtrace.io/tx/${tx.fullHash}`} 
+                                href={getExplorerTxLink(tx.fullHash)} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="font-mono text-xs text-primary hover:underline flex items-center gap-1"

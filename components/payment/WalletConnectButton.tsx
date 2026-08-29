@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Wallet, Unplug, ChevronDown } from "lucide-react";
+import { getNetworkConfig, getExplorerAddressLink } from "@/lib/crypto/networkConfig";
 
 interface WalletState {
   address: string | null;
@@ -28,6 +29,8 @@ export default function WalletConnectButton({
   const [connecting, setConnecting] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
+  const cfg = getNetworkConfig();
+
   const connect = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       alert("Please install MetaMask to use crypto payments");
@@ -40,43 +43,45 @@ export default function WalletConnectButton({
         method: "eth_requestAccounts",
       });
 
-      const chainIdHex: string = await (window as any).ethereum.request({
+      if (!accounts || accounts.length === 0) {
+        throw new Error("No accounts returned");
+      }
+
+      // Verify and enforce correct network
+      const currentChainIdHex: string = await (window as any).ethereum.request({
         method: "eth_chainId",
       });
-      const chainId = parseInt(chainIdHex, 16);
 
-      // Switch to Avalanche C-Chain if not already
-      if (chainId !== 43114) {
+      if (currentChainIdHex.toLowerCase() !== cfg.chainIdHex.toLowerCase()) {
         try {
           await (window as any).ethereum.request({
             method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0xa86a" }], // Avalanche C-Chain
+            params: [{ chainId: cfg.chainIdHex }],
           });
         } catch {
-          // Add Avalanche C-Chain network
           await (window as any).ethereum.request({
             method: "wallet_addEthereumChain",
             params: [
               {
-                chainId: "0xa86a",
-                chainName: "Avalanche C-Chain",
-                rpcUrls: ["https://api.avax.network/ext/bc/C/rpc"],
-                nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
-                blockExplorerUrls: ["https://snowtrace.io"],
+                chainId: cfg.chainIdHex,
+                chainName: cfg.name,
+                rpcUrls: [cfg.rpcUrl],
+                nativeCurrency: cfg.nativeCurrency,
+                blockExplorerUrls: [cfg.explorerUrl],
               },
             ],
           });
         }
       }
 
-      setWallet({ address: accounts[0], chainId: 43114, isConnected: true });
+      setWallet({ address: accounts[0], chainId: cfg.chainIdDecimal, isConnected: true });
       onConnect?.(accounts[0]);
     } catch (err) {
       console.error("Wallet connection failed:", err);
     } finally {
       setConnecting(false);
     }
-  }, [onConnect]);
+  }, [cfg, onConnect]);
 
   const disconnect = useCallback(() => {
     setWallet({ address: null, chainId: null, isConnected: false });
@@ -84,7 +89,7 @@ export default function WalletConnectButton({
     onDisconnect?.();
   }, [onDisconnect]);
 
-  const truncateAddress = (addr: string) =>
+  const formatAddress = (addr: string) =>
     `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
   if (!wallet.isConnected) {
@@ -95,7 +100,7 @@ export default function WalletConnectButton({
         className={`btn-primary flex items-center gap-2 ${className}`}
       >
         <Wallet className="w-4 h-4" />
-        {connecting ? "Connecting..." : "Connect Wallet"}
+        <span>{connecting ? "Connecting..." : "Connect Wallet"}</span>
       </button>
     );
   }
@@ -103,12 +108,12 @@ export default function WalletConnectButton({
   return (
     <div className="relative">
       <button
-        onClick={() => setShowMenu(!showMenu)}
-        className={`btn-outline flex items-center gap-2 ${className}`}
+        onClick={() => setShowMenu((prev) => !prev)}
+        className={`btn-outline flex items-center gap-2 font-mono text-sm ${className}`}
       >
-        <div className="w-2 h-2 bg-secondary rounded-full" />
-        {truncateAddress(wallet.address!)}
-        <ChevronDown className="w-3.5 h-3.5" />
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <span>{formatAddress(wallet.address!)}</span>
+        <ChevronDown className="w-3.5 h-3.5 text-dark-400" />
       </button>
 
       {showMenu && (
@@ -118,22 +123,22 @@ export default function WalletConnectButton({
               navigator.clipboard.writeText(wallet.address!);
               setShowMenu(false);
             }}
-            className="w-full text-left px-3 py-2 text-sm text-dark-700 hover:bg-dark-50 rounded-lg"
+            className="w-full text-left px-3 py-2 text-sm text-dark-700 hover:bg-dark-50 rounded-lg cursor-pointer"
           >
             Copy Address
           </button>
           <a
-            href={`https://snowtrace.io/address/${wallet.address}`}
+            href={getExplorerAddressLink(wallet.address!)}
             target="_blank"
             rel="noopener noreferrer"
-            className="block px-3 py-2 text-sm text-dark-700 hover:bg-dark-50 rounded-lg"
+            className="block px-3 py-2 text-sm text-dark-700 hover:bg-dark-50 rounded-lg cursor-pointer"
           >
             View on SnowTrace
           </a>
           <hr className="my-1 border-dark-100" />
           <button
             onClick={disconnect}
-            className="w-full text-left px-3 py-2 text-sm text-danger hover:bg-danger/5 rounded-lg flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm text-danger hover:bg-danger/5 rounded-lg flex items-center gap-2 cursor-pointer"
           >
             <Unplug className="w-3.5 h-3.5" />
             Disconnect

@@ -6,6 +6,7 @@ import { Wallet, ArrowRightLeft, Copy, ExternalLink, RefreshCw, Send, Loader2, S
 import toast from "react-hot-toast";
 import { ethers } from "ethers";
 import { getTokenAddress } from "@/lib/crypto/payment";
+import { getExplorerAddressLink } from "@/lib/crypto/networkConfig";
 
 interface TreasuryStatus {
   address: string;
@@ -14,7 +15,6 @@ interface TreasuryStatus {
   nativeBalance: string;
   network: string;
   rpcUrl: string;
-  isDbFallback?: boolean;
 }
 
 const ERC20_ABI = [
@@ -213,7 +213,7 @@ export default function AdminWalletPage() {
                         <Copy className="w-4 h-4" />
                       </button>
                       <a
-                        href={`https://testnet.snowtrace.io/address/${status.address}`}
+                        href={getExplorerAddressLink(status.address)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 hover:bg-dark-100 rounded-xl text-dark-500 hover:text-dark-900 transition-colors"
@@ -224,16 +224,7 @@ export default function AdminWalletPage() {
                     </div>
                   </div>
 
-                  {/* DB Fallback Banner */}
-                  {(status as any).isDbFallback && (
-                    <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
-                      <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold">Balance shown from DB Ledger</p>
-                        <p className="text-amber-700 mt-0.5">Live RPC response unavailable. Showing ledger total.</p>
-                      </div>
-                    </div>
-                  )}
+
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">

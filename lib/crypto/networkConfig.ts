@@ -12,7 +12,7 @@ export const ACTIVE_NETWORK: "fuji" | "mainnet" = "fuji";
 
 export const NETWORKS = {
   // ==========================================================================
-  // AVALANCHE FUJI TESTNET CONFIGURATION (ACTIVE FOR TESTING)
+  // [TAG: FUJI TESTNET CONFIGURATION - CHAIN ID 43113]
   // ==========================================================================
   fuji: {
     networkKey: "fuji",
@@ -33,7 +33,7 @@ export const NETWORKS = {
   },
 
   // ==========================================================================
-  // AVALANCHE C-CHAIN MAINNET CONFIGURATION (PRE-CONFIGURED FOR PRODUCTION)
+  // [TAG: AVALANCHE MAINNET CONFIGURATION - CHAIN ID 43114]
   // ==========================================================================
   mainnet: {
     networkKey: "mainnet",
@@ -57,4 +57,50 @@ export const NETWORKS = {
 export function getNetworkConfig() {
   // ACTIVE_NETWORK is the absolute single source of truth
   return NETWORKS[ACTIVE_NETWORK];
+}
+
+/**
+ * Dynamically constructs explorer URL for transactions based on active network
+ */
+export function getExplorerTxLink(txHash: string): string {
+  if (!txHash) return "#";
+  const cfg = getNetworkConfig();
+  return `${cfg.explorerUrl}/tx/${txHash}`;
+}
+
+/**
+ * Dynamically constructs explorer URL for wallet addresses based on active network
+ */
+export function getExplorerAddressLink(address: string): string {
+  if (!address) return "#";
+  const cfg = getNetworkConfig();
+  return `${cfg.explorerUrl}/address/${address}`;
+}
+
+/**
+ * 1-Click helper to import our active USDC token into MetaMask
+ */
+export async function importUsdcToMetaMask(): Promise<boolean> {
+  if (typeof window === "undefined" || !(window as any).ethereum) {
+    throw new Error("MetaMask is not installed.");
+  }
+  const cfg = getNetworkConfig();
+  try {
+    const wasAdded = await (window as any).ethereum.request({
+      method: "wallet_watchAsset",
+      params: {
+        type: "ERC20",
+        options: {
+          address: cfg.usdcTokenAddress,
+          symbol: "USDC",
+          decimals: 6,
+          image: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+        },
+      },
+    });
+    return !!wasAdded;
+  } catch (error: any) {
+    console.error("Failed to import token to MetaMask:", error);
+    throw error;
+  }
 }

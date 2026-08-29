@@ -19,7 +19,7 @@ import {
   getEscrowAddress
 } from "@/lib/crypto/payment";
 import { ethers } from "ethers";
-import { getNetworkConfig } from "@/lib/crypto/networkConfig";
+import { getNetworkConfig, getExplorerTxLink } from "@/lib/crypto/networkConfig";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -680,7 +680,7 @@ export default function PaymentModal({
               </div>
               {txHash && (
                 <a
-                  href={`https://snowtrace.io/tx/${txHash}`}
+                  href={getExplorerTxLink(txHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline font-mono flex items-center gap-1 font-semibold"

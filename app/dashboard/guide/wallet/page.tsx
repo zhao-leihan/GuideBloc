@@ -1,13 +1,13 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { Wallet, Link2, ExternalLink, Copy, CheckCircle, AlertCircle, Loader2, RefreshCw, ShieldCheck, Sparkles, PlusCircle } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { connectWallet, getTokenBalance, claimGuideEarnings, SupportedNetwork } from "@/lib/crypto/payment";
 import DotsLoader from "@/components/ui/DotsLoader";
 import toast from "react-hot-toast";
-import { getNetworkConfig } from "@/lib/crypto/networkConfig";
+import { getNetworkConfig, getExplorerTxLink, getExplorerAddressLink, importUsdcToMetaMask } from "@/lib/crypto/networkConfig";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-500/10 text-yellow-600",
@@ -265,7 +265,7 @@ export default function GuideWalletPage() {
   };
 
   const getExplorerUrl = (address: string) => {
-    return `${getNetworkConfig().explorerUrl}/address/${address}`;
+    return getExplorerAddressLink(address);
   };
 
   return (
@@ -350,7 +350,23 @@ export default function GuideWalletPage() {
                       className="w-5 h-5 object-contain" 
                     />
                   </div>
-                  <div className="text-2xl font-bold font-mono text-dark-900">${usdcBalance}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold font-mono text-dark-900">${usdcBalance}</div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await importUsdcToMetaMask();
+                          toast.success("USDC added to MetaMask successfully!");
+                        } catch (e: any) {
+                          toast.error(e.message || "Failed to add USDC to MetaMask");
+                        }
+                      }}
+                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer bg-primary/5 px-2.5 py-1.5 rounded-lg border border-primary/20"
+                      title="Import USDC token to your MetaMask extension"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" /> Add to MetaMask
+                    </button>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100">
@@ -463,16 +479,16 @@ export default function GuideWalletPage() {
                                 )}
                               </td>
                               <td className="px-4 py-3">
-                                {tx.txHash && tx.txHash !== "N/A" && (
-                                  <a
-                                    href={`https://snowtrace.io/tx/${tx.escrowPayout?.releaseHash || tx.txHash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
-                                  >
-                                    SnowTrace <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                )}
+                                  {tx.txHash && tx.txHash !== "N/A" && (
+                                    <a
+                                      href={getExplorerTxLink(tx.escrowPayout?.releaseHash || tx.txHash)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                                    >
+                                      SnowTrace <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  )}
                               </td>
                             </tr>
                           );

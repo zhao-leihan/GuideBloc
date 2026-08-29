@@ -7,6 +7,7 @@ import { ethers } from "ethers";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import escrowArtifact from "@/lib/crypto/escrowArtifact";
+import { getNetworkConfig, getExplorerAddressLink } from "@/lib/crypto/networkConfig";
 
 export default function DeployEscrowPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -46,16 +47,17 @@ export default function DeployEscrowPage() {
     try {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       // Switch to Avalanche C-Chain
+      const cfg = getNetworkConfig();
       try {
-        await provider.send("wallet_switchEthereumChain", [{ chainId: "0xa86a" }]);
+        await provider.send("wallet_switchEthereumChain", [{ chainId: cfg.chainIdHex }]);
       } catch (switchErr: any) {
         if (switchErr.code === 4902) {
           await provider.send("wallet_addEthereumChain", [{
-            chainId: "0xa86a",
-            chainName: "Avalanche C-Chain",
-            rpcUrls: ["https://api.avax.network/ext/bc/C/rpc"],
-            nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
-            blockExplorerUrls: ["https://snowtrace.io"],
+            chainId: cfg.chainIdHex,
+            chainName: cfg.name,
+            rpcUrls: [cfg.rpcUrl],
+            nativeCurrency: cfg.nativeCurrency,
+            blockExplorerUrls: [cfg.explorerUrl],
           }]);
         }
       }
@@ -200,7 +202,7 @@ export default function DeployEscrowPage() {
               </p>
               <div className="flex items-center gap-3 pt-2">
                 <a
-                  href={`https://snowtrace.io/address/${deployedAddress}`}
+                  href={getExplorerAddressLink(deployedAddress)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-outline text-xs py-2 px-3 flex items-center gap-1.5"

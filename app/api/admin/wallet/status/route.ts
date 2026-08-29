@@ -64,21 +64,6 @@ export async function GET(req: Request) {
       console.warn("Failed to fetch USDT balance:", e);
     }
 
-    // 3. If on-chain USDC balance is zero, check DB platform revenue as secondary reference
-    // This is informational only — DB ledger may differ from on-chain if there were sync failures
-    let isDbFallback = false;
-    if (Number(usdcBalance) === 0) {
-      const { prisma } = await import("@/lib/prisma");
-      const revAgg = await prisma.platformRevenue.aggregate({
-        _sum: { amountUSDT: true },
-      });
-      const dbFeeSum = revAgg._sum.amountUSDT || 0;
-      if (dbFeeSum > 0) {
-        usdcBalance = dbFeeSum.toFixed(2);
-        isDbFallback = true; // Signals to UI that this is a DB ledger sum, not live on-chain balance
-      }
-    }
-
     return NextResponse.json({
       address,
       escrowAddress,
@@ -87,7 +72,6 @@ export async function GET(req: Request) {
       nativeBalance: formattedNative,
       network,
       rpcUrl,
-      isDbFallback, // If true, balance shown is from DB ledger, not live on-chain
     });
   } catch (error: any) {
     console.error("Admin wallet status error:", error);

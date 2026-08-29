@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getNetworkConfig } from "@/lib/crypto/networkConfig";
+import { getNetworkConfig, getExplorerTxLink } from "@/lib/crypto/networkConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -237,7 +237,7 @@ export default async function AdminDashboardPage() {
                       treasuryTransactions.map((tx, idx) => (
                         <tr key={idx} className="border-b border-dark-100/50 hover:bg-dark-50/50 transition-colors">
                           <td className="py-2 font-mono text-primary font-medium">
-                            <a href={`https://snowtrace.io/tx/${tx.hash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
+                            <a href={getExplorerTxLink(tx.hash)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:underline">
                               {tx.hash.substring(0, 10)}... <ExternalLink className="w-2.5 h-2.5" />
                             </a>
                           </td>

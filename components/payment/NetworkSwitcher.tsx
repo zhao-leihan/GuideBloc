@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
-
-const AVAX_CHAIN_ID = 43114; // 0xa86a
+import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 interface NetworkSwitcherProps {
   targetChain?: "avalanche";
@@ -11,14 +10,14 @@ interface NetworkSwitcherProps {
 }
 
 export default function NetworkSwitcher({
-  targetChain = "avalanche",
   onSwitched,
 }: NetworkSwitcherProps) {
   const [currentChain, setCurrentChain] = useState<number | null>(null);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
   const [switching, setSwitching] = useState(false);
 
-  const targetChainId = AVAX_CHAIN_ID;
+  const cfg = getNetworkConfig();
+  const targetChainId = cfg.chainIdDecimal;
 
   useEffect(() => {
     if (typeof window === "undefined" || !(window as any).ethereum) return;
@@ -40,19 +39,17 @@ export default function NetworkSwitcher({
     (window as any).ethereum.on?.("chainChanged", checkChain);
 
     return () => {
-      (window as any).ethereum.removeListener?.("chainChanged", checkChain);
+      (window as any).ethereum?.removeListener?.("chainChanged", checkChain);
     };
   }, [targetChainId]);
 
-  const switchNetwork = async () => {
+  const handleSwitch = async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) return;
-
     setSwitching(true);
     try {
-      const chainIdHex = `0x${targetChainId.toString(16)}`;
       await (window as any).ethereum.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: chainIdHex }],
+        params: [{ chainId: cfg.chainIdHex }],
       });
       setIsCorrectNetwork(true);
       onSwitched?.();
@@ -62,11 +59,11 @@ export default function NetworkSwitcher({
         await (window as any).ethereum.request({
           method: "wallet_addEthereumChain",
           params: [{
-            chainId: "0xa86a",
-            chainName: "Avalanche C-Chain",
-            rpcUrls: ["https://api.avax.network/ext/bc/C/rpc"],
-            nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
-            blockExplorerUrls: ["https://snowtrace.io"],
+            chainId: cfg.chainIdHex,
+            chainName: cfg.name,
+            rpcUrls: [cfg.rpcUrl],
+            nativeCurrency: cfg.nativeCurrency,
+            blockExplorerUrls: [cfg.explorerUrl],
           }],
         });
       }
@@ -77,27 +74,25 @@ export default function NetworkSwitcher({
 
   if (isCorrectNetwork) {
     return (
-      <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
-        <CheckCircle2 className="w-4 h-4" />
-        Connected to Avalanche C-Chain
+      <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        <span>Connected to {cfg.badgeLabel}</span>
       </div>
     );
   }
 
-  if (currentChain === null) return null;
-
   return (
-    <div className="flex items-center justify-between p-3 bg-warning/10 rounded-xl border border-warning/20">
-      <div className="flex items-center gap-2 text-warning text-sm">
-        <AlertTriangle className="w-4 h-4" />
-        <span>Please switch to Avalanche C-Chain</span>
+    <div className="flex items-center justify-between gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs">
+      <div className="flex items-center gap-1.5 text-amber-800">
+        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+        <span>Wrong Network. Please switch to {cfg.badgeLabel}.</span>
       </div>
       <button
-        onClick={switchNetwork}
+        onClick={handleSwitch}
         disabled={switching}
-        className="btn-primary text-xs px-3 py-1.5 cursor-pointer font-bold"
+        className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
       >
-        {switching ? "Switching..." : "Switch to Avalanche"}
+        {switching ? "Switching..." : `Switch to ${cfg.shortName}`}
       </button>
     </div>
   );

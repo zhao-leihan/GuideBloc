@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import MeetInterface from "@/components/meet/MeetInterface";
 import TourVerificationModal from "@/components/verification/TourVerificationModal";
 import TipModal from "@/components/payment/TipModal";
+import { getExplorerTxLink } from "@/lib/crypto/networkConfig";
 
 function formatRemainingTime(expiresAt?: string, createdAt?: string): string {
   const target = expiresAt
@@ -627,7 +628,7 @@ export default function TouristBookingsPage() {
                           <span className="text-[10px] bg-dark-100 text-dark-500 px-2 py-0.5 rounded-full ml-1">Sandbox</span>
                         ) : (
                           <a 
-                            href={`https://snowtrace.io/tx/${booking.txHash}`}
+                            href={getExplorerTxLink(booking.txHash)}
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="hover:text-primary transition-colors flex items-center gap-0.5"
