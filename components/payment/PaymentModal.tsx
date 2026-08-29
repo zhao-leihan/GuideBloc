@@ -74,12 +74,6 @@ const WalletLogos: Record<string, React.ReactNode> = {
       className="w-7 h-7 flex-shrink-0 object-contain" 
     />
   ),
-  walletconnect: (
-    <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="16" fill="#3B99FC"/>
-      <path d="M9.8 12.8C13.2 9.4 18.8 9.4 22.2 12.8L22.8 13.4C23.1 13.7 23.1 14.1 22.8 14.4L21.4 15.8C21.3 15.9 21.0 15.9 20.9 15.8L20.0 14.9C17.8 12.7 14.2 12.7 12.0 14.9L11.0 15.8C10.9 15.9 10.7 15.9 10.5 15.8L9.2 14.4C8.9 14.1 8.9 13.7 9.2 13.4L9.8 12.8ZM25.0 15.6L26.2 16.8C26.5 17.1 26.5 17.5 26.2 17.8L20.8 23.2C20.5 23.5 20.1 23.5 19.8 23.2L16.0 19.4C15.9 19.3 15.8 19.3 15.7 19.4L11.9 23.2C11.6 23.5 11.2 23.5 10.9 23.2L5.5 17.8C5.2 17.5 5.2 17.1 5.5 16.8L6.7 15.6C7.0 15.3 7.4 15.3 7.7 15.6L11.5 19.4C11.6 19.5 11.7 19.5 11.8 19.4L15.6 15.6C15.9 15.3 16.3 15.3 16.6 15.6L20.4 19.4C20.5 19.5 20.6 19.5 20.7 19.4L24.5 15.6C24.8 15.3 25.0 15.3 25.0 15.6Z" fill="white"/>
-    </svg>
-  ),
   coinbase: (
     <svg className="w-7 h-7 flex-shrink-0" viewBox="0 0 32 32" fill="none">
       <circle cx="16" cy="16" r="16" fill="#0052FF"/>
@@ -98,7 +92,6 @@ const WALLET_OPTIONS: {
   { id: "core", name: "Core Wallet", desc: "Official Avalanche • Free Gas Sponsored", badge: "Recommended" },
   { id: "metamask", name: "MetaMask", desc: "Popular Web3 Extension & Mobile App", badge: "Popular" },
   { id: "coinbase", name: "Coinbase Wallet", desc: "Self-Custody Web3 & Mobile Wallet" },
-  { id: "walletconnect", name: "WalletConnect", desc: "Connect any mobile or desktop wallet via QR", badge: "Universal" },
 ];
 
 export default function PaymentModal({
@@ -617,7 +610,7 @@ export default function PaymentModal({
                   <img src={qrCodeUrl} alt="Escrow QR Code" className="w-44 h-44 object-contain rounded-lg" />
                 </div>
                 <p className="text-xs text-dark-500 font-medium">
-                  Scan via Mobile Wallet (MetaMask, Coinbase, Trust, Rainbow, WalletConnect)
+                  Scan via Mobile Wallet (MetaMask, Core, Coinbase, Trust, Rainbow)
                 </p>
               </div>
 

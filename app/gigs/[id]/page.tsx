@@ -13,7 +13,7 @@ import Footer from "@/components/layout/Footer";
 import { formatCurrency, formatDate, getCountryFlag, getCategoryIcon, cn } from "@/lib/utils";
 import ReviewCard from "@/components/reviews/ReviewCard";
 import GuideCalendarPicker from "@/components/booking/GuideCalendarPicker";
-import { initiatePayment } from "@/lib/crypto/payment";
+import { initiatePayment, SupportedWalletType } from "@/lib/crypto/payment";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import PaymentModal from "@/components/payment/PaymentModal";
@@ -296,7 +296,7 @@ export default function GigDetailPage() {
     }
   };
 
-  const handleBookNow = async (walletType: "metamask" | "coinbase" | "walletconnect") => {
+  const handleBookNow = async (walletType?: SupportedWalletType) => {
     let bookingId: string | null = null;
     try {
       setShowWalletModal(false);
@@ -324,9 +324,7 @@ export default function GigDetailPage() {
       const dbBooking = await createRes.json();
       bookingId = dbBooking.id;
 
-      toast.info(`Requesting Approval via ${walletType.toUpperCase()}...`);
-      
-      const mappedWalletType = walletType === "walletconnect" ? undefined : (walletType as any);
+      toast.info(`Requesting Approval via ${(walletType || "wallet").toUpperCase()}...`);
 
       const hash = await initiatePayment({
         bookingId: dbBooking.id,
@@ -334,7 +332,7 @@ export default function GigDetailPage() {
         token: "USDC", 
         network: "avalanche", 
         guideWalletAddress: gig.guide?.walletAddress || "0x079D9c349741C27565ee04e31E4174F640F512aE", 
-        walletType: mappedWalletType
+        walletType
       });
 
       // 2. Update booking status to CONFIRMED (funded)

@@ -67,10 +67,9 @@ export function getEscrowAddress(network: SupportedNetwork = "avalanche"): strin
 }
 
 export type SupportedWalletType = 
-  | "metamask" 
   | "core"
-  | "coinbase" 
-  | "walletconnect";
+  | "metamask" 
+  | "coinbase";
 
 export interface WalletAccountDetails {
   address: string;
@@ -98,19 +97,15 @@ export function openMobileWalletDeepLink(walletType: SupportedWalletType): boole
   
   let deepLink = "";
   switch (walletType) {
-    case "core":
-      if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent)) {
-        deepLink = `intent://${hostPath}#Intent;scheme=https;package=com.avaxmobilevault;end`;
-      } else {
-        deepLink = `https://core.app/`;
-      }
-      break;
     case "metamask":
       deepLink = `https://metamask.app.link/dapp/${hostPath}`;
       break;
     case "coinbase":
       deepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(currentUrl)}`;
       break;
+    case "core":
+      // Do not launch broken external intent; keep user inside Explomate
+      return false;
   }
 
   if (deepLink) {
@@ -138,7 +133,6 @@ export async function connectWallet(
       if (walletType === "core") return rdns === "app.core.extension" || rdns === "app.core" || rdns.includes("core") || name.includes("core");
       if (walletType === "metamask") return rdns === "io.metamask" || rdns.includes("metamask") || name.includes("metamask");
       if (walletType === "coinbase") return rdns === "com.coinbase.wallet" || rdns.includes("coinbase") || name.includes("coinbase");
-      if (walletType === "walletconnect") return rdns.includes("walletconnect") || name.includes("walletconnect");
       return false;
     };
 
@@ -193,8 +187,6 @@ export async function connectWallet(
         if (!rawProvider && eth.providers) rawProvider = eth.providers.find((p: any) => p.isCoinbaseWallet);
         if (!rawProvider && (eth.isCoinbaseWallet || eth.isCoinbase)) rawProvider = eth;
       }
-    } else if (walletType === "walletconnect") {
-      rawProvider = (window as any).walletConnectProvider || (window as any).ethereum;
     }
   }
 
@@ -211,16 +203,17 @@ export async function connectWallet(
         throw new Error(`Opening ${walletType} app on mobile...`);
       }
     }
-    const walletName = walletType === "core"
-      ? "Core Wallet"
-      : walletType === "metamask" 
-        ? "MetaMask" 
-        : walletType === "coinbase" 
-          ? "Coinbase Wallet" 
-          : walletType === "walletconnect"
-            ? "WalletConnect"
-            : "Web3 Crypto";
-    throw new Error(`${walletName} extension is not detected. Please install ${walletName} or use a supported wallet.`);
+    if (walletType === "core") {
+      throw new Error(
+        isMobileBrowser()
+          ? "Please open Explomate inside Core Wallet's in-app browser on mobile, or select MetaMask."
+          : "Core Wallet extension not found. Please install Core from core.app"
+      );
+    }
+    const walletName = walletType === "metamask" 
+      ? "MetaMask" 
+      : "Coinbase Wallet";
+    throw new Error(`${walletName} is not detected. Please install ${walletName} or use a supported wallet.`);
   }
 
   // Explicitly request permissions to show account selection dialog

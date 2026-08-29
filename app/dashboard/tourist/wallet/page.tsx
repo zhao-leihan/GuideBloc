@@ -390,7 +390,7 @@ export default function TouristWalletPage() {
               </p>
 
               {/* Wallet Providers Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                 {/* Core Wallet (Official Avalanche) */}
                 <button
                   onClick={() => handleConnect("core")}
@@ -447,26 +447,6 @@ export default function TouristWalletPage() {
                   )}
                   <span className="font-display font-bold text-dark-900 text-sm">Coinbase</span>
                   <span className="text-[11px] text-dark-400 mt-0.5">Self-Custody App</span>
-                </button>
-
-                {/* WalletConnect */}
-                <button
-                  onClick={() => handleConnect("walletconnect")}
-                  disabled={connecting}
-                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer"
-                >
-                  {connecting && walletType === "walletconnect" ? (
-                    <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
-                  ) : (
-                    <div className="w-10 h-10 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                      <svg className="w-10 h-10" viewBox="0 0 32 32" fill="none">
-                        <circle cx="16" cy="16" r="16" fill="#3B99FC"/>
-                        <path d="M9.8 12.8C13.2 9.4 18.8 9.4 22.2 12.8L22.8 13.4C23.1 13.7 23.1 14.1 22.8 14.4L21.4 15.8C21.3 15.9 21.0 15.9 20.9 15.8L20.0 14.9C17.8 12.7 14.2 12.7 12.0 14.9L11.0 15.8C10.9 15.9 10.7 15.9 10.5 15.8L9.2 14.4C8.9 14.1 8.9 13.7 9.2 13.4L9.8 12.8ZM25.0 15.6L26.2 16.8C26.5 17.1 26.5 17.5 26.2 17.8L20.8 23.2C20.5 23.5 20.1 23.5 19.8 23.2L16.0 19.4C15.9 19.3 15.8 19.3 15.7 19.4L11.9 23.2C11.6 23.5 11.2 23.5 10.9 23.2L5.5 17.8C5.2 17.5 5.2 17.1 5.5 16.8L6.7 15.6C7.0 15.3 7.4 15.3 7.7 15.6L11.5 19.4C11.6 19.5 11.7 19.5 11.8 19.4L15.6 15.6C15.9 15.3 16.3 15.3 16.6 15.6L20.4 19.4C20.5 19.5 20.6 19.5 20.7 19.4L24.5 15.6C24.8 15.3 25.0 15.3 25.0 15.6Z" fill="white"/>
-                      </svg>
-                    </div>
-                  )}
-                  <span className="font-display font-bold text-dark-900 text-sm">WalletConnect</span>
-                  <span className="text-[11px] text-dark-400 mt-0.5">Universal QR</span>
                 </button>
               </div>
 
