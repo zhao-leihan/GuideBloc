@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import localAddresses from "../../local-addresses.json";
 import { getNetworkConfig } from "./networkConfig";
 
 interface EIP6963ProviderDetail {
