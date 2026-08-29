@@ -99,7 +99,11 @@ export function openMobileWalletDeepLink(walletType: SupportedWalletType): boole
   let deepLink = "";
   switch (walletType) {
     case "core":
-      deepLink = `https://core.app/`;
+      if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent)) {
+        deepLink = `intent://${hostPath}#Intent;scheme=https;package=com.avaxmobilevault;end`;
+      } else {
+        deepLink = `https://core.app/`;
+      }
       break;
     case "metamask":
       deepLink = `https://metamask.app.link/dapp/${hostPath}`;

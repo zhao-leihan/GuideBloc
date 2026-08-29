@@ -515,16 +515,16 @@ export default function GuideWalletPage() {
                 <button
                   onClick={() => handleConnect("core")}
                   disabled={connecting}
-                  className="flex flex-col items-center justify-center p-5 bg-white border border-dark-200 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer relative"
+                  className="flex flex-col items-center justify-center p-5 bg-white border border-primary/40 bg-primary/5 rounded-2xl hover:border-primary hover:shadow-md transition-all group cursor-pointer relative"
                 >
-                  <span className="absolute top-2 right-2 text-[9px] font-extrabold bg-emerald-500/15 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
-                    ⚡ Free Gas
+                  <span className="absolute top-2 right-2 text-[9px] font-extrabold bg-primary text-white px-2 py-0.5 rounded-full shadow-sm">
+                    Recommended
                   </span>
                   {connecting && walletType === "core" ? (
                     <div className="h-10 flex items-center justify-center mb-3"><DotsLoader size="lg" /></div>
                   ) : (
-                    <div className="w-10 h-10 rounded-xl bg-dark-950 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform p-2">
-                      <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png?v=032" alt="Core Wallet Logo" className="w-6 h-6 object-contain" />
+                    <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                      <img src="https://play-lh.googleusercontent.com/Cwe9OOsfbzNRZGxhhzGR2TZ3TpVoVToQIa8O4yuse2y9lWsTd4myiBT4T11t-SNwugylLMlgqET8yQviMOvugg=w240-h480-rw" alt="Core Wallet Logo" className="w-10 h-10 object-contain rounded-xl" />
                     </div>
                   )}
                   <span className="font-display font-bold text-dark-900 text-sm">Core Wallet</span>
@@ -588,17 +588,6 @@ export default function GuideWalletPage() {
                   <span className="font-display font-bold text-dark-900 text-sm">WalletConnect</span>
                   <span className="text-[11px] text-dark-400 mt-0.5">Universal QR</span>
                 </button>
-              </div>
-
-              {/* Marketing Callout: Core Wallet Free Gas */}
-              <div className="mt-6 p-3.5 bg-gradient-to-r from-red-500/10 via-amber-500/10 to-emerald-500/10 border border-amber-500/30 rounded-2xl max-w-xl mx-auto text-left flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <p className="font-bold text-dark-900">Recommended for Avalanche: Core Wallet by Ava Labs</p>
-                  <p className="text-dark-500 mt-0.5 leading-relaxed">
-                    Enjoy sponsored zero-gas transactions on Avalanche C-Chain with official Ava Labs Core Wallet.
-                  </p>
-                </div>
               </div>
 
               <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-2xl max-w-md mx-auto">

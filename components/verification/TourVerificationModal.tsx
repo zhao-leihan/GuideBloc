@@ -128,31 +128,31 @@ export default function TourVerificationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-900/60 backdrop-blur-sm overflow-y-auto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-lg bg-dark-900 border border-dark-700 rounded-3xl shadow-2xl overflow-hidden p-6 md:p-8 space-y-6 text-white"
+        className="relative w-full max-w-lg bg-white border border-dark-100 rounded-3xl shadow-2xl overflow-hidden p-6 md:p-8 space-y-6 text-dark-900"
       >
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-dark-800 text-dark-400 hover:text-white transition-colors cursor-pointer"
+          className="absolute top-5 right-5 p-2 rounded-full bg-dark-50 border border-dark-200 text-dark-500 hover:text-dark-900 hover:bg-dark-100 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">
+            <h2 className="text-xl font-bold text-dark-900">
               {isGuide ? "Tour Completion Confirmation" : "Confirm Tour & Release Escrow"}
             </h2>
-            <p className="text-xs text-dark-400">
+            <p className="text-xs text-dark-500 mt-0.5">
               {isGuide 
                 ? "Mark tour as finished. Your 90% payout will be sent directly to your wallet." 
                 : "Release escrow funds from smart contract directly to your guide."}
@@ -161,44 +161,44 @@ export default function TourVerificationModal({
         </div>
 
         {/* Financial Distribution Card */}
-        <div className="bg-dark-850 border border-dark-750 p-4 rounded-2xl space-y-3">
-          <div className="flex items-center justify-between text-xs text-dark-400 pb-2 border-b border-dark-750">
+        <div className="bg-dark-50 border border-dark-200/80 p-4 rounded-2xl space-y-3">
+          <div className="flex items-center justify-between text-xs text-dark-500 pb-2 border-b border-dark-200/60">
             <span>Tour Experience</span>
-            <span className="font-semibold text-white truncate max-w-[220px]">
+            <span className="font-bold text-dark-900 truncate max-w-[220px]">
               {booking?.gig?.title || "Tour Booking"}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-xs pb-2 border-b border-dark-750">
-            <span className="text-dark-400">Blockchain Network</span>
-            <span className="font-semibold text-emerald-400">
+          <div className="flex items-center justify-between text-xs pb-2 border-b border-dark-200/60">
+            <span className="text-dark-500">Blockchain Network</span>
+            <span className="font-bold text-emerald-700">
               {getNetworkConfig().badgeLabel}
             </span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <span className="text-dark-400">Total Locked in Escrow</span>
-            <span className="font-mono font-bold text-white">${totalPrice.toFixed(2)} USDC</span>
+            <span className="text-dark-500">Total Locked in Escrow</span>
+            <span className="font-mono font-bold text-dark-900">${totalPrice.toFixed(2)} USDC</span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <span className="text-emerald-400">Guide Net Earnings (90%)</span>
-            <span className="font-mono font-bold text-emerald-400">+{guideEarnings.toFixed(2)} USDC</span>
+            <span className="text-emerald-700 font-bold">Guide Net Earnings (90%)</span>
+            <span className="font-mono font-bold text-emerald-700">+{guideEarnings.toFixed(2)} USDC</span>
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <span className="text-blue-400">Platform Fee (10%)</span>
-            <span className="font-mono font-bold text-blue-400">+{commission.toFixed(2)} USDC</span>
+            <span className="text-blue-600 font-bold">Platform Fee (10%)</span>
+            <span className="font-mono font-bold text-blue-600">+{commission.toFixed(2)} USDC</span>
           </div>
         </div>
 
         {/* Guide Notice Box */}
         {isGuide && (
-          <div className="flex items-start gap-2.5 p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-2xl text-xs text-emerald-300">
-            <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
+          <div className="flex items-start gap-2.5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
             <div>
-              <p className="font-bold text-emerald-200">Zero Gas Fee Guarantee</p>
-              <p className="text-emerald-400/90 mt-0.5">
+              <p className="font-bold text-emerald-900">Zero Gas Fee Guarantee</p>
+              <p className="text-emerald-700 mt-0.5">
                 You do not need crypto or gas fees to claim your earnings. Your +${guideEarnings.toFixed(2)} USDC payout is automatically transferred directly to your payout wallet.
               </p>
             </div>
@@ -208,10 +208,10 @@ export default function TourVerificationModal({
         {/* Photo Proof Upload (Optional for Guide) */}
         {isGuide && (
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-dark-300 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-dark-700 uppercase tracking-wider">
               Tour Documentation Photo (Optional)
             </label>
-            <div className="border border-dashed border-dark-700 hover:border-dark-500 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-dark-800/40 relative">
+            <div className="border border-dashed border-dark-300 hover:border-emerald-500 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-dark-50/50 relative">
               <input 
                 type="file" 
                 accept="image/*" 
@@ -219,12 +219,12 @@ export default function TourVerificationModal({
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               />
               {photoUrl ? (
-                <div className="flex items-center justify-center gap-2 text-emerald-400 text-xs font-bold">
+                <div className="flex items-center justify-center gap-2 text-emerald-600 text-xs font-bold">
                   <CheckCircle2 className="w-4 h-4" />
                   Proof photo selected
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-1.5 text-dark-400">
+                <div className="flex flex-col items-center gap-1.5 text-dark-500">
                   <Camera className="w-6 h-6 text-dark-400" />
                   <span className="text-xs">Click to select documentation photo</span>
                 </div>
@@ -237,7 +237,7 @@ export default function TourVerificationModal({
         <button
           onClick={handleAction}
           disabled={isProcessing || isSuccess}
-          className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isProcessing ? (
             <>
