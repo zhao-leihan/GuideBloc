@@ -379,3 +379,58 @@ export async function triggerTipReceivedEmail(
   const html = getEmailLayout("Tip Received", content);
   return sendTransactionalEmail({ to: tipperEmail, subject, html });
 }
+
+/**
+ * Sent to the tour guide when a tourist completes a booking payment.
+ */
+export async function triggerNewBookingForGuideEmail(
+  recipientEmail: string,
+  guideName: string,
+  touristName: string,
+  gigTitle: string,
+  bookingDate: string,
+  bookingTime: string,
+  groupSize: number,
+  totalPriceUSD: number,
+  guideNetUSD: number,
+  bookingId: string
+) {
+  const subject = `🎉 New Tour Booking! - "${gigTitle}" by ${touristName}`;
+  const content = `
+    <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">New Tour Booking Received!</h2>
+    <p>Hello <strong>${guideName}</strong>,</p>
+    <p>Great news! <strong>${touristName}</strong> has just booked your tour <strong>"${gigTitle}"</strong> on Explomate.</p>
+    
+    <div style="background: #eef2ff; border-left: 4px solid #4f46e5; padding: 16px 20px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 13px; color: #3730a3; line-height: 1.8;">
+        <strong>Booking ID:</strong> <span style="font-family: monospace;">${bookingId}</span><br/>
+        <strong>Tour Experience:</strong> ${gigTitle}<br/>
+        <strong>Traveler Name:</strong> ${touristName}<br/>
+        <strong>Date & Time:</strong> ${bookingDate} at ${bookingTime}<br/>
+        <strong>Group Size:</strong> ${groupSize} person(s)<br/>
+        <strong>Total Escrow Paid:</strong> $${totalPriceUSD.toFixed(2)} USDC<br/>
+        <strong>Your Estimated Earnings (90%):</strong> <span style="color: #10b981; font-weight: 700; font-size: 15px;">+$${guideNetUSD.toFixed(2)} USDC</span><br/>
+        <strong>Payment Status:</strong> <span style="background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">100% SECURED IN SMART CONTRACT ESCROW</span>
+      </p>
+    </div>
+
+    <p style="font-size: 13px; color: #4b5563;">
+      The guest's payment is safely locked in our decentralized smart contract. As soon as the tour is completed, your earnings ($${guideNetUSD.toFixed(2)} USDC) will be disbursed directly to your wallet.
+    </p>
+
+    <div style="margin: 28px 0; text-align: center;">
+      <a href="https://www.explomate.com/dashboard/guide/bookings" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">
+        View Booking in Guide Dashboard &rarr;
+      </a>
+    </div>
+
+    <p style="font-size: 13px; color: #6b7280;">
+      Need to coordinate meetup details with your guest? You can chat with them directly through the Explomate messaging system.<br/><br/>
+      Best regards,<br/>
+      <strong>The Explomate Team</strong>
+    </p>
+  `;
+
+  const html = getEmailLayout("New Booking Order", content);
+  return sendTransactionalEmail({ to: recipientEmail, subject, html });
+}

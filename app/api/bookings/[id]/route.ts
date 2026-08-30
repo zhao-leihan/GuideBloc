@@ -165,7 +165,7 @@ export async function PATCH(
     if (status === "CONFIRMED" && booking.status !== "CONFIRMED" && booking.status !== "PAID") {
       try {
         const { generateReceiptPdf } = await import("@/lib/receipt");
-        const { triggerBookingSuccessEmail } = await import("@/lib/email");
+        const { triggerBookingSuccessEmail, triggerNewBookingForGuideEmail } = await import("@/lib/email");
 
         const effectiveNetwork = updatedBooking.paymentNetwork || paymentNetwork || "Avalanche C-Chain";
         const effectiveTxHash = updatedBooking.txHash || txHash || "0x...";
@@ -183,13 +183,39 @@ export async function PATCH(
           tourist: { name: booking.tourist.name, email: booking.tourist.email },
         });
 
+        // 1. Send receipt PDF to tourist
         await triggerBookingSuccessEmail(
           updatedBooking.id,
           booking.tourist.email,
           booking.gig.title,
           updatedBooking.totalPriceUSD,
           pdfBuffer
-        );
+        ).catch((err) => console.error("[Tourist Receipt Email Error]", err));
+
+        // 2. Send new booking order notification to tour guide
+        if (booking.gig?.guide?.email) {
+          const guideCommission = updatedBooking.platform_fee ?? updatedBooking.totalPriceUSD * 0.1;
+          const guideNetEarnings = updatedBooking.totalPriceUSD - guideCommission;
+          const bookingFormattedDate = new Date(updatedBooking.bookingDate).toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+
+          await triggerNewBookingForGuideEmail(
+            booking.gig.guide.email,
+            booking.gig.guide.name || "Tour Guide",
+            booking.tourist.name || "A Traveler",
+            booking.gig.title,
+            bookingFormattedDate,
+            updatedBooking.bookingTime || "09:00 AM",
+            updatedBooking.groupSize,
+            updatedBooking.totalPriceUSD,
+            guideNetEarnings,
+            updatedBooking.id
+          ).catch((err) => console.error("[Guide Notification Email Error]", err));
+        }
       } catch (emailErr) {
         console.error("[Booking PATCH Email Error]", emailErr);
       }

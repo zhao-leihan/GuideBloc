@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ethers } from "ethers";
-import { triggerBookingSuccessEmail } from "@/lib/email";
+import { triggerBookingSuccessEmail, triggerNewBookingForGuideEmail } from "@/lib/email";
 import { generateReceiptPdf } from "@/lib/receipt";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +61,10 @@ export async function POST(req: Request) {
     // 2. Booking & Expiry Check
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { gig: true, tourist: true }
+      include: { 
+        gig: { include: { guide: true } }, 
+        tourist: true 
+      }
     });
 
     if (!booking) {
@@ -285,13 +288,40 @@ export async function POST(req: Request) {
         tourist: { name: booking.tourist.name, email: booking.tourist.email }
       });
 
+      // 1. Send receipt PDF to tourist
       await triggerBookingSuccessEmail(
         booking.id,
         booking.tourist.email,
         booking.gig.title,
         transferredAmountUSD,
         pdfBuffer
-      );
+      ).catch((err) => console.error("[Tourist Receipt Email Error]", err));
+
+      // 2. Send new booking notification email to tour guide
+      const guideObj = (booking.gig as any)?.guide;
+      if (guideObj?.email) {
+        const guideCommission = booking.platform_fee ?? transferredAmountUSD * 0.1;
+        const guideNetEarnings = transferredAmountUSD - guideCommission;
+        const bookingFormattedDate = new Date(booking.bookingDate).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+
+        await triggerNewBookingForGuideEmail(
+          guideObj.email,
+          guideObj.name || "Tour Guide",
+          booking.tourist.name || "A Traveler",
+          booking.gig.title,
+          bookingFormattedDate,
+          booking.bookingTime || "09:00 AM",
+          booking.groupSize,
+          transferredAmountUSD,
+          guideNetEarnings,
+          booking.id
+        ).catch((err) => console.error("[Guide Notification Email Error]", err));
+      }
     } catch (emailErr) {
       console.error("[Verify API Email Error]", emailErr);
     }
