@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { releaseToGuide } from "@/lib/crypto/payment";
 import { getNetworkConfig } from "@/lib/crypto/networkConfig";
 
 interface TourVerificationModalProps {
@@ -89,29 +88,26 @@ export default function TourVerificationModal({
         setIsProcessing(false);
       }
     } else {
-      // Tourist flow: On-chain release via Tourist MetaMask (Tourist pays tiny ~Rp 150 gas fee)
-      const toastId = toast.loading("Processing escrow disbursement from smart contract...");
+      // Tourist flow: 1-Click Instant Web Confirmation (ZERO second payment, ZERO wallet popup, ZERO gas fee!)
+      const toastId = toast.loading("Confirming tour completion and releasing escrow to guide...");
       try {
-        const txHash = await releaseToGuide(booking.id, "avalanche");
-
         const res = await fetch("/api/bookings/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             bookingId: booking.id,
             action: "TOURIST_RELEASE",
-            txHash,
           }),
         });
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to update booking status");
+          throw new Error(errorData.message || "Failed to release escrow funds");
         }
 
         setIsSuccess(true);
         toast.dismiss(toastId);
-        toast.success("Escrow funds successfully disbursed to Guide.");
+        toast.success("Tour completed! Escrow funds successfully disbursed to Guide.");
 
         setTimeout(() => {
           onSuccess();
@@ -242,7 +238,7 @@ export default function TourVerificationModal({
           {isProcessing ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              {isGuide ? "Submitting Completion..." : "Disbursing Escrow via MetaMask..."}
+              {isGuide ? "Submitting Completion..." : "Releasing Escrow to Guide..."}
             </>
           ) : isSuccess ? (
             <>
@@ -257,7 +253,7 @@ export default function TourVerificationModal({
           ) : (
             <>
               <ShieldCheck className="w-5 h-5" />
-              Release ${guideEarnings.toFixed(2)} USDC to Guide
+              Release ${guideEarnings.toFixed(2)} USDC to Guide (Instant)
             </>
           )}
         </button>

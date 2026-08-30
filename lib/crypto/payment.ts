@@ -96,15 +96,19 @@ export function openMobileWalletDeepLink(walletType: SupportedWalletType): boole
   
   let deepLink = "";
   switch (walletType) {
+    case "core":
+      if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent)) {
+        deepLink = `intent://${hostPath}#Intent;scheme=https;package=com.avax.core;end`;
+      } else {
+        deepLink = `https://core.app/`;
+      }
+      break;
     case "metamask":
       deepLink = `https://metamask.app.link/dapp/${hostPath}`;
       break;
     case "coinbase":
       deepLink = `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(currentUrl)}`;
       break;
-    case "core":
-      // Do not launch broken external intent; keep user inside Explomate
-      return false;
   }
 
   if (deepLink) {
