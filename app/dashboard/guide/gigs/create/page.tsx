@@ -95,7 +95,7 @@ export default function CreateGigPage() {
   const [benefitInput, setBenefitInput] = useState("");
   const [benefitsList, setBenefitsList] = useState<string[]>([]);
 
-  // Custom Tier Packages State (Max 4 packages - Upwork style)
+  // Custom Tier Packages State (Max 4 packages)
   const [packages, setPackages] = useState<TourPackageItem[]>([
     {
       id: "pkg-1",
@@ -1021,14 +1021,14 @@ export default function CreateGigPage() {
             </div>
           </div>
 
-          {/* Section: Custom Tour Packages / Tiers (Max 4 - Upwork Style) */}
+          {/* Section: Custom Tour Packages / Tiers (Max 4) */}
           <div className="card p-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dark-100 pb-3">
               <div>
                 <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2">
                   <Layers className="w-5 h-5 text-primary" /> Tour Packages & Tiered Pricing
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    Max 4 Packages (Upwork Style)
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    Max 4 Packages
                   </span>
                 </h2>
                 <p className="text-xs text-dark-500 mt-0.5">
