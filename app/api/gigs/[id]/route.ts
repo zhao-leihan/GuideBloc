@@ -48,6 +48,42 @@ export async function GET(
   }
 }
 
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const gig = await prisma.gig.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!gig) {
+      return NextResponse.json({ message: "Gig not found" }, { status: 404 });
+    }
+
+    if (gig.guideId !== userId && (session.user as any).role !== "ADMIN") {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
+    const data = await req.json();
+    const updated = await prisma.gig.update({
+      where: { id: params.id },
+      data,
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("Gig PATCH error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }

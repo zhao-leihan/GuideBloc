@@ -6,7 +6,9 @@ import Link from "next/link";
 import {
   MapPin, Clock, Users, Star, Globe, ChevronLeft, ChevronRight,
   Calendar, Shield, CheckCircle, XCircle, MessageSquare, X,
-  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark, Copy, AlertTriangle, Sparkles
+  CheckCircle2, Receipt, ArrowRight, CreditCard, ShieldCheck, User as UserIcon, 
+  Plus, Loader2, AlertCircle, ArrowRightLeft, QrCode, Landmark, Copy, AlertTriangle, 
+  Sparkles, Layers, Tag, Percent, Gift
 } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -25,6 +27,7 @@ export default function GigDetailPage() {
   const [gig, setGig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
+  const [selectedPackageIndex, setSelectedPackageIndex] = useState(0);
   
   // Dynamic Theme Detector State & MutationObserver Function
   const [isDarkTheme, setIsDarkTheme] = useState(false);
@@ -274,6 +277,10 @@ export default function GigDetailPage() {
           groupSize,
           participants: passengerDetails,
           cryptoToken: "USDC",
+          selectedPackage: currentPackage,
+          discountUSD: discountAmount,
+          promoCode: activePromo ? activePromo.title : null,
+          totalPriceUSD: totalPrice,
         }),
       });
 
@@ -425,8 +432,42 @@ export default function GigDetailPage() {
     );
   }
 
-  const effectivePrice = gig.client_price || gig.priceUSD;
-  const totalPrice = Math.round(effectivePrice * groupSize * 100) / 100;
+  // Packages List
+  const packagesList = Array.isArray(gig.packages) && gig.packages.length > 0 
+    ? gig.packages 
+    : [
+        {
+          id: "default-pkg",
+          name: "Standard Guided Tour",
+          priceUSD: gig.client_price || gig.priceUSD,
+          description: "Full standard guided tour hosted by local guide",
+          includes: gig.included?.length > 0 ? gig.included : ["Licensed Local Tour Guide"],
+        },
+      ];
+
+  const currentPackage = packagesList[selectedPackageIndex] || packagesList[0];
+  const basePerPersonPrice = currentPackage?.priceUSD || (gig.client_price || gig.priceUSD);
+
+  // Check active promo for selected bookingDate
+  const activePromo = (() => {
+    if (!gig.promos || !Array.isArray(gig.promos) || gig.promos.length === 0 || !bookingDate) {
+      return null;
+    }
+    const [y, m, d] = bookingDate.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const currentDayName = dayNames[dateObj.getDay()];
+
+    const match = gig.promos.find(
+      (p: any) => p.isActive && (p.daysOfWeek?.includes(currentDayName) || p.daysOfWeek?.length === 0)
+    );
+    return match || null;
+  })();
+
+  const discountPercent = activePromo ? activePromo.discountPercent : 0;
+  const subtotalPrice = Math.round(basePerPersonPrice * groupSize * 100) / 100;
+  const discountAmount = Math.round((subtotalPrice * (discountPercent / 100)) * 100) / 100;
+  const totalPrice = Math.max(1, Math.round((subtotalPrice - discountAmount) * 100) / 100);
 
   return (
     <div className="min-h-screen bg-dark-50">
@@ -540,38 +581,109 @@ export default function GigDetailPage() {
 
             {/* Guide Info */}
             <div className="card p-6">
-              <div className="flex items-center gap-4">
-                <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl text-primary font-bold">
-                  {gig.guide.avatar ? (
-                    <img src={gig.guide.avatar} alt="" className="w-14 h-14 rounded-full object-cover" />
-                  ) : (
-                    gig.guide.name[0]
-                  )}
-                  <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-xs" title="Verified Local Guide">✓</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Link href={`/guides/${gig.guide.id}`} className="font-display font-bold text-dark-900 text-lg hover:text-primary transition-colors">
-                      {gig.guide.name}
-                    </Link>
-                    <span className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      Verified Guide
-                    </span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-xl text-primary font-bold shrink-0">
+                    {gig.guide.avatar ? (
+                      <img src={gig.guide.avatar} alt="" className="w-14 h-14 rounded-full object-cover" />
+                    ) : (
+                      gig.guide.name[0]
+                    )}
+                    <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xs font-bold border-2 border-white shadow-xs" title="Verified Local Guide">✓</span>
                   </div>
-                  <p className="text-sm text-dark-500 mt-0.5">Verified Local Guide · Background Checked · {gig.guide.country} {getCountryFlag(gig.guide.country)}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link href={`/guides/${gig.guide.id}`} className="font-display font-bold text-dark-900 text-base sm:text-lg hover:text-primary transition-colors truncate">
+                        {gig.guide.name}
+                      </Link>
+                      <span className="bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-[11px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shrink-0">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        Verified Guide
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-dark-500 mt-0.5">
+                      Verified Local Guide · Background Checked · {gig.guide.country} {getCountryFlag(gig.guide.country)}
+                    </p>
+                  </div>
                 </div>
+
                 <Link
                   href={`/guides/${gig.guide.id}`}
-                  className="btn-ghost text-sm"
+                  className="btn-outline text-xs sm:text-sm px-4 py-2 text-center rounded-xl font-bold shrink-0 hover:bg-primary hover:text-white transition-all self-start sm:self-auto"
                 >
                   View Profile
                 </Link>
               </div>
               {gig.guide.bio && (
-                <p className="mt-4 text-dark-600 text-sm leading-relaxed">{gig.guide.bio}</p>
+                <p className="mt-3.5 pt-3.5 border-t border-dark-100 text-dark-600 text-xs sm:text-sm leading-relaxed">{gig.guide.bio}</p>
               )}
             </div>
+
+            {/* Tour Packages Selector */}
+            {packagesList.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-dark-900 flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-primary" /> Select Tour Package
+                  </h2>
+                  <span className="text-xs font-semibold text-dark-500">
+                    {packagesList.length} Option{packagesList.length > 1 ? "s" : ""} Available
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {packagesList.map((pkg: any, idx: number) => {
+                    const isSelected = selectedPackageIndex === idx;
+                    return (
+                      <div
+                        key={pkg.id || idx}
+                        onClick={() => setSelectedPackageIndex(idx)}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-dark-200/80 bg-white hover:border-primary/40"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <h3 className="font-bold text-dark-900 text-base flex items-center gap-1.5">
+                              {pkg.name}
+                            </h3>
+                            <span className="text-sm font-extrabold text-primary shrink-0">
+                              ${pkg.priceUSD} <span className="text-[10px] text-dark-400 font-normal">/ person</span>
+                            </span>
+                          </div>
+                          {pkg.description && (
+                            <p className="text-xs text-dark-600 leading-relaxed mb-3">
+                              {pkg.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {pkg.includes && Array.isArray(pkg.includes) && pkg.includes.length > 0 && (
+                          <div className="pt-2 border-t border-dark-100 space-y-1">
+                            <p className="text-[10px] uppercase font-bold text-dark-400 tracking-wider">
+                              Package Inclusions:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {pkg.includes.map((perk: string, pIdx: number) => (
+                                <span
+                                  key={pIdx}
+                                  className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-medium"
+                                >
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  {perk}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div>
@@ -687,10 +799,18 @@ export default function GigDetailPage() {
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 card p-6 space-y-5">
-              <div className="flex items-baseline justify-between">
-                <span className="text-3xl font-bold text-dark-900">{formatCurrency(gig.priceUSD)}</span>
-                <span className="text-sm text-dark-400">/ person</span>
+              {/* Selected Package Header */}
+              <div className="p-3.5 bg-dark-50 rounded-2xl border border-dark-100 space-y-1">
+                <div className="flex items-center justify-between text-xs text-dark-500 font-semibold">
+                  <span className="flex items-center gap-1"><Layers className="w-3.5 h-3.5 text-primary" /> Selected Tier:</span>
+                  <span className="text-primary font-bold truncate max-w-[140px]">{currentPackage?.name}</span>
+                </div>
+                <div className="flex items-baseline justify-between pt-1">
+                  <span className="text-2xl font-black text-dark-900">${basePerPersonPrice}</span>
+                  <span className="text-xs text-dark-400">/ person</span>
+                </div>
               </div>
+
               <div className="flex items-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-sm" style={getBadgeStyle()}>
                   <img 
@@ -698,10 +818,23 @@ export default function GigDetailPage() {
                     alt="USDC" 
                     className="w-3.5 h-3.5 object-contain inline-block" 
                   />
-                  ≈ {gig.priceUSD.toFixed(0)} USDC / USDT
+                  ≈ {basePerPersonPrice.toFixed(0)} USDC / USDT
                 </span>
-                <span className="text-dark-400">per person</span>
+                <span className="text-dark-400 text-xs">per person</span>
               </div>
+
+              {/* Active Promo Notice Banner */}
+              {activePromo && (
+                <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/15 to-amber-500/10 border border-amber-500/30 flex items-center gap-2.5 text-amber-900 shadow-xs">
+                  <Percent className="w-4 h-4 text-amber-600 shrink-0" />
+                  <div className="text-xs">
+                    <p className="font-bold text-amber-800">{activePromo.title}</p>
+                    <p className="text-[11px] text-amber-700 font-medium">
+                      {activePromo.discountPercent}% discount active for selected date!
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* INTERACTIVE GUIDE CALENDAR PICKER (UNAVAILABLE DAYS TOTALLY DISABLED) */}
               <div className="space-y-3">
@@ -746,18 +879,30 @@ export default function GigDetailPage() {
                 </div>
               </div>
 
-              <div className="border-t border-dark-100 pt-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-dark-500">{formatCurrency(gig.priceUSD)} × {groupSize}</span>
-                  <span className="text-dark-900">{formatCurrency(totalPrice)}</span>
+              {/* Pricing Breakdown */}
+              <div className="border-t border-dark-100 pt-4 space-y-2">
+                <div className="flex justify-between text-xs text-dark-500">
+                  <span>${basePerPersonPrice} × {groupSize} person{groupSize > 1 ? "s" : ""}</span>
+                  <span className="text-dark-900 font-semibold">${subtotalPrice.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm mb-3">
-                  <span className="text-dark-500">Crypto equivalent</span>
-                  <span className="text-secondary font-medium">{totalPrice.toFixed(0)} USDT</span>
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-xs text-amber-600 font-bold">
+                    <span className="flex items-center gap-1">
+                      <Tag className="w-3 h-3" /> {activePromo?.title || "Promo Discount"} ({discountPercent}%)
+                    </span>
+                    <span>-${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-xs text-dark-500">
+                  <span>Crypto equivalent</span>
+                  <span className="text-secondary font-bold">{totalPrice.toFixed(2)} USDT</span>
                 </div>
-                <div className="flex justify-between font-bold text-dark-900 pt-3 border-t border-dark-100">
-                  <span>Total</span>
-                  <span>{formatCurrency(totalPrice)}</span>
+
+                <div className="flex justify-between font-bold text-dark-900 pt-2 border-t border-dark-100 text-base">
+                  <span>Total Due</span>
+                  <span className="text-lg text-primary">${totalPrice.toFixed(2)} USD</span>
                 </div>
               </div>
 

@@ -4,10 +4,30 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import toast from "react-hot-toast";
-import { Rocket, Info, Image as ImageIcon, MapPin, DollarSign, Clock, Users, X, FileText, Globe, Loader2, AlertCircle, Calendar, CheckCircle, XCircle, Languages as LanguagesIcon, Sparkles, Plus } from "lucide-react";
+import { 
+  Rocket, Info, Image as ImageIcon, MapPin, DollarSign, Clock, Users, X, 
+  FileText, Globe, Loader2, AlertCircle, Calendar, CheckCircle, XCircle, 
+  Languages as LanguagesIcon, Sparkles, Plus, Layers, Percent, Tag, Trash2, Gift, CheckCircle2 
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CONFIG } from "@/lib/config";
 import PaymentModal from "@/components/payment/PaymentModal";
+
+interface TourPackageItem {
+  id: string;
+  name: string;
+  priceUSD: number;
+  description: string;
+  includes: string[];
+}
+
+interface TourPromoItem {
+  id: string;
+  title: string;
+  discountPercent: number;
+  daysOfWeek: string[];
+  isActive: boolean;
+}
 
 const categories = [
   "Adventure",
@@ -74,6 +94,125 @@ export default function CreateGigPage() {
   const [customTimeInput, setCustomTimeInput] = useState("");
   const [benefitInput, setBenefitInput] = useState("");
   const [benefitsList, setBenefitsList] = useState<string[]>([]);
+
+  // Custom Tier Packages State (Max 5 packages)
+  const [packages, setPackages] = useState<TourPackageItem[]>([
+    {
+      id: "pkg-1",
+      name: "Standard Tour Package",
+      priceUSD: 0, // defaults to formData.price
+      description: "Standard guided walking experience with local guide",
+      includes: ["Licensed Tour Guide", "Route Assistance"],
+    },
+  ]);
+  const [packagePerkInput, setPackagePerkInput] = useState<Record<number, string>>({});
+
+  // Custom Promos State (Max 3 promo rules)
+  const [promos, setPromos] = useState<TourPromoItem[]>([]);
+
+  const addPackage = () => {
+    if (packages.length >= 5) {
+      toast.error("Maximum 5 packages allowed per tour");
+      return;
+    }
+    const newId = `pkg-${Date.now()}`;
+    const basePrice = parseFloat(formData.price) || 50;
+    const multiplier = packages.length === 1 ? 1.5 : packages.length === 2 ? 2.2 : packages.length === 3 ? 2.8 : 3.5;
+    setPackages([
+      ...packages,
+      {
+        id: newId,
+        name: `Tier ${packages.length + 1} Package`,
+        priceUSD: Math.round(basePrice * multiplier),
+        description: "Includes extended transport, meals, or attraction entry tickets",
+        includes: ["Licensed Tour Guide", "Transportation Included"],
+      },
+    ]);
+    toast.success(`Package ${packages.length + 1} added!`);
+  };
+
+  const removePackage = (index: number) => {
+    if (packages.length <= 1) {
+      toast.error("You must have at least 1 package");
+      return;
+    }
+    setPackages(packages.filter((_, i) => i !== index));
+  };
+
+  const updatePackageField = (index: number, field: keyof TourPackageItem, value: any) => {
+    setPackages(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const addPackageInclude = (pkgIndex: number) => {
+    const perk = (packagePerkInput[pkgIndex] || "").trim();
+    if (!perk) return;
+    setPackages(prev => {
+      const copy = [...prev];
+      if (!copy[pkgIndex].includes.includes(perk)) {
+        copy[pkgIndex].includes = [...copy[pkgIndex].includes, perk];
+      }
+      return copy;
+    });
+    setPackagePerkInput(prev => ({ ...prev, [pkgIndex]: "" }));
+  };
+
+  const removePackageInclude = (pkgIndex: number, includeIndex: number) => {
+    setPackages(prev => {
+      const copy = [...prev];
+      copy[pkgIndex].includes = copy[pkgIndex].includes.filter((_, i) => i !== includeIndex);
+      return copy;
+    });
+  };
+
+  // Promo Handlers
+  const addPromo = () => {
+    if (promos.length >= 3) {
+      toast.error("Maximum 3 active promo rules allowed");
+      return;
+    }
+    setPromos([
+      ...promos,
+      {
+        id: `promo-${Date.now()}`,
+        title: "Special Day Discount",
+        discountPercent: 15,
+        daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday"],
+        isActive: true,
+      },
+    ]);
+    toast.success("Promo rule added!");
+  };
+
+  const removePromo = (index: number) => {
+    setPromos(promos.filter((_, i) => i !== index));
+  };
+
+  const updatePromoField = (index: number, field: keyof TourPromoItem, value: any) => {
+    setPromos(prev => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const togglePromoDay = (promoIndex: number, day: string) => {
+    setPromos(prev => {
+      const copy = [...prev];
+      const days = copy[promoIndex].daysOfWeek;
+      if (days.includes(day)) {
+        if (days.length > 1) {
+          copy[promoIndex].daysOfWeek = days.filter(d => d !== day);
+        }
+      } else {
+        copy[promoIndex].daysOfWeek = [...days, day];
+      }
+      return copy;
+    });
+  };
 
   // Languages & Logistics State
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["English", "Indonesian"]);
@@ -286,6 +425,11 @@ export default function CreateGigPage() {
           benefits: benefitsList,
           availableDays,
           availableTimes,
+          packages: packages.map((pkg, idx) => ({
+            ...pkg,
+            priceUSD: pkg.priceUSD > 0 ? pkg.priceUSD : parseFloat(formData.price) || 0,
+          })),
+          promos: promos.filter(p => p.isActive && p.discountPercent > 0),
         }),
       });
 
@@ -882,6 +1026,302 @@ export default function CreateGigPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Section: Custom Tour Packages / Tiers (Max 5) */}
+          <div className="card p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dark-100 pb-3">
+              <div>
+                <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-primary" /> Tour Packages & Tiered Options
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                    Max 5 Packages
+                  </span>
+                </h2>
+                <p className="text-xs text-dark-500 mt-0.5">
+                  Give tourists tailored choices (e.g. Standard Walking, Transit Included, or VIP All-Inclusive with Van & Lunch).
+                </p>
+              </div>
+
+              {packages.length < 5 && (
+                <button
+                  type="button"
+                  onClick={addPackage}
+                  className="btn-primary text-xs flex items-center gap-1.5 py-2 px-3 self-start sm:self-auto cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Package ({packages.length}/5)
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {packages.map((pkg, idx) => (
+                <div 
+                  key={pkg.id || idx} 
+                  className="p-4 rounded-2xl bg-dark-50/60 border border-dark-200/80 space-y-4 hover:border-primary/40 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <span className="text-sm font-bold text-dark-900">
+                        Package #{idx + 1}
+                      </span>
+                    </div>
+
+                    {packages.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removePackage(idx)}
+                        className="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-dark-700 mb-1">
+                        Package Name *
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full p-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-medium"
+                        placeholder="e.g. Standard Walking, VIP Comfort with Train Pass"
+                        value={pkg.name}
+                        onChange={(e) => updatePackageField(idx, "name", e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-dark-700 mb-1">
+                        Price (USD) *
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="1"
+                          className="w-full pl-8 pr-3 py-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-bold"
+                          placeholder="e.g. 75"
+                          value={pkg.priceUSD || ""}
+                          onChange={(e) => updatePackageField(idx, "priceUSD", parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-dark-700 mb-1">
+                      Short Description / What makes this package special
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
+                      placeholder="e.g. Includes private AC vehicle, authentic bento lunch & all entrance tickets"
+                      value={pkg.description}
+                      onChange={(e) => updatePackageField(idx, "description", e.target.value)}
+                    />
+                  </div>
+
+                  {/* Included Perks for this Package */}
+                  <div className="space-y-2 pt-2 border-t border-dark-200/60">
+                    <label className="block text-xs font-bold text-dark-700">
+                      Included Benefits / Perks in this Package
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-grow p-2 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
+                        placeholder="e.g. Bullet Train / Shinkansen Pass, Buffet Lunch, Van Transport"
+                        value={packagePerkInput[idx] || ""}
+                        onChange={(e) => setPackagePerkInput({ ...packagePerkInput, [idx]: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addPackageInclude(idx);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addPackageInclude(idx)}
+                        className="px-3 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all cursor-pointer"
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {[
+                        "Public Train / Bus Pass",
+                        "Private AC Van Transport",
+                        "Lunch / Food Tasting",
+                        "Temple / Museum Admission Tickets",
+                        "Hotel Pickup & Drop",
+                        "Professional Camera Photography",
+                      ].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => {
+                            if (!pkg.includes.includes(preset)) {
+                              updatePackageField(idx, "includes", [...pkg.includes, preset]);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-white text-dark-700 border border-dark-200 hover:border-primary hover:text-primary transition-all cursor-pointer"
+                        >
+                          + {preset}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Active Perks List */}
+                    {pkg.includes.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {pkg.includes.map((perk, pIdx) => (
+                          <span
+                            key={pIdx}
+                            className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2.5 py-1 rounded-lg font-medium"
+                          >
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            {perk}
+                            <button
+                              type="button"
+                              onClick={() => removePackageInclude(idx, pIdx)}
+                              className="text-emerald-700 hover:text-red-500 font-bold ml-1 cursor-pointer"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section: Custom Promos & Special Day Discounts */}
+          <div className="card p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dark-100 pb-3">
+              <div>
+                <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-amber-500" /> Custom Promotions & Day Discounts
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    Optional
+                  </span>
+                </h2>
+                <p className="text-xs text-dark-500 mt-0.5">
+                  Design special discounts for specific days of the week (e.g. 15% OFF for Weekdays or Weekend Specials).
+                </p>
+              </div>
+
+              {promos.length < 3 && (
+                <button
+                  type="button"
+                  onClick={addPromo}
+                  className="btn-secondary text-xs flex items-center gap-1.5 py-2 px-3 self-start sm:self-auto cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Promo Rule
+                </button>
+              )}
+            </div>
+
+            {promos.length === 0 ? (
+              <div className="p-4 rounded-xl bg-dark-50 border border-dashed border-dark-200 text-center text-xs text-dark-500">
+                No active promotional rules configured. Click &quot;Add Promo Rule&quot; to design a custom discount!
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {promos.map((promo, pIdx) => (
+                  <div
+                    key={promo.id || pIdx}
+                    className="p-4 rounded-2xl bg-amber-50/40 border border-amber-200/80 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-amber-600" /> Promo Rule #{pIdx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removePromo(pIdx)}
+                        className="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-dark-700 mb-1">
+                          Promo Title / Banner Label *
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full p-2.5 bg-white border border-dark-200 rounded-xl focus:border-amber-500 outline-none text-dark-950 text-sm font-medium"
+                          placeholder="e.g. Weekday Discovery 15% OFF, Autumn Early Bird"
+                          value={promo.title}
+                          onChange={(e) => updatePromoField(pIdx, "title", e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-dark-700 mb-1">
+                          Discount Percentage (%) *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min="1"
+                            max="90"
+                            className="w-full pl-3 pr-8 py-2.5 bg-white border border-dark-200 rounded-xl focus:border-amber-500 outline-none text-dark-950 text-sm font-bold"
+                            placeholder="e.g. 15"
+                            value={promo.discountPercent || ""}
+                            onChange={(e) => updatePromoField(pIdx, "discountPercent", parseInt(e.target.value) || 0)}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-dark-400">
+                            % OFF
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Valid Days */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-dark-700">
+                        Applicable Tour Days for this Promo
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {ALL_DAYS.map((day) => {
+                          const isSelected = promo.daysOfWeek.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => togglePromoDay(pIdx, day)}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                                isSelected
+                                  ? "bg-amber-500 text-white border-amber-500 shadow-xs"
+                                  : "bg-white text-dark-600 border-dark-200 hover:border-dark-350"
+                              }`}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Section 3: Gallery Upload */}

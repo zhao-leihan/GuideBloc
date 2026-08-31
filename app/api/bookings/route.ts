@@ -95,11 +95,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const client_price = Math.round((gig.client_price || gig.priceUSD) * 100) / 100;
-    const guide_price = Math.round((gig.guide_price || (client_price * 0.90)) * 100) / 100;
-    const platform_fee = Math.round((gig.platform_fee || (client_price - guide_price)) * 100) / 100;
+    // Calculate pricing based on selected package if provided
+    const pkgPrice = data.selectedPackage?.priceUSD 
+      ? parseFloat(data.selectedPackage.priceUSD) 
+      : (gig.client_price || gig.priceUSD);
+    const client_price = Math.round(pkgPrice * 100) / 100;
+    const guide_price = Math.round((client_price * 0.90) * 100) / 100;
+    const platform_fee = Math.round((client_price - guide_price) * 100) / 100;
 
-    const totalPriceUSD = Math.round(client_price * data.groupSize * 100) / 100;
+    const subtotalUSD = Math.round(client_price * data.groupSize * 100) / 100;
+    const discountUSD = data.discountUSD ? parseFloat(data.discountUSD) : 0;
+    const finalTotalPriceUSD = Math.max(1, Math.round((subtotalUSD - discountUSD) * 100) / 100);
+
     const oneDayInMs = 24 * 60 * 60 * 1000;
     const expiresAt = new Date(Date.now() + oneDayInMs);
 
@@ -111,8 +118,11 @@ export async function POST(req: Request) {
         bookingTime: data.bookingTime || null,
         participants: data.participants || null,
         groupSize: data.groupSize,
-        totalPriceUSD,
-        totalPriceCrypto: totalPriceUSD,
+        totalPriceUSD: finalTotalPriceUSD,
+        totalPriceCrypto: finalTotalPriceUSD,
+        discountUSD,
+        promoCode: data.promoCode || null,
+        selectedPackage: data.selectedPackage || null,
         cryptoToken: data.cryptoToken || "USDT",
         guide_price,
         client_price,

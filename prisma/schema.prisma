@@ -106,6 +106,8 @@ model Gig {
   meetingPoint String?
   availableDays String[] @default(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
   availableTimes String[] @default(["08:00 AM", "10:00 AM", "01:00 PM", "04:00 PM"])
+  packages     Json?    // Custom tier packages (max 5) [{ id, name, priceUSD, description, includes }]
+  promos       Json?    // Custom promo discounts [{ id, title, discountPercent, daysOfWeek, isActive }]
   isActive     Boolean  @default(true)
   guideId      String
   createdAt    DateTime @default(now())
@@ -131,6 +133,9 @@ model Booking {
   client_price  Float?
   platform_fee  Float?
   paidAmountUSD   Float?
+  discountUSD     Float?        @default(0)
+  promoCode       String?
+  selectedPackage Json?         // { id, name, priceUSD, includes }
   expiresAt       DateTime?
   paymentMemo     String?
   cryptoToken     CryptoToken
