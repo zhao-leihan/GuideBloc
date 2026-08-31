@@ -95,14 +95,14 @@ export default function CreateGigPage() {
   const [benefitInput, setBenefitInput] = useState("");
   const [benefitsList, setBenefitsList] = useState<string[]>([]);
 
-  // Custom Tier Packages State (Max 5 packages)
+  // Custom Tier Packages State (Max 4 packages - Upwork style)
   const [packages, setPackages] = useState<TourPackageItem[]>([
     {
       id: "pkg-1",
-      name: "Standard Tour Package",
-      priceUSD: 0, // defaults to formData.price
+      name: "Basic Tour Package",
+      priceUSD: 45,
       description: "Standard guided walking experience with local guide",
-      includes: ["Licensed Tour Guide", "Route Assistance"],
+      includes: ["Licensed Local Tour Guide", "Route & Direction Assistance"],
     },
   ]);
   const [packagePerkInput, setPackagePerkInput] = useState<Record<number, string>>({});
@@ -111,21 +111,22 @@ export default function CreateGigPage() {
   const [promos, setPromos] = useState<TourPromoItem[]>([]);
 
   const addPackage = () => {
-    if (packages.length >= 5) {
-      toast.error("Maximum 5 packages allowed per tour");
+    if (packages.length >= 4) {
+      toast.error("Maximum 4 packages allowed per tour");
       return;
     }
     const newId = `pkg-${Date.now()}`;
-    const basePrice = parseFloat(formData.price) || 50;
-    const multiplier = packages.length === 1 ? 1.5 : packages.length === 2 ? 2.2 : packages.length === 3 ? 2.8 : 3.5;
+    const basePrice = packages[0]?.priceUSD || 45;
+    const multiplier = packages.length === 1 ? 1.5 : packages.length === 2 ? 2.2 : 3.0;
+    const tierNames = ["Standard Package", "Comfort Transit Package", "VIP All-Inclusive Package"];
     setPackages([
       ...packages,
       {
         id: newId,
-        name: `Tier ${packages.length + 1} Package`,
+        name: tierNames[packages.length - 1] || `Tier ${packages.length + 1} Package`,
         priceUSD: Math.round(basePrice * multiplier),
         description: "Includes extended transport, meals, or attraction entry tickets",
-        includes: ["Licensed Tour Guide", "Transportation Included"],
+        includes: ["Licensed Local Tour Guide", "Transportation Included"],
       },
     ]);
     toast.success(`Package ${packages.length + 1} added!`);
@@ -390,8 +391,13 @@ export default function CreateGigPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.price || !formData.location || !formData.description) {
+    if (!formData.title || !formData.location || !formData.description) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (packages.length === 0 || packages.some(pkg => !pkg.name || !pkg.priceUSD || pkg.priceUSD <= 0)) {
+      toast.error("Please configure at least 1 package with a valid name and price");
       return;
     }
 
@@ -403,6 +409,8 @@ export default function CreateGigPage() {
     try {
       setIsCreating(true);
       toast.loading("Creating your tour gig...", { id: "create-gig" });
+
+      const baseGuidePrice = packages[0].priceUSD;
 
       // 1. Create Gig on backend
       const res = await fetch("/api/gigs", {
@@ -420,14 +428,14 @@ export default function CreateGigPage() {
           excluded: excludedList,
           durationHours: parseInt(formData.durationHours),
           maxGroupSize: parseInt(formData.maxGroupSize),
-          guide_price: parseFloat(formData.price),
+          guide_price: baseGuidePrice,
           images: images,
           benefits: benefitsList,
           availableDays,
           availableTimes,
-          packages: packages.map((pkg, idx) => ({
+          packages: packages.map((pkg) => ({
             ...pkg,
-            priceUSD: pkg.priceUSD > 0 ? pkg.priceUSD : parseFloat(formData.price) || 0,
+            priceUSD: pkg.priceUSD > 0 ? pkg.priceUSD : baseGuidePrice,
           })),
           promos: promos.filter(p => p.isActive && p.discountPercent > 0),
         }),
@@ -595,29 +603,14 @@ export default function CreateGigPage() {
             </div>
           </div>
 
-          {/* Section 2: Details & Pricing */}
+          {/* Section 2: Schedule & Logistics */}
           <div className="card p-6 space-y-6">
             <h2 className="text-lg font-bold text-dark-900 border-b border-dark-100 pb-2 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-primary" /> Pricing & Logistics
+              <Calendar className="w-5 h-5 text-primary" /> Schedule & Logistics
             </h2>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
-                    <DollarSign className="w-4 h-4 text-dark-400" /> Price per Person (USDC) *
-                  </label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    min="1"
-                    className="w-full p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 font-semibold"
-                    placeholder="45.00"
-                    value={formData.price}
-                    onChange={e => setFormData({...formData, price: e.target.value})}
-                    required
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark-700 mb-1 flex items-center gap-1">
                     <Clock className="w-4 h-4 text-dark-400" /> Duration (Hours) *
@@ -1028,28 +1021,28 @@ export default function CreateGigPage() {
             </div>
           </div>
 
-          {/* Section: Custom Tour Packages / Tiers (Max 5) */}
+          {/* Section: Custom Tour Packages / Tiers (Max 4 - Upwork Style) */}
           <div className="card p-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dark-100 pb-3">
               <div>
                 <h2 className="text-lg font-bold text-dark-900 flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-primary" /> Tour Packages & Tiered Options
+                  <Layers className="w-5 h-5 text-primary" /> Tour Packages & Tiered Pricing
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                    Max 5 Packages
+                    Max 4 Packages (Upwork Style)
                   </span>
                 </h2>
                 <p className="text-xs text-dark-500 mt-0.5">
-                  Give tourists tailored choices (e.g. Standard Walking, Transit Included, or VIP All-Inclusive with Van & Lunch).
+                  Set up 1 to 4 package tiers (e.g. Basic, Standard, VIP Transit, or All-Inclusive). Tourists choose their package directly during booking.
                 </p>
               </div>
 
-              {packages.length < 5 && (
+              {packages.length < 4 && (
                 <button
                   type="button"
                   onClick={addPackage}
                   className="btn-primary text-xs flex items-center gap-1.5 py-2 px-3 self-start sm:self-auto cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Add Package ({packages.length}/5)
+                  <Plus className="w-3.5 h-3.5" /> Add Package ({packages.length}/4)
                 </button>
               )}
             </div>
@@ -1098,7 +1091,7 @@ export default function CreateGigPage() {
 
                     <div>
                       <label className="block text-xs font-bold text-dark-700 mb-1">
-                        Price (USD) *
+                        Price per Person (USDC / USD) *
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
@@ -1107,9 +1100,10 @@ export default function CreateGigPage() {
                           step="0.01"
                           min="1"
                           className="w-full pl-8 pr-3 py-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-bold"
-                          placeholder="e.g. 75"
+                          placeholder="45"
                           value={pkg.priceUSD || ""}
                           onChange={(e) => updatePackageField(idx, "priceUSD", parseFloat(e.target.value) || 0)}
+                          required
                         />
                       </div>
                     </div>

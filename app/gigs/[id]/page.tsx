@@ -638,12 +638,17 @@ export default function GigDetailPage() {
                       <div
                         key={pkg.id || idx}
                         onClick={() => setSelectedPackageIndex(idx)}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
                           isSelected
-                            ? "border-primary bg-primary/5 shadow-sm"
+                            ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20"
                             : "border-dark-200/80 bg-white hover:border-primary/40"
                         }`}
                       >
+                        {isSelected && (
+                          <span className="absolute -top-2.5 right-4 bg-primary text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
+                            ✓ Selected Tier
+                          </span>
+                        )}
                         <div>
                           <div className="flex items-start justify-between gap-2 mb-1.5">
                             <h3 className="font-bold text-dark-900 text-base flex items-center gap-1.5">
