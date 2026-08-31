@@ -638,14 +638,14 @@ export default function GigDetailPage() {
                       <div
                         key={pkg.id || idx}
                         onClick={() => setSelectedPackageIndex(idx)}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
+                        className={`p-4.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
                           isSelected
                             ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20"
                             : "border-dark-200/80 bg-white hover:border-primary/40"
                         }`}
                       >
                         {isSelected && (
-                          <span className="absolute -top-2.5 right-4 bg-primary text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
+                          <span className="absolute -top-2.5 right-4 bg-primary text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-xs">
                             ✓ Selected Tier
                           </span>
                         )}
@@ -665,24 +665,44 @@ export default function GigDetailPage() {
                           )}
                         </div>
 
-                        {pkg.includes && Array.isArray(pkg.includes) && pkg.includes.length > 0 && (
-                          <div className="pt-2 border-t border-dark-100 space-y-1">
-                            <p className="text-[10px] uppercase font-bold text-dark-400 tracking-wider">
-                              Package Inclusions:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {pkg.includes.map((perk: string, pIdx: number) => (
-                                <span
-                                  key={pIdx}
-                                  className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-medium"
-                                >
-                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                  {perk}
-                                </span>
-                              ))}
+                        {/* Package Inclusions & Exclusions */}
+                        <div className="pt-2.5 border-t border-dark-100 space-y-2 mt-2">
+                          {pkg.includes && Array.isArray(pkg.includes) && pkg.includes.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Inclusions:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {pkg.includes.map((perk: string, pIdx: number) => (
+                                  <span
+                                    key={pIdx}
+                                    className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md font-medium"
+                                  >
+                                    ✓ {perk}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
+
+                          {pkg.excludes && Array.isArray(pkg.excludes) && pkg.excludes.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase font-bold text-red-700 tracking-wider flex items-center gap-1">
+                                <XCircle className="w-3 h-3 text-red-500" /> Exclusions:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {pkg.excludes.map((exItem: string, eIdx: number) => (
+                                  <span
+                                    key={eIdx}
+                                    className="inline-flex items-center gap-1 text-[11px] bg-red-50 text-red-800 px-2 py-0.5 rounded-md font-medium"
+                                  >
+                                    ✕ {exItem}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -716,39 +736,67 @@ export default function GigDetailPage() {
               </div>
             )}
 
-            {/* Included/Excluded */}
-            <div className="grid sm:grid-cols-2 gap-5">
-              {gig.included?.length > 0 && (
-                <div className="p-5 bg-emerald-50/50 border border-emerald-500/20 rounded-2xl">
-                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2 text-emerald-700 text-base">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" /> What&apos;s Included
-                  </h3>
-                  <ul className="space-y-2.5">
-                    {gig.included.map((item: string) => (
-                      <li key={item} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
-                        <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+            {/* Dynamic Included / Excluded for Active Package */}
+            {(() => {
+              const activeIncludes = currentPackage?.includes && currentPackage.includes.length > 0 
+                ? currentPackage.includes 
+                : gig.included || [];
+              const activeExcludes = currentPackage?.excludes && currentPackage.excludes.length > 0 
+                ? currentPackage.excludes 
+                : gig.excluded || [];
+
+              if (activeIncludes.length === 0 && activeExcludes.length === 0) return null;
+
+              return (
+                <div className="grid sm:grid-cols-2 gap-5">
+                  {activeIncludes.length > 0 && (
+                    <div className="p-5 bg-emerald-50/50 border border-emerald-500/20 rounded-2xl">
+                      <h3 className="font-bold text-dark-900 mb-3 flex items-center justify-between text-emerald-700 text-base">
+                        <span className="flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5 text-emerald-600" /> What&apos;s Included
+                        </span>
+                        {currentPackage?.name && (
+                          <span className="text-[11px] font-semibold bg-emerald-100/80 text-emerald-800 px-2.5 py-0.5 rounded-full">
+                            {currentPackage.name}
+                          </span>
+                        )}
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {activeIncludes.map((item: string, iIdx: number) => (
+                          <li key={iIdx} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
+                            <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {activeExcludes.length > 0 && (
+                    <div className="p-5 bg-red-50/50 border border-red-500/20 rounded-2xl">
+                      <h3 className="font-bold text-dark-900 mb-3 flex items-center justify-between text-red-700 text-base">
+                        <span className="flex items-center gap-2">
+                          <XCircle className="w-5 h-5 text-red-500" /> Not Included
+                        </span>
+                        {currentPackage?.name && (
+                          <span className="text-[11px] font-semibold bg-red-100/80 text-red-800 px-2.5 py-0.5 rounded-full">
+                            {currentPackage.name}
+                          </span>
+                        )}
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {activeExcludes.map((item: string, eIdx: number) => (
+                          <li key={eIdx} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
+                            <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              )}
-              {gig.excluded?.length > 0 && (
-                <div className="p-5 bg-red-50/50 border border-red-500/20 rounded-2xl">
-                  <h3 className="font-bold text-dark-900 mb-3 flex items-center gap-2 text-red-700 text-base">
-                    <XCircle className="w-5 h-5 text-red-500" /> Not Included
-                  </h3>
-                  <ul className="space-y-2.5">
-                    {gig.excluded.map((item: string) => (
-                      <li key={item} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
-                        <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Custom Benefits */}
             {gig.benefits?.length > 0 && (

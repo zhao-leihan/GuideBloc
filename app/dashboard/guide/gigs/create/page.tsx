@@ -19,6 +19,7 @@ interface TourPackageItem {
   priceUSD: number;
   description: string;
   includes: string[];
+  excludes: string[];
 }
 
 interface TourPromoItem {
@@ -102,10 +103,12 @@ export default function CreateGigPage() {
       name: "Basic Tour Package",
       priceUSD: 45,
       description: "Standard guided walking experience with local guide",
-      includes: ["Licensed Local Tour Guide", "Route & Direction Assistance"],
+      includes: ["Licensed Local Tour Guide", "Route & Direction Assistance", "Bottled Mineral Water"],
+      excludes: ["Personal Shopping Expenses", "Alcoholic Beverages", "Hotel Pick-up & Drop-off"],
     },
   ]);
   const [packagePerkInput, setPackagePerkInput] = useState<Record<number, string>>({});
+  const [packageExcludeInput, setPackageExcludeInput] = useState<Record<number, string>>({});
 
   // Custom Promos State (Max 3 promo rules)
   const [promos, setPromos] = useState<TourPromoItem[]>([]);
@@ -119,6 +122,17 @@ export default function CreateGigPage() {
     const basePrice = packages[0]?.priceUSD || 45;
     const multiplier = packages.length === 1 ? 1.5 : packages.length === 2 ? 2.2 : 3.0;
     const tierNames = ["Standard Package", "Comfort Transit Package", "VIP All-Inclusive Package"];
+    const tierInclusions = [
+      ["Licensed Local Tour Guide", "Public Train / Bus Pass", "Local Food Tasting"],
+      ["Licensed Local Tour Guide", "Private AC Van Transport", "Buffet Lunch / Food Tasting", "Bottled Mineral Water"],
+      ["Licensed Local Tour Guide", "Private AC Van Transport", "Buffet Lunch / Food Tasting", "Temple / Museum Admission Tickets", "Hotel Pickup & Drop", "Photography Assistance"]
+    ];
+    const tierExclusions = [
+      ["Personal Shopping Expenses", "Alcoholic Beverages", "Hotel Pick-up & Drop-off"],
+      ["Personal Shopping Expenses", "Alcoholic Beverages"],
+      ["Personal Shopping Expenses"]
+    ];
+
     setPackages([
       ...packages,
       {
@@ -126,7 +140,8 @@ export default function CreateGigPage() {
         name: tierNames[packages.length - 1] || `Tier ${packages.length + 1} Package`,
         priceUSD: Math.round(basePrice * multiplier),
         description: "Includes extended transport, meals, or attraction entry tickets",
-        includes: ["Licensed Local Tour Guide", "Transportation Included"],
+        includes: tierInclusions[packages.length - 1] || ["Licensed Local Tour Guide", "Transportation Included"],
+        excludes: tierExclusions[packages.length - 1] || ["Personal Shopping Expenses"],
       },
     ]);
     toast.success(`Package ${packages.length + 1} added!`);
@@ -148,23 +163,52 @@ export default function CreateGigPage() {
     });
   };
 
-  const addPackageInclude = (pkgIndex: number) => {
-    const perk = (packagePerkInput[pkgIndex] || "").trim();
+  const addPackageInclude = (pkgIndex: number, customItem?: string) => {
+    const perk = (customItem || packagePerkInput[pkgIndex] || "").trim();
     if (!perk) return;
     setPackages(prev => {
       const copy = [...prev];
+      if (!copy[pkgIndex].includes) copy[pkgIndex].includes = [];
       if (!copy[pkgIndex].includes.includes(perk)) {
         copy[pkgIndex].includes = [...copy[pkgIndex].includes, perk];
       }
       return copy;
     });
-    setPackagePerkInput(prev => ({ ...prev, [pkgIndex]: "" }));
+    if (!customItem) {
+      setPackagePerkInput(prev => ({ ...prev, [pkgIndex]: "" }));
+    }
   };
 
   const removePackageInclude = (pkgIndex: number, includeIndex: number) => {
     setPackages(prev => {
       const copy = [...prev];
       copy[pkgIndex].includes = copy[pkgIndex].includes.filter((_, i) => i !== includeIndex);
+      return copy;
+    });
+  };
+
+  const addPackageExclude = (pkgIndex: number, customItem?: string) => {
+    const item = (customItem || packageExcludeInput[pkgIndex] || "").trim();
+    if (!item) return;
+    setPackages(prev => {
+      const copy = [...prev];
+      if (!copy[pkgIndex].excludes) copy[pkgIndex].excludes = [];
+      if (!copy[pkgIndex].excludes.includes(item)) {
+        copy[pkgIndex].excludes = [...copy[pkgIndex].excludes, item];
+      }
+      return copy;
+    });
+    if (!customItem) {
+      setPackageExcludeInput(prev => ({ ...prev, [pkgIndex]: "" }));
+    }
+  };
+
+  const removePackageExclude = (pkgIndex: number, excludeIndex: number) => {
+    setPackages(prev => {
+      const copy = [...prev];
+      if (copy[pkgIndex].excludes) {
+        copy[pkgIndex].excludes = copy[pkgIndex].excludes.filter((_, i) => i !== excludeIndex);
+      }
       return copy;
     });
   };
@@ -411,6 +455,8 @@ export default function CreateGigPage() {
       toast.loading("Creating your tour gig...", { id: "create-gig" });
 
       const baseGuidePrice = packages[0].priceUSD;
+      const aggregatedIncluded = Array.from(new Set(packages.flatMap(p => p.includes || [])));
+      const aggregatedExcluded = Array.from(new Set(packages.flatMap(p => p.excludes || [])));
 
       // 1. Create Gig on backend
       const res = await fetch("/api/gigs", {
@@ -424,13 +470,13 @@ export default function CreateGigPage() {
           country: formData.country,
           meetingPoint: formData.meetingPoint,
           languages: selectedLanguages,
-          included: includedList,
-          excluded: excludedList,
+          included: aggregatedIncluded,
+          excluded: aggregatedExcluded,
           durationHours: parseInt(formData.durationHours),
           maxGroupSize: parseInt(formData.maxGroupSize),
           guide_price: baseGuidePrice,
           images: images,
-          benefits: benefitsList,
+          benefits: aggregatedIncluded,
           availableDays,
           availableTimes,
           packages: packages.map((pkg) => ({
@@ -868,160 +914,10 @@ export default function CreateGigPage() {
                   required
                 />
               </div>
-
-              {/* WHAT'S INCLUDED */}
-              <div className="space-y-2 pt-2 border-t border-dark-100">
-                <label className="block text-sm font-bold text-dark-800 flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" /> What&apos;s Included in this Tour
-                </label>
-                <p className="text-xs text-dark-500">Add items or click quick presets below:</p>
-                <div className="flex gap-2">
-                  <input 
-                    type="text"
-                    className="flex-grow p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm"
-                    placeholder="e.g. Entrance tickets, Food tasting, Mineral water"
-                    value={includedInput}
-                    onChange={e => setIncludedInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addIncluded(); } }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => addIncluded()}
-                    className="px-5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer text-sm"
-                  >
-                    Add
-                  </button>
-                </div>
-                
-                {/* Presets */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {["Licensed Local Guide", "Bottled Water", "Local Food Tasting", "Photography Assistance", "Entrance Tickets"].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => addIncluded(preset)}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/60 hover:bg-emerald-100/60 cursor-pointer"
-                    >
-                      + {preset}
-                    </button>
-                  ))}
-                </div>
-
-                {includedList.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {includedList.map((item, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 text-xs bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-3 py-1.5 rounded-full font-semibold">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        {item}
-                        <button
-                          type="button"
-                          onClick={() => removeIncluded(idx)}
-                          className="hover:text-red-500 font-bold ml-1 cursor-pointer"
-                        >
-                          &times;
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* WHAT'S NOT INCLUDED */}
-              <div className="space-y-2 pt-2 border-t border-dark-100">
-                <label className="block text-sm font-bold text-dark-800 flex items-center gap-1.5">
-                  <XCircle className="w-4 h-4 text-red-500" /> What&apos;s NOT Included
-                </label>
-                <p className="text-xs text-dark-500">Clarify exclusions to avoid traveler confusion:</p>
-                <div className="flex gap-2">
-                  <input 
-                    type="text"
-                    className="flex-grow p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm"
-                    placeholder="e.g. Hotel pickup, Alcoholic drinks, Personal shopping"
-                    value={excludedInput}
-                    onChange={e => setExcludedInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addExcluded(); } }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => addExcluded()}
-                    className="px-5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors cursor-pointer text-sm"
-                  >
-                    Add
-                  </button>
-                </div>
-
-                {/* Presets */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {["Hotel Pick-up & Drop-off", "Personal Shopping Expenses", "Alcoholic Beverages", "Gratuities & Tips"].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => addExcluded(preset)}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-red-50 text-red-800 border border-red-200/60 hover:bg-red-100/60 cursor-pointer"
-                    >
-                      + {preset}
-                    </button>
-                  ))}
-                </div>
-
-                {excludedList.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {excludedList.map((item, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 text-xs bg-red-500/10 text-red-700 border border-red-500/20 px-3 py-1.5 rounded-full font-semibold">
-                        <XCircle className="w-3.5 h-3.5 text-red-500" />
-                        {item}
-                        <button
-                          type="button"
-                          onClick={() => removeExcluded(idx)}
-                          className="hover:text-red-700 font-bold ml-1 cursor-pointer"
-                        >
-                          &times;
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-dark-700 mb-1">Custom Benefits / Tour Perks</label>
-                <div className="flex gap-2">
-                  <input 
-                    type="text"
-                    className="flex-grow p-3 bg-dark-50/50 border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950"
-                    placeholder="e.g. Free local snacks, Exclusive camera photography"
-                    value={benefitInput}
-                    onChange={e => setBenefitInput(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={addBenefit}
-                    className="px-5 bg-secondary text-white font-semibold rounded-xl hover:bg-secondary-600 transition-colors cursor-pointer"
-                  >
-                    Add
-                  </button>
-                </div>
-                {benefitsList.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {benefitsList.map((benefit, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-semibold">
-                        {benefit}
-                        <button
-                          type="button"
-                          onClick={() => removeBenefit(idx)}
-                          className="hover:text-red-500 font-bold ml-1 cursor-pointer"
-                        >
-                          &times;
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* Section: Custom Tour Packages / Tiers (Max 4) */}
+          {/* Section: Custom Tour Packages & Tiered Pricing (Max 4) */}
           <div className="card p-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-dark-100 pb-3">
               <div>
@@ -1032,7 +928,7 @@ export default function CreateGigPage() {
                   </span>
                 </h2>
                 <p className="text-xs text-dark-500 mt-0.5">
-                  Set up 1 to 4 package tiers (e.g. Basic, Standard, VIP Transit, or All-Inclusive). Tourists choose their package directly during booking.
+                  Design 1 to 4 tailored package tiers with custom inclusions and exclusions. Tourists will choose their package directly on the tour page.
                 </p>
               </div>
 
@@ -1047,11 +943,11 @@ export default function CreateGigPage() {
               )}
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {packages.map((pkg, idx) => (
                 <div 
                   key={pkg.id || idx} 
-                  className="p-4 rounded-2xl bg-dark-50/60 border border-dark-200/80 space-y-4 hover:border-primary/40 transition-colors"
+                  className="p-5 rounded-2xl bg-dark-50/60 border border-dark-200 space-y-4 hover:border-primary/50 transition-colors shadow-xs"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -1069,7 +965,7 @@ export default function CreateGigPage() {
                         onClick={() => removePackage(idx)}
                         className="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                        <Trash2 className="w-3.5 h-3.5" /> Remove Package
                       </button>
                     )}
                   </div>
@@ -1081,8 +977,8 @@ export default function CreateGigPage() {
                       </label>
                       <input
                         type="text"
-                        className="w-full p-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-medium"
-                        placeholder="e.g. Standard Walking, VIP Comfort with Train Pass"
+                        className="w-full p-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-semibold"
+                        placeholder="e.g. Basic Tour, Standard Transit, VIP All-Inclusive"
                         value={pkg.name}
                         onChange={(e) => updatePackageField(idx, "name", e.target.value)}
                         required
@@ -1111,27 +1007,28 @@ export default function CreateGigPage() {
 
                   <div>
                     <label className="block text-xs font-bold text-dark-700 mb-1">
-                      Short Description / What makes this package special
+                      Package Summary & Experience Highlights
                     </label>
                     <input
                       type="text"
                       className="w-full p-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
-                      placeholder="e.g. Includes private AC vehicle, authentic bento lunch & all entrance tickets"
+                      placeholder="e.g. Full guided walking tour with public transit pass, bento lunch & admission"
                       value={pkg.description}
                       onChange={(e) => updatePackageField(idx, "description", e.target.value)}
                     />
                   </div>
 
-                  {/* Included Perks for this Package */}
-                  <div className="space-y-2 pt-2 border-t border-dark-200/60">
-                    <label className="block text-xs font-bold text-dark-700">
-                      Included Benefits / Perks in this Package
+                  {/* 1. What's Included in THIS Package */}
+                  <div className="space-y-2 pt-3 border-t border-dark-200/80">
+                    <label className="block text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> What&apos;s Included in this Package
                     </label>
+                    
                     <div className="flex gap-2">
                       <input
                         type="text"
                         className="flex-grow p-2 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
-                        placeholder="e.g. Bullet Train / Shinkansen Pass, Buffet Lunch, Van Transport"
+                        placeholder="Type inclusion and press Enter or Add..."
                         value={packagePerkInput[idx] || ""}
                         onChange={(e) => setPackagePerkInput({ ...packagePerkInput, [idx]: e.target.value })}
                         onKeyDown={(e) => {
@@ -1144,39 +1041,37 @@ export default function CreateGigPage() {
                       <button
                         type="button"
                         onClick={() => addPackageInclude(idx)}
-                        className="px-3 py-2 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary-dark transition-all cursor-pointer"
+                        className="px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-all cursor-pointer"
                       >
                         + Add
                       </button>
                     </div>
 
-                    {/* Quick Preset Buttons */}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    {/* Quick Presets for Inclusions */}
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
                       {[
+                        "Licensed Local Guide",
                         "Public Train / Bus Pass",
                         "Private AC Van Transport",
-                        "Lunch / Food Tasting",
-                        "Temple / Museum Admission Tickets",
+                        "Local Food Tasting / Lunch",
+                        "Temple / Museum Tickets",
+                        "Bottled Mineral Water",
                         "Hotel Pickup & Drop",
-                        "Professional Camera Photography",
+                        "Photography Assistance",
                       ].map((preset) => (
                         <button
                           key={preset}
                           type="button"
-                          onClick={() => {
-                            if (!pkg.includes.includes(preset)) {
-                              updatePackageField(idx, "includes", [...pkg.includes, preset]);
-                            }
-                          }}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-white text-dark-700 border border-dark-200 hover:border-primary hover:text-primary transition-all cursor-pointer"
+                          onClick={() => addPackageInclude(idx, preset)}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white text-dark-700 border border-dark-200 hover:border-emerald-500 hover:text-emerald-700 transition-all cursor-pointer"
                         >
                           + {preset}
                         </button>
                       ))}
                     </div>
 
-                    {/* Active Perks List */}
-                    {pkg.includes.length > 0 && (
+                    {/* Active Inclusions List */}
+                    {pkg.includes && pkg.includes.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {pkg.includes.map((perk, pIdx) => (
                           <span
@@ -1189,6 +1084,78 @@ export default function CreateGigPage() {
                               type="button"
                               onClick={() => removePackageInclude(idx, pIdx)}
                               className="text-emerald-700 hover:text-red-500 font-bold ml-1 cursor-pointer"
+                            >
+                              &times;
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. What's NOT Included in THIS Package */}
+                  <div className="space-y-2 pt-3 border-t border-dark-200/80">
+                    <label className="block text-xs font-bold text-red-800 flex items-center gap-1.5">
+                      <XCircle className="w-3.5 h-3.5 text-red-500" /> What&apos;s NOT Included in this Package
+                    </label>
+                    
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        className="flex-grow p-2 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
+                        placeholder="Type exclusion and press Enter or Add..."
+                        value={packageExcludeInput[idx] || ""}
+                        onChange={(e) => setPackageExcludeInput({ ...packageExcludeInput, [idx]: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addPackageExclude(idx);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addPackageExclude(idx)}
+                        className="px-3.5 py-1.5 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition-all cursor-pointer"
+                      >
+                        + Add
+                      </button>
+                    </div>
+
+                    {/* Quick Presets for Exclusions */}
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {[
+                        "Personal Shopping Expenses",
+                        "Alcoholic Beverages",
+                        "Dinner Expenses",
+                        "Hotel Pick-up & Drop-off",
+                        "Gratuities & Tips",
+                      ].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => addPackageExclude(idx, preset)}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white text-dark-700 border border-dark-200 hover:border-red-500 hover:text-red-700 transition-all cursor-pointer"
+                        >
+                          + {preset}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Active Exclusions List */}
+                    {pkg.excludes && pkg.excludes.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {pkg.excludes.map((exItem, eIdx) => (
+                          <span
+                            key={eIdx}
+                            className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-800 border border-red-200/80 px-2.5 py-1 rounded-lg font-medium"
+                          >
+                            <XCircle className="w-3 h-3 text-red-500" />
+                            {exItem}
+                            <button
+                              type="button"
+                              onClick={() => removePackageExclude(idx, eIdx)}
+                              className="text-red-700 hover:text-red-900 font-bold ml-1 cursor-pointer"
                             >
                               &times;
                             </button>
