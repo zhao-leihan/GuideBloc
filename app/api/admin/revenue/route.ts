@@ -67,20 +67,50 @@ export async function GET() {
       };
     });
 
-    // 5. Escrow and Payout Metrics
-    const escrowAgg = await prisma.booking.aggregate({
-      where: {
-        status: { in: ["CONFIRMED", "PAID", "DISPUTED"] },
+    // 5. GMV, Escrow TVL, and Payout Metrics
+    const allBookings = await prisma.booking.findMany({
+      select: {
+        id: true,
+        status: true,
+        totalPriceUSD: true,
       },
-      _sum: { totalPriceUSD: true },
     });
-    const totalEscrowLocked = escrowAgg._sum.totalPriceUSD || 0;
+
+    const totalBookings = allBookings.length;
+    const gmv = allBookings
+      .filter((b) => b.status !== "CANCELLED")
+      .reduce((acc, b) => acc + (b.totalPriceUSD || 0), 0);
+
+    const activeEscrowBookings = allBookings.filter((b) =>
+      ["CONFIRMED", "PAID"].includes(b.status)
+    );
+    const activeEscrowTVL = activeEscrowBookings.reduce(
+      (acc, b) => acc + (b.totalPriceUSD || 0),
+      0
+    );
+
+    const disputedOrRefundedCount = allBookings.filter((b) =>
+      ["CANCELLED", "DISPUTED"].includes(b.status)
+    ).length;
+    const disputeRate = totalBookings > 0
+      ? Number(((disputedOrRefundedCount / totalBookings) * 100).toFixed(1))
+      : 0;
 
     const payoutAgg = await prisma.escrowPayout.aggregate({
       where: { status: "COMPLETED" },
       _sum: { guideAmountUSD: true },
+      _count: { id: true },
     });
     const totalGuidePayouts = payoutAgg._sum.guideAmountUSD || 0;
+    const completedPayoutsCount = payoutAgg._count.id || 0;
+
+    // Estimate Relayer / Gas OpEx subsidized on Avalanche C-Chain ($0.25 - $0.40 per tx)
+    const gasOpEx = Number(((completedPayoutsCount * 0.40) + (totalBookings * 0.15)).toFixed(2));
+    const grossRevenue = totalRevenue;
+    const netMargin = Math.max(0, Number((grossRevenue - gasOpEx).toFixed(2)));
+    const marginPercent = grossRevenue > 0
+      ? ((netMargin / grossRevenue) * 100).toFixed(1)
+      : "100.0";
 
     // 6. Monthly Time-Series Trend (Past 6 Months)
     const monthlyTrendMap = new Map<string, { label: string; commission: number; subscriptions: number; boosts: number; tips: number; total: number }>();
@@ -121,12 +151,12 @@ export async function GET() {
     const topSourcePercent = totalRevenue > 0 ? Math.round((topAmount / totalRevenue) * 100) : 0;
     const financialInsights = {
       summary: totalRevenue > 0
-        ? `Platform cash flow is healthy. Your primary revenue driver is ${topSource}, accounting for ${topSourcePercent}% of all net platform income.`
-        : "Platform financial engine is initialized. New commissions and fees will automatically chart here as tours are booked.",
-      escrowNote: totalEscrowLocked > 0
-        ? `$${totalEscrowLocked.toLocaleString()} USD is currently held safely in decentralized smart contracts awaiting tour completion.`
+        ? `Platform cash flow is healthy with a ${marginPercent}% net margin. Primary driver is ${topSource}, accounting for ${topSourcePercent}% of gross treasury earnings.`
+        : "Platform financial engine is initialized. New commissions and metrics will automatically chart here as tours are booked.",
+      escrowNote: activeEscrowTVL > 0
+        ? `$${activeEscrowTVL.toLocaleString()} USDC is currently held safely in decentralized smart contracts awaiting tour completion.`
         : "All past escrow balances have been completely disbursed to tour guides with zero locked funds remaining.",
-      payoutNote: `$${totalGuidePayouts.toLocaleString()} USD has been successfully transferred to tour guides' crypto wallets to date.`
+      payoutNote: `$${totalGuidePayouts.toLocaleString()} USDC has been successfully transferred to tour guides' crypto wallets to date.`
     };
 
     // 8. Mapped Transactions List
@@ -140,9 +170,17 @@ export async function GET() {
     }));
 
     return NextResponse.json({
+      gmv,
+      grossRevenue,
+      gasOpEx,
+      netMargin,
+      marginPercent,
+      activeEscrowTVL,
+      disputeRate,
+      totalBookings,
+      disputedOrRefundedCount,
       totalRevenue,
       thisMonthRevenue,
-      totalEscrowLocked,
       totalGuidePayouts,
       sources,
       monthlyTrends,
@@ -150,10 +188,7 @@ export async function GET() {
       transactions: mappedTransactions,
     });
   } catch (error) {
-    console.error("Admin revenue error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("[Admin Revenue API Error]", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

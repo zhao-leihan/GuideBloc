@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   DollarSign, TrendingUp, ExternalLink, ShieldCheck, Lock, CheckCircle2, 
-  Lightbulb, LineChart, BarChart3, PieChart as PieIcon, ArrowUpRight, Wallet
+  Lightbulb, LineChart, BarChart3, PieChart as PieIcon, ArrowUpRight, Wallet,
+  Zap, AlertTriangle, Coins, ShieldAlert
 } from "lucide-react";
 import { ClipboardIcon, CardStackIcon, RocketIcon, TokensIcon } from "@radix-ui/react-icons";
 import toast from "react-hot-toast";
@@ -55,19 +56,29 @@ interface Transaction {
   ref: string;
 }
 
+interface AdminRevenueData {
+  gmv: number;
+  grossRevenue: number;
+  gasOpEx: number;
+  netMargin: number;
+  marginPercent: string;
+  activeEscrowTVL: number;
+  disputeRate: number;
+  totalBookings: number;
+  disputedOrRefundedCount: number;
+  totalRevenue: number;
+  thisMonthRevenue: number;
+  totalGuidePayouts: number;
+  sources: SourceBreakdown[];
+  monthlyTrends: MonthlyTrendItem[];
+  financialInsights: FinancialInsights;
+  transactions: Transaction[];
+}
+
 const PIE_COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"];
 
 export default function AdminRevenuePage() {
-  const [data, setData] = useState<{
-    totalRevenue: number;
-    thisMonthRevenue: number;
-    totalEscrowLocked: number;
-    totalGuidePayouts: number;
-    sources: SourceBreakdown[];
-    monthlyTrends: MonthlyTrendItem[];
-    financialInsights: FinancialInsights;
-    transactions: Transaction[];
-  } | null>(null);
+  const [data, setData] = useState<AdminRevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartMode, setChartMode] = useState<"area" | "bar">("area");
   const [mounted, setMounted] = useState(false);
@@ -123,15 +134,15 @@ export default function AdminRevenuePage() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-dark-900">Financial Analytics & Revenue</h1>
+            <h1 className="text-2xl font-bold text-dark-900">Financial Analytics & Treasury</h1>
             <p className="text-dark-500 text-sm">
-              Live platform financials, decentralized escrow balances, and income stream breakdown
+              Live marketplace GMV, protocol treasury earnings, gas operations, and risk metrics (USDC)
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Blockchain Sync
+              Live Avalanche C-Chain Sync
             </span>
           </div>
         </div>
@@ -151,7 +162,7 @@ export default function AdminRevenuePage() {
                 <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20">
                   <Lightbulb className="w-5 h-5" />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 flex-1">
                   <h3 className="font-bold text-dark-900 text-base flex items-center gap-2">
                     Executive Financial Summary
                     <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-md">
@@ -175,84 +186,145 @@ export default function AdminRevenuePage() {
               </div>
             </div>
 
-            {/* 2. Simplified Financial KPI Cards */}
+            {/* 2. Four Vital Financial Cards (Marketplace Standard) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Card 1: Platform Treasury Net Inflow */}
+              {/* Card 1: GMV (Gross Merchandise Value) */}
               <div className="card p-5 bg-white border border-dark-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between text-dark-400 mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-dark-500">
-                    Net Platform Treasury
+                  <span className="text-xs font-bold uppercase tracking-wider text-dark-500">
+                    GMV (Gross Volume)
                   </span>
                   <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <DollarSign className="w-4 h-4" />
+                    <Coins className="w-4 h-4" />
                   </div>
                 </div>
                 <p className="text-2xl font-black text-dark-900">
-                  ${data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USDT</span>
+                  ${(data.gmv || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USDC</span>
                 </p>
-                <p className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">
+                <p className="text-xs text-indigo-600 font-bold mt-2 flex items-center gap-1">
                   <ArrowUpRight className="w-3.5 h-3.5" />
-                  Total retained platform earnings
+                  Total tourist gross booking volume
                 </p>
               </div>
 
-              {/* Card 2: This Month's Revenue */}
+              {/* Card 2: Gross Revenue (Treasury) */}
               <div className="card p-5 bg-white border border-dark-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between text-dark-400 mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-dark-500">
-                    This Month
+                  <span className="text-xs font-bold uppercase tracking-wider text-dark-500">
+                    Gross Revenue (Treasury)
                   </span>
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <TrendingUp className="w-4 h-4" />
                   </div>
                 </div>
                 <p className="text-2xl font-black text-dark-900">
-                  ${data.thisMonthRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USDT</span>
+                  ${(data.grossRevenue || data.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USDC</span>
                 </p>
-                <p className="text-xs text-dark-500 font-medium mt-2">
-                  Current calendar billing period
+                <p className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  10% Take-rate protocol earnings
                 </p>
               </div>
 
-              {/* Card 3: Active Escrow Holdings */}
+              {/* Card 3: Relayer / Gas OpEx */}
               <div className="card p-5 bg-white border border-dark-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between text-dark-400 mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-dark-500">
-                    Active Escrow Holdings
+                  <span className="text-xs font-bold uppercase tracking-wider text-dark-500">
+                    Relayer / Gas OpEx
                   </span>
                   <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <Lock className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                   </div>
                 </div>
                 <p className="text-2xl font-black text-dark-900">
-                  ${(data.totalEscrowLocked || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USD</span>
+                  ${(data.gasOpEx || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USDC</span>
                 </p>
-                <p className="text-xs text-amber-600 font-bold mt-2 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Held in Fuji / C-Chain Smart Contract
+                <p className="text-xs text-amber-700 font-medium mt-2">
+                  Subsidized network gas for guides
                 </p>
               </div>
 
-              {/* Card 4: Total Guide Payouts */}
+              {/* Card 4: Net Platform Margin */}
               <div className="card p-5 bg-white border border-dark-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between text-dark-400 mb-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-dark-500">
-                    Guide Payouts Disbursed
+                  <span className="text-xs font-bold uppercase tracking-wider text-dark-500">
+                    Net Platform Margin
                   </span>
                   <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <CheckCircle2 className="w-4 h-4" />
+                    <Wallet className="w-4 h-4" />
                   </div>
                 </div>
                 <p className="text-2xl font-black text-dark-900">
-                  ${(data.totalGuidePayouts || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USD</span>
+                  ${(data.netMargin || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-semibold text-dark-400">USDC</span>
                 </p>
                 <p className="text-xs text-blue-600 font-bold mt-2">
-                  Successfully delivered to guides
+                  Retained treasury ({data.marginPercent || "100.0"}% margin)
                 </p>
               </div>
             </div>
 
-            {/* 3. Financial Visual Graphics (Charts) */}
+            {/* 3. Operational Risk & Liquidity Indicators (2 Vital Cards) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Risk Card 1: Active Escrow TVL */}
+              <div className="card p-5 bg-white border border-amber-200/80 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Lock className="w-4 h-4 text-amber-600" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-dark-600">
+                        Active Escrow TVL (Total Value Locked)
+                      </span>
+                    </div>
+                    <p className="text-2xl font-black text-dark-900">
+                      ${(data.activeEscrowTVL || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                      <span className="text-sm font-semibold text-dark-400">USDC</span>
+                    </p>
+                    <p className="text-xs text-dark-600 mt-2 font-medium">
+                      Tourist funds currently secured in smart contracts awaiting tour completion.
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
+                    Active TVL
+                  </span>
+                </div>
+              </div>
+
+              {/* Risk Card 2: Dispute / Refund Rate */}
+              <div className={`card p-5 bg-white border transition-shadow ${
+                (data.disputeRate || 0) > 5 ? "border-red-300" : "border-emerald-200/80"
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <ShieldAlert className={`w-4 h-4 ${(data.disputeRate || 0) > 5 ? "text-red-500" : "text-emerald-600"}`} />
+                      <span className="text-xs font-bold uppercase tracking-wider text-dark-600">
+                        Dispute & Refund Rate (%)
+                      </span>
+                    </div>
+                    <p className="text-2xl font-black text-dark-900">
+                      {data.disputeRate || 0}%{" "}
+                      <span className="text-xs font-normal text-dark-400">
+                        ({data.disputedOrRefundedCount || 0} of {data.totalBookings || 0} orders)
+                      </span>
+                    </p>
+                    <p className="text-xs text-dark-600 mt-2 font-medium">
+                      {(data.disputeRate || 0) <= 5 
+                        ? "Platform risk is healthy. Quality of local guides and communication is well maintained."
+                        : "Attention recommended: Cancellation/dispute rate exceeds 5% threshold."}
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 border ${
+                    (data.disputeRate || 0) <= 5
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      : "bg-red-50 text-red-800 border-red-200"
+                  }`}>
+                    {(data.disputeRate || 0) <= 5 ? "Healthy (< 5%)" : "Attention (> 5%)"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Financial Visual Graphics (Charts) */}
             {mounted && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left: Monthly Trend Chart */}
@@ -266,7 +338,7 @@ export default function AdminRevenuePage() {
                         </h3>
                       </div>
                       <p className="text-xs text-dark-500 mt-1">
-                        Monthly cash inflow from bookings, subscriptions, boosts & tips
+                        Monthly platform earnings from tour escrow commissions & marketplace volume
                       </p>
                     </div>
 
@@ -324,7 +396,7 @@ export default function AdminRevenuePage() {
                             tickFormatter={(val) => `$${val}`}
                           />
                           <Tooltip
-                            formatter={(val: any) => [`$${Number(val).toLocaleString()} USDT`, "Total Inflow"]}
+                            formatter={(val: any) => [`$${Number(val).toLocaleString()} USDC`, "Total Inflow"]}
                             contentStyle={{
                               backgroundColor: "#0f172a",
                               border: "none",
@@ -363,7 +435,7 @@ export default function AdminRevenuePage() {
                             tickFormatter={(val) => `$${val}`}
                           />
                           <Tooltip
-                            formatter={(val: any, name: any) => [`$${Number(val).toLocaleString()} USDT`, name]}
+                            formatter={(val: any, name: any) => [`$${Number(val).toLocaleString()} USDC`, name]}
                             contentStyle={{
                               backgroundColor: "#0f172a",
                               border: "none",
@@ -426,7 +498,7 @@ export default function AdminRevenuePage() {
                         </Pie>
                         <Tooltip
                           formatter={(val: any, name: any) => [
-                            pieData.length > 0 ? `$${Number(val).toLocaleString()} USDT` : "No Data Yet",
+                            pieData.length > 0 ? `$${Number(val).toLocaleString()} USDC` : "No Data Yet",
                             name,
                           ]}
                           contentStyle={{
@@ -479,7 +551,7 @@ export default function AdminRevenuePage() {
               </div>
             )}
 
-            {/* 4. Detailed Revenue by Source List */}
+            {/* 5. Detailed Revenue by Source List */}
             <div className="card p-6">
               <h3 className="font-display font-semibold text-dark-900 mb-6">Revenue by Source Details</h3>
               <div className="space-y-4">
@@ -497,7 +569,7 @@ export default function AdminRevenuePage() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span className="font-medium text-dark-700">{item.source}</span>
-                            <span className="font-bold text-dark-900">${item.amount.toLocaleString()} USDT ({item.percent}%)</span>
+                            <span className="font-bold text-dark-900">${item.amount.toLocaleString()} USDC ({item.percent}%)</span>
                           </div>
                           <div className="h-2.5 bg-dark-100 rounded-full overflow-hidden">
                             <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${item.percent}%` }} />
@@ -510,7 +582,7 @@ export default function AdminRevenuePage() {
               </div>
             </div>
 
-            {/* 5. Recent Transactions Table */}
+            {/* 6. Recent Transactions Table */}
             <div className="card p-6">
               <h3 className="font-display font-semibold text-dark-900 mb-4">Recent Inflow Transactions</h3>
               <div className="overflow-x-auto">
@@ -536,7 +608,7 @@ export default function AdminRevenuePage() {
                           <td className="py-3">
                             <span className="badge badge-primary text-xs capitalize">{tx.source}</span>
                           </td>
-                          <td className="py-3 font-medium text-dark-900">${tx.amount.toLocaleString()} USDT</td>
+                          <td className="py-3 font-medium text-dark-900">${tx.amount.toLocaleString()} USDC</td>
                           <td className="py-3">
                             {tx.fullHash ? (
                               <a 
@@ -560,7 +632,7 @@ export default function AdminRevenuePage() {
               </div>
             </div>
 
-            {/* 6. Platform Treasury Wallet Card */}
+            {/* 7. Platform Treasury Wallet Card */}
             <div className="card p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-5 h-5 text-indigo-600" />
@@ -581,7 +653,7 @@ export default function AdminRevenuePage() {
                 <div className="p-4 bg-dark-50 rounded-xl">
                   <p className="text-xs text-dark-400 mb-1">Accumulated Realized Platform Revenue</p>
                   <p className="font-bold text-dark-900 text-lg">
-                    ${data.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT
+                    ${(data.grossRevenue || data.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
                   </p>
                 </div>
               </div>
