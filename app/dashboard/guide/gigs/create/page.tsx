@@ -979,9 +979,9 @@ export default function CreateGigPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-dark-700 mb-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
+                    <div className="sm:col-span-7 md:col-span-8">
+                      <label className="block text-xs font-bold text-dark-700 mb-1.5 h-4 leading-4 truncate">
                         Package Name *
                       </label>
                       <input
@@ -994,9 +994,9 @@ export default function CreateGigPage() {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-dark-700 mb-1">
-                        Your Take-Home Payout (USDC / USD) *
+                    <div className="sm:col-span-5 md:col-span-4">
+                      <label className="block text-xs font-bold text-dark-700 mb-1.5 h-4 leading-4 truncate" title="Your Take-Home Payout (USDC / USD) *">
+                        Take-Home Price (USDC) *
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
