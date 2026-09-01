@@ -13,13 +13,38 @@ export async function POST(req: Request) {
       // Allow during setup if admin is logged in
     }
 
-    const { contractAddress } = await req.json();
+    const { contractAddress, tokenAddress } = await req.json();
 
-    if (!contractAddress || !contractAddress.startsWith("0x") || contractAddress.length !== 42) {
-      return NextResponse.json({ message: "Invalid contract address" }, { status: 400 });
+    const targetAddress = tokenAddress || contractAddress;
+
+    if (!targetAddress || !targetAddress.startsWith("0x") || targetAddress.length !== 42) {
+      return NextResponse.json({ message: "Invalid address" }, { status: 400 });
     }
 
-    // Update .env
+    if (tokenAddress) {
+      // Update lib/crypto/networkConfig.ts
+      const configPath = path.resolve("lib/crypto/networkConfig.ts");
+      if (fs.existsSync(configPath)) {
+        let configContent = fs.readFileSync(configPath, "utf-8");
+        configContent = configContent.replace(
+          /usdcTokenAddress:\s*"0x[a-fA-F0-9]{40}"/,
+          `usdcTokenAddress: "${tokenAddress}"`
+        );
+        configContent = configContent.replace(
+          /usdtTokenAddress:\s*"0x[a-fA-F0-9]{40}"/,
+          `usdtTokenAddress: "${tokenAddress}"`
+        );
+        fs.writeFileSync(configPath, configContent, "utf-8");
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `USDC Token address updated to ${tokenAddress}`,
+        tokenAddress,
+      });
+    }
+
+    // Update .env for escrow
     const envPath = path.resolve(".env");
     if (fs.existsSync(envPath)) {
       let content = fs.readFileSync(envPath, "utf-8");

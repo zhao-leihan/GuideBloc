@@ -96,16 +96,24 @@ export async function POST(req: Request) {
     }
 
     // Calculate pricing based on selected package if provided
-    const pkgPrice = data.selectedPackage?.priceUSD 
-      ? parseFloat(data.selectedPackage.priceUSD) 
-      : (gig.client_price || gig.priceUSD);
-    const client_price = Math.round(pkgPrice * 100) / 100;
-    const guide_price = Math.round((client_price * 0.90) * 100) / 100;
-    const platform_fee = Math.round((client_price - guide_price) * 100) / 100;
+    let client_price = 0;
+    let guide_price = 0;
+    let platform_fee = 0;
+
+    if (data.selectedPackage) {
+      client_price = parseFloat(data.selectedPackage.client_price || data.selectedPackage.priceUSD || "0");
+      guide_price = parseFloat(data.selectedPackage.guide_price || (client_price / 1.10).toFixed(2));
+      platform_fee = Math.round((client_price - guide_price) * 100) / 100;
+    } else {
+      client_price = gig.client_price || gig.priceUSD;
+      guide_price = gig.guide_price || Math.round((client_price / 1.10) * 100) / 100;
+      platform_fee = Math.round((client_price - guide_price) * 100) / 100;
+    }
 
     const subtotalUSD = Math.round(client_price * data.groupSize * 100) / 100;
     const discountUSD = data.discountUSD ? parseFloat(data.discountUSD) : 0;
-    const finalTotalPriceUSD = Math.max(1, Math.round((subtotalUSD - discountUSD) * 100) / 100);
+    const finalTotalPriceUSD = Math.max(0.01, Math.round((subtotalUSD - discountUSD) * 100) / 100);
+    const totalPlatformFee = Math.round(platform_fee * data.groupSize * 100) / 100;
 
     const oneDayInMs = 24 * 60 * 60 * 1000;
     const expiresAt = new Date(Date.now() + oneDayInMs);
@@ -120,13 +128,13 @@ export async function POST(req: Request) {
         groupSize: data.groupSize,
         totalPriceUSD: finalTotalPriceUSD,
         totalPriceCrypto: finalTotalPriceUSD,
-        discountUSD,
+        discountUSD: discountUSD > 0 ? discountUSD : null,
         promoCode: data.promoCode || null,
         selectedPackage: data.selectedPackage || null,
         cryptoToken: data.cryptoToken || "USDT",
-        guide_price,
-        client_price,
-        platform_fee,
+        guide_price: Math.round(guide_price * data.groupSize * 100) / 100,
+        client_price: finalTotalPriceUSD,
+        platform_fee: totalPlatformFee,
         specialRequests: data.specialRequests,
         status: "PENDING",
         expiresAt,

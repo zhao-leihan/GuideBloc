@@ -479,10 +479,18 @@ export default function CreateGigPage() {
           benefits: aggregatedIncluded,
           availableDays,
           availableTimes,
-          packages: packages.map((pkg) => ({
-            ...pkg,
-            priceUSD: pkg.priceUSD > 0 ? pkg.priceUSD : baseGuidePrice,
-          })),
+          packages: packages.map((pkg) => {
+            const guide_p = pkg.priceUSD > 0 ? pkg.priceUSD : baseGuidePrice;
+            const client_p = Math.round(guide_p * 1.10 * 100) / 100;
+            const fee_p = Math.round((client_p - guide_p) * 100) / 100;
+            return {
+              ...pkg,
+              guide_price: guide_p,
+              client_price: client_p,
+              platform_fee: fee_p,
+              priceUSD: client_p,
+            };
+          }),
           promos: promos.filter(p => p.isActive && p.discountPercent > 0),
         }),
       });
@@ -987,22 +995,32 @@ export default function CreateGigPage() {
 
                     <div>
                       <label className="block text-xs font-bold text-dark-700 mb-1">
-                        Price per Person (USDC / USD) *
+                        Your Take-Home Payout (USDC / USD) *
                       </label>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
                         <input
                           type="number"
                           step="0.01"
-                          min="1"
+                          min="0.01"
                           className="w-full pl-8 pr-3 py-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-bold"
-                          placeholder="45"
+                          placeholder="12.00"
                           value={pkg.priceUSD || ""}
                           onChange={(e) => updatePackageField(idx, "priceUSD", parseFloat(e.target.value) || 0)}
                           required
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Pricing Breakdown Card */}
+                  <div className="flex flex-wrap items-center justify-between text-xs bg-emerald-50/60 border border-emerald-500/20 p-2.5 rounded-xl">
+                    <span className="text-dark-700 font-medium">
+                      Your Net Payout (100%): <strong className="text-emerald-700 font-extrabold">${Number(pkg.priceUSD || 0).toFixed(2)} USDC</strong>
+                    </span>
+                    <span className="text-dark-600">
+                      Tourist Price (+10% platform fee): <strong className="text-primary font-extrabold">${(Number(pkg.priceUSD || 0) * 1.10).toFixed(2)} USDC</strong>
+                    </span>
                   </div>
 
                   <div>

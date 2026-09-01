@@ -49,8 +49,8 @@ export async function POST(
       );
     }
 
-    const commissionAmount = booking.platform_fee ?? booking.totalPriceUSD * 0.1;
-    const guideAmount = booking.totalPriceUSD - commissionAmount;
+    const guideAmount = booking.guide_price ?? (booking.totalPriceUSD - (booking.platform_fee ?? (booking.totalPriceUSD * 0.1)));
+    const commissionAmount = booking.platform_fee ?? (booking.totalPriceUSD - guideAmount);
     const guideWallet =
       booking.guideWalletSnapshot ||
       booking.gig.guide.walletAddress ||

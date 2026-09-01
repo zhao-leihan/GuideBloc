@@ -131,17 +131,33 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
-    // Platform fee system
-    // Guide wants to earn guide_price.
-    // Client price paid by tourist is client_price = guide_price / 0.90
-    // Platform fee is platform_fee = client_price - guide_price
+    // Platform fee system (Buyer-pays fee model)
+    // Guide wants to earn guide_price (e.g. $12.00).
+    // Client price paid by tourist is client_price = guide_price * 1.10 (e.g. $13.20).
+    // Platform fee is platform_fee = client_price - guide_price (e.g. $1.20).
     const guide_price = Math.round(parseFloat(data.guide_price || data.priceUSD || "0") * 100) / 100;
-    const client_price = Math.round((guide_price / 0.90) * 100) / 100;
+    const client_price = Math.round((guide_price * 1.10) * 100) / 100;
     const platform_fee = Math.round((client_price - guide_price) * 100) / 100;
+
+    const formattedPackages = Array.isArray(data.packages)
+      ? data.packages.map((pkg: any) => {
+          const gPrice = parseFloat(pkg.guide_price || pkg.priceUSD || guide_price.toString());
+          const cPrice = Math.round((gPrice * 1.10) * 100) / 100;
+          const pFee = Math.round((cPrice - gPrice) * 100) / 100;
+          return {
+            ...pkg,
+            guide_price: gPrice,
+            client_price: cPrice,
+            platform_fee: pFee,
+            priceUSD: cPrice,
+          };
+        })
+      : null;
 
     const gig = await prisma.gig.create({
       data: {
         ...data,
+        packages: formattedPackages ?? data.packages,
         guide_price,
         client_price,
         platform_fee,
