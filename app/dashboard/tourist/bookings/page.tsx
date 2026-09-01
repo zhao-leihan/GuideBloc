@@ -92,6 +92,7 @@ export default function TouristBookingsPage() {
         const userId = (session?.user as any)?.id;
         // Map database schema to frontend expected layout
         const mapped = data.map((b: any) => ({
+          ...b,
           id: b.id,
           tourName: b.gig?.title || "Unknown Tour",
           guideName: b.gig?.guide?.name || "Unknown Guide",
@@ -100,6 +101,11 @@ export default function TouristBookingsPage() {
           date: new Date(b.bookingDate).toISOString().split("T")[0],
           bookingTime: b.bookingTime || "",
           amountUSD: b.totalPriceUSD,
+          totalPriceUSD: b.totalPriceUSD,
+          guide_price: b.guide_price,
+          platform_fee: b.platform_fee,
+          gig: b.gig,
+          proofPhoto: b.proofPhoto || null,
           status: b.status === "CONFIRMED" ? "FUNDED" : b.status,
           txHash: b.txHash || "N/A",
           location: b.gig?.location || "Unknown Location",

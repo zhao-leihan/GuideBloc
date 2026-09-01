@@ -16,7 +16,7 @@ import PaymentModal from "@/components/payment/PaymentModal";
 interface TourPackageItem {
   id: string;
   name: string;
-  priceUSD: number;
+  priceUSD: number | string;
   description: string;
   includes: string[];
   excludes: string[];
@@ -119,7 +119,7 @@ export default function CreateGigPage() {
       return;
     }
     const newId = `pkg-${Date.now()}`;
-    const basePrice = packages[0]?.priceUSD || 45;
+    const basePrice = parseFloat(String(packages[0]?.priceUSD || 45)) || 45;
     const multiplier = packages.length === 1 ? 1.5 : packages.length === 2 ? 2.2 : 3.0;
     const tierNames = ["Standard Package", "Comfort Transit Package", "VIP All-Inclusive Package"];
     const tierInclusions = [
@@ -138,7 +138,7 @@ export default function CreateGigPage() {
       {
         id: newId,
         name: tierNames[packages.length - 1] || `Tier ${packages.length + 1} Package`,
-        priceUSD: Math.round(basePrice * multiplier),
+        priceUSD: Math.round(basePrice * multiplier * 100) / 100,
         description: "Includes extended transport, meals, or attraction entry tickets",
         includes: tierInclusions[packages.length - 1] || ["Licensed Local Tour Guide", "Transportation Included"],
         excludes: tierExclusions[packages.length - 1] || ["Personal Shopping Expenses"],
@@ -440,8 +440,8 @@ export default function CreateGigPage() {
       return;
     }
 
-    if (packages.length === 0 || packages.some(pkg => !pkg.name || !pkg.priceUSD || pkg.priceUSD <= 0)) {
-      toast.error("Please configure at least 1 package with a valid name and price");
+    if (packages.length === 0 || packages.some(pkg => !pkg.name || parseFloat(String(pkg.priceUSD || 0)) <= 0)) {
+      toast.error("Please configure at least 1 package with a valid name and price (min $0.01)");
       return;
     }
 
@@ -454,7 +454,7 @@ export default function CreateGigPage() {
       setIsCreating(true);
       toast.loading("Creating your tour gig...", { id: "create-gig" });
 
-      const baseGuidePrice = packages[0].priceUSD;
+      const baseGuidePrice = parseFloat(String(packages[0].priceUSD)) || 0.01;
       const aggregatedIncluded = Array.from(new Set(packages.flatMap(p => p.includes || [])));
       const aggregatedExcluded = Array.from(new Set(packages.flatMap(p => p.excludes || [])));
 
@@ -480,7 +480,8 @@ export default function CreateGigPage() {
           availableDays,
           availableTimes,
           packages: packages.map((pkg) => {
-            const guide_p = pkg.priceUSD > 0 ? pkg.priceUSD : baseGuidePrice;
+            const parsedP = parseFloat(String(pkg.priceUSD));
+            const guide_p = !isNaN(parsedP) && parsedP > 0 ? parsedP : baseGuidePrice;
             const client_p = Math.round(guide_p * 1.10 * 100) / 100;
             const fee_p = Math.round((client_p - guide_p) * 100) / 100;
             return {
@@ -1004,9 +1005,9 @@ export default function CreateGigPage() {
                           step="0.01"
                           min="0.01"
                           className="w-full pl-8 pr-3 py-2.5 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-sm font-bold"
-                          placeholder="12.00"
-                          value={pkg.priceUSD || ""}
-                          onChange={(e) => updatePackageField(idx, "priceUSD", parseFloat(e.target.value) || 0)}
+                          placeholder="0.01"
+                          value={pkg.priceUSD !== undefined ? pkg.priceUSD : ""}
+                          onChange={(e) => updatePackageField(idx, "priceUSD", e.target.value)}
                           required
                         />
                       </div>
@@ -1016,10 +1017,10 @@ export default function CreateGigPage() {
                   {/* Pricing Breakdown Card */}
                   <div className="flex flex-wrap items-center justify-between text-xs bg-emerald-50/60 border border-emerald-500/20 p-2.5 rounded-xl">
                     <span className="text-dark-700 font-medium">
-                      Your Net Payout (100%): <strong className="text-emerald-700 font-extrabold">${Number(pkg.priceUSD || 0).toFixed(2)} USDC</strong>
+                      Your Net Payout (100%): <strong className="text-emerald-700 font-extrabold">${(parseFloat(String(pkg.priceUSD || 0)) || 0).toFixed(2)} USDC</strong>
                     </span>
                     <span className="text-dark-600">
-                      Tourist Price (+10% platform fee): <strong className="text-primary font-extrabold">${(Number(pkg.priceUSD || 0) * 1.10).toFixed(2)} USDC</strong>
+                      Tourist Price (+10% platform fee): <strong className="text-primary font-extrabold">${((parseFloat(String(pkg.priceUSD || 0)) || 0) * 1.10).toFixed(2)} USDC</strong>
                     </span>
                   </div>
 
