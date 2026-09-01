@@ -1018,151 +1018,172 @@ export default function CreateGigPage() {
                     />
                   </div>
 
-                  {/* 1. What's Included in THIS Package */}
-                  <div className="space-y-2 pt-3 border-t border-dark-200/80">
-                    <label className="block text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> What&apos;s Included in this Package
-                    </label>
-                    
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="flex-grow p-2 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
-                        placeholder="Type inclusion and press Enter or Add..."
-                        value={packagePerkInput[idx] || ""}
-                        onChange={(e) => setPackagePerkInput({ ...packagePerkInput, [idx]: e.target.value })}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addPackageInclude(idx);
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => addPackageInclude(idx)}
-                        className="px-3.5 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-all cursor-pointer"
-                      >
-                        + Add
-                      </button>
-                    </div>
-
-                    {/* Quick Presets for Inclusions */}
-                    <div className="flex flex-wrap gap-1.5 pt-0.5">
-                      {[
-                        "Licensed Local Guide",
-                        "Public Train / Bus Pass",
-                        "Private AC Van Transport",
-                        "Local Food Tasting / Lunch",
-                        "Temple / Museum Tickets",
-                        "Bottled Mineral Water",
-                        "Hotel Pickup & Drop",
-                        "Photography Assistance",
-                      ].map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => addPackageInclude(idx, preset)}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white text-dark-700 border border-dark-200 hover:border-emerald-500 hover:text-emerald-700 transition-all cursor-pointer"
-                        >
-                          + {preset}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Active Inclusions List */}
-                    {pkg.includes && pkg.includes.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {pkg.includes.map((perk, pIdx) => (
-                          <span
-                            key={pIdx}
-                            className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2.5 py-1 rounded-lg font-medium"
-                          >
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                            {perk}
-                            <button
-                              type="button"
-                              onClick={() => removePackageInclude(idx, pIdx)}
-                              className="text-emerald-700 hover:text-red-500 font-bold ml-1 cursor-pointer"
-                            >
-                              &times;
-                            </button>
-                          </span>
-                        ))}
+                  {/* 2-Column Compact Inclusions & Exclusions Builder */}
+                  <div className="pt-3 border-t border-dark-200/80 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Left Column: What's Included */}
+                    <div className="p-3.5 bg-emerald-50/40 border border-emerald-500/20 rounded-xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> What&apos;s Included
+                        </label>
+                        <span className="text-[10px] font-semibold text-emerald-700">
+                          {pkg.includes?.length || 0} item{pkg.includes?.length !== 1 ? "s" : ""}
+                        </span>
                       </div>
-                    )}
-                  </div>
 
-                  {/* 2. What's NOT Included in THIS Package */}
-                  <div className="space-y-2 pt-3 border-t border-dark-200/80">
-                    <label className="block text-xs font-bold text-red-800 flex items-center gap-1.5">
-                      <XCircle className="w-3.5 h-3.5 text-red-500" /> What&apos;s NOT Included in this Package
-                    </label>
-                    
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="flex-grow p-2 bg-white border border-dark-200 rounded-xl focus:border-primary outline-none text-dark-950 text-xs"
-                        placeholder="Type exclusion and press Enter or Add..."
-                        value={packageExcludeInput[idx] || ""}
-                        onChange={(e) => setPackageExcludeInput({ ...packageExcludeInput, [idx]: e.target.value })}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addPackageExclude(idx);
-                          }
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => addPackageExclude(idx)}
-                        className="px-3.5 py-1.5 bg-red-600 text-white text-xs font-bold rounded-xl hover:bg-red-700 transition-all cursor-pointer"
-                      >
-                        + Add
-                      </button>
-                    </div>
-
-                    {/* Quick Presets for Exclusions */}
-                    <div className="flex flex-wrap gap-1.5 pt-0.5">
-                      {[
-                        "Personal Shopping Expenses",
-                        "Alcoholic Beverages",
-                        "Dinner Expenses",
-                        "Hotel Pick-up & Drop-off",
-                        "Gratuities & Tips",
-                      ].map((preset) => (
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          className="flex-grow p-1.5 px-2.5 bg-white border border-dark-200 rounded-lg focus:border-emerald-500 outline-none text-dark-950 text-xs"
+                          placeholder="Type inclusion & press Enter..."
+                          value={packagePerkInput[idx] || ""}
+                          onChange={(e) => setPackagePerkInput({ ...packagePerkInput, [idx]: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addPackageInclude(idx);
+                            }
+                          }}
+                        />
                         <button
-                          key={preset}
                           type="button"
-                          onClick={() => addPackageExclude(idx, preset)}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-white text-dark-700 border border-dark-200 hover:border-red-500 hover:text-red-700 transition-all cursor-pointer"
+                          onClick={() => addPackageInclude(idx)}
+                          className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all cursor-pointer shrink-0"
                         >
-                          + {preset}
+                          + Add
                         </button>
-                      ))}
+                      </div>
+
+                      {/* Quick Presets Selection Dropdown */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-dark-500 font-medium shrink-0">Quick Add:</span>
+                        <select
+                          className="w-full text-[11px] p-1 bg-white border border-dark-200 rounded-md text-dark-700 outline-none focus:border-emerald-500"
+                          defaultValue=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              addPackageInclude(idx, e.target.value);
+                              e.target.value = "";
+                            }
+                          }}
+                        >
+                          <option value="" disabled>Select a preset to insert...</option>
+                          <option value="Licensed Local Tour Guide">✓ Licensed Local Tour Guide</option>
+                          <option value="Public Train / Bus Transit Pass">✓ Public Train / Bus Transit Pass</option>
+                          <option value="Private AC Van Transport">✓ Private AC Van Transport</option>
+                          <option value="Local Food Tasting / Lunch">✓ Local Food Tasting / Lunch</option>
+                          <option value="Temple / Museum Entry Tickets">✓ Temple / Museum Entry Tickets</option>
+                          <option value="Bottled Mineral Water">✓ Bottled Mineral Water</option>
+                          <option value="Hotel Pickup & Drop-off">✓ Hotel Pickup & Drop-off</option>
+                          <option value="Photography Assistance">✓ Photography Assistance</option>
+                        </select>
+                      </div>
+
+                      {/* Active Inclusions Tag List */}
+                      {pkg.includes && pkg.includes.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {pkg.includes.map((perk, pIdx) => (
+                            <span
+                              key={pIdx}
+                              className="inline-flex items-center gap-1 text-[11px] bg-white text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-md font-medium shadow-2xs"
+                            >
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[150px]">{perk}</span>
+                              <button
+                                type="button"
+                                onClick={() => removePackageInclude(idx, pIdx)}
+                                className="text-dark-400 hover:text-red-500 font-bold ml-0.5 cursor-pointer"
+                              >
+                                &times;
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-dark-400 italic pt-1">No inclusions added yet.</p>
+                      )}
                     </div>
 
-                    {/* Active Exclusions List */}
-                    {pkg.excludes && pkg.excludes.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {pkg.excludes.map((exItem, eIdx) => (
-                          <span
-                            key={eIdx}
-                            className="inline-flex items-center gap-1 text-xs bg-red-50 text-red-800 border border-red-200/80 px-2.5 py-1 rounded-lg font-medium"
-                          >
-                            <XCircle className="w-3 h-3 text-red-500" />
-                            {exItem}
-                            <button
-                              type="button"
-                              onClick={() => removePackageExclude(idx, eIdx)}
-                              className="text-red-700 hover:text-red-900 font-bold ml-1 cursor-pointer"
-                            >
-                              &times;
-                            </button>
-                          </span>
-                        ))}
+                    {/* Right Column: What's NOT Included */}
+                    <div className="p-3.5 bg-red-50/40 border border-red-500/20 rounded-xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-red-800 flex items-center gap-1.5">
+                          <XCircle className="w-3.5 h-3.5 text-red-500" /> What&apos;s NOT Included
+                        </label>
+                        <span className="text-[10px] font-semibold text-red-700">
+                          {pkg.excludes?.length || 0} item{pkg.excludes?.length !== 1 ? "s" : ""}
+                        </span>
                       </div>
-                    )}
+
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          className="flex-grow p-1.5 px-2.5 bg-white border border-dark-200 rounded-lg focus:border-red-500 outline-none text-dark-950 text-xs"
+                          placeholder="Type exclusion & press Enter..."
+                          value={packageExcludeInput[idx] || ""}
+                          onChange={(e) => setPackageExcludeInput({ ...packageExcludeInput, [idx]: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addPackageExclude(idx);
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addPackageExclude(idx)}
+                          className="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-all cursor-pointer shrink-0"
+                        >
+                          + Add
+                        </button>
+                      </div>
+
+                      {/* Quick Presets Selection Dropdown */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-dark-500 font-medium shrink-0">Quick Add:</span>
+                        <select
+                          className="w-full text-[11px] p-1 bg-white border border-dark-200 rounded-md text-dark-700 outline-none focus:border-red-500"
+                          defaultValue=""
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              addPackageExclude(idx, e.target.value);
+                              e.target.value = "";
+                            }
+                          }}
+                        >
+                          <option value="" disabled>Select a preset to insert...</option>
+                          <option value="Personal Shopping Expenses">✕ Personal Shopping Expenses</option>
+                          <option value="Alcoholic Beverages">✕ Alcoholic Beverages</option>
+                          <option value="Dinner Expenses">✕ Dinner Expenses</option>
+                          <option value="Hotel Pick-up & Drop-off">✕ Hotel Pick-up & Drop-off</option>
+                          <option value="Gratuities & Tips">✕ Gratuities & Tips</option>
+                        </select>
+                      </div>
+
+                      {/* Active Exclusions Tag List */}
+                      {pkg.excludes && pkg.excludes.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {pkg.excludes.map((exItem, eIdx) => (
+                            <span
+                              key={eIdx}
+                              className="inline-flex items-center gap-1 text-[11px] bg-white text-red-800 border border-red-300 px-2 py-0.5 rounded-md font-medium shadow-2xs"
+                            >
+                              <XCircle className="w-3 h-3 text-red-500 shrink-0" />
+                              <span className="truncate max-w-[150px]">{exItem}</span>
+                              <button
+                                type="button"
+                                onClick={() => removePackageExclude(idx, eIdx)}
+                                className="text-dark-400 hover:text-red-900 font-bold ml-0.5 cursor-pointer"
+                              >
+                                &times;
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[10px] text-dark-400 italic pt-1">No exclusions added yet.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

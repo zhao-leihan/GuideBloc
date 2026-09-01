@@ -631,77 +631,95 @@ export default function GigDetailPage() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {packagesList.map((pkg: any, idx: number) => {
                     const isSelected = selectedPackageIndex === idx;
                     return (
                       <div
                         key={pkg.id || idx}
                         onClick={() => setSelectedPackageIndex(idx)}
-                        className={`p-4.5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
+                        className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
                           isSelected
-                            ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20"
-                            : "border-dark-200/80 bg-white hover:border-primary/40"
+                            ? "border-primary bg-primary/[0.02] shadow-sm ring-2 ring-primary/20"
+                            : "border-dark-200/90 bg-white hover:border-primary/40 hover:shadow-xs"
                         }`}
                       >
-                        {isSelected && (
-                          <span className="absolute -top-2.5 right-4 bg-primary text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-xs">
-                            ✓ Selected Tier
-                          </span>
-                        )}
+                        {/* Top Header */}
                         <div>
-                          <div className="flex items-start justify-between gap-2 mb-1.5">
-                            <h3 className="font-bold text-dark-900 text-base flex items-center gap-1.5">
-                              {pkg.name}
-                            </h3>
-                            <span className="text-sm font-extrabold text-primary shrink-0">
-                              ${pkg.priceUSD} <span className="text-[10px] text-dark-400 font-normal">/ person</span>
-                            </span>
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div>
+                              <h3 className="font-bold text-dark-900 text-base">
+                                {pkg.name}
+                              </h3>
+                              {isSelected && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full mt-1">
+                                  ✓ Selected Tier
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className="text-lg font-black text-primary">
+                                ${pkg.priceUSD}
+                              </span>
+                              <span className="block text-[10px] text-dark-400 font-medium">
+                                / person
+                              </span>
+                            </div>
                           </div>
+
                           {pkg.description && (
-                            <p className="text-xs text-dark-600 leading-relaxed mb-3">
+                            <p className="text-xs text-dark-600 leading-relaxed mb-4">
                               {pkg.description}
                             </p>
                           )}
+
+                          {/* Inclusions Vertical List */}
+                          {pkg.includes && Array.isArray(pkg.includes) && pkg.includes.length > 0 && (
+                            <div className="pt-3 border-t border-dark-100 space-y-2">
+                              <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> What&apos;s Included:
+                              </p>
+                              <ul className="space-y-1.5">
+                                {pkg.includes.map((perk: string, pIdx: number) => (
+                                  <li key={pIdx} className="flex items-start gap-2 text-xs text-dark-800 font-medium leading-tight">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                    <span>{perk}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Exclusions Vertical List */}
+                          {pkg.excludes && Array.isArray(pkg.excludes) && pkg.excludes.length > 0 && (
+                            <div className="pt-3 mt-2 border-t border-dark-100/70 space-y-2">
+                              <p className="text-[10px] uppercase font-bold text-red-600/80 tracking-wider flex items-center gap-1.5">
+                                <XCircle className="w-3.5 h-3.5 text-red-500" /> Not Included:
+                              </p>
+                              <ul className="space-y-1.5">
+                                {pkg.excludes.map((exItem: string, eIdx: number) => (
+                                  <li key={eIdx} className="flex items-start gap-2 text-xs text-dark-400 leading-tight">
+                                    <XCircle className="w-3.5 h-3.5 text-red-400/80 shrink-0 mt-0.5" />
+                                    <span>{exItem}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Package Inclusions & Exclusions */}
-                        <div className="pt-2.5 border-t border-dark-100 space-y-2 mt-2">
-                          {pkg.includes && Array.isArray(pkg.includes) && pkg.includes.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Inclusions:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {pkg.includes.map((perk: string, pIdx: number) => (
-                                  <span
-                                    key={pIdx}
-                                    className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md font-medium"
-                                  >
-                                    ✓ {perk}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {pkg.excludes && Array.isArray(pkg.excludes) && pkg.excludes.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-[10px] uppercase font-bold text-red-700 tracking-wider flex items-center gap-1">
-                                <XCircle className="w-3 h-3 text-red-500" /> Exclusions:
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {pkg.excludes.map((exItem: string, eIdx: number) => (
-                                  <span
-                                    key={eIdx}
-                                    className="inline-flex items-center gap-1 text-[11px] bg-red-50 text-red-800 px-2 py-0.5 rounded-md font-medium"
-                                  >
-                                    ✕ {exItem}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                        {/* Bottom Select Action Bar */}
+                        <div className="pt-4 mt-3">
+                          <button
+                            type="button"
+                            className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                              isSelected
+                                ? "bg-primary text-white shadow-xs"
+                                : "bg-dark-100/80 text-dark-700 hover:bg-primary/10 hover:text-primary"
+                            }`}
+                          >
+                            {isSelected ? "✓ Active Selection" : "Select This Tier"}
+                          </button>
                         </div>
                       </div>
                     );
@@ -735,68 +753,6 @@ export default function GigDetailPage() {
                 </div>
               </div>
             )}
-
-            {/* Dynamic Included / Excluded for Active Package */}
-            {(() => {
-              const activeIncludes = currentPackage?.includes && currentPackage.includes.length > 0 
-                ? currentPackage.includes 
-                : gig.included || [];
-              const activeExcludes = currentPackage?.excludes && currentPackage.excludes.length > 0 
-                ? currentPackage.excludes 
-                : gig.excluded || [];
-
-              if (activeIncludes.length === 0 && activeExcludes.length === 0) return null;
-
-              return (
-                <div className="grid sm:grid-cols-2 gap-5">
-                  {activeIncludes.length > 0 && (
-                    <div className="p-5 bg-emerald-50/50 border border-emerald-500/20 rounded-2xl">
-                      <h3 className="font-bold text-dark-900 mb-3 flex items-center justify-between text-emerald-700 text-base">
-                        <span className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-emerald-600" /> What&apos;s Included
-                        </span>
-                        {currentPackage?.name && (
-                          <span className="text-[11px] font-semibold bg-emerald-100/80 text-emerald-800 px-2.5 py-0.5 rounded-full">
-                            {currentPackage.name}
-                          </span>
-                        )}
-                      </h3>
-                      <ul className="space-y-2.5">
-                        {activeIncludes.map((item: string, iIdx: number) => (
-                          <li key={iIdx} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
-                            <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {activeExcludes.length > 0 && (
-                    <div className="p-5 bg-red-50/50 border border-red-500/20 rounded-2xl">
-                      <h3 className="font-bold text-dark-900 mb-3 flex items-center justify-between text-red-700 text-base">
-                        <span className="flex items-center gap-2">
-                          <XCircle className="w-5 h-5 text-red-500" /> Not Included
-                        </span>
-                        {currentPackage?.name && (
-                          <span className="text-[11px] font-semibold bg-red-100/80 text-red-800 px-2.5 py-0.5 rounded-full">
-                            {currentPackage.name}
-                          </span>
-                        )}
-                      </h3>
-                      <ul className="space-y-2.5">
-                        {activeExcludes.map((item: string, eIdx: number) => (
-                          <li key={eIdx} className="flex items-start gap-2.5 text-sm text-dark-700 font-medium">
-                            <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
 
             {/* Custom Benefits */}
             {gig.benefits?.length > 0 && (
