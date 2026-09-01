@@ -12,6 +12,7 @@ interface ReviewCardProps {
       id: string;
       name: string;
       avatar: string | null;
+      role?: string;
     };
     guide?: {
       id: string;
@@ -22,6 +23,8 @@ interface ReviewCardProps {
 }
 
 export default function ReviewCard({ review }: ReviewCardProps) {
+  const isGuideReviewer = review.reviewer?.role === "GUIDE";
+
   return (
     <div className="card p-5">
       <div className="flex items-start gap-3 mb-3">
@@ -35,7 +38,13 @@ export default function ReviewCard({ review }: ReviewCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-semibold text-dark-900 text-sm">{review.reviewer.name}</span>
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider px-2 py-0.5 bg-primary/10 rounded-full border border-primary/20 flex-shrink-0">Verified Tourist</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border flex-shrink-0 ${
+              isGuideReviewer
+                ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                : "text-primary bg-primary/10 border-primary/20"
+            }`}>
+              {isGuideReviewer ? "Verified Guide" : "Verified Tourist"}
+            </span>
           </div>
           <p className="text-[10px] text-dark-400 mt-1">{formatDate(review.createdAt)}</p>
         </div>

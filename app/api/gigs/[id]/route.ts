@@ -23,8 +23,13 @@ export async function GET(
           },
         },
         reviews: {
+          where: {
+            reviewer: {
+              role: { not: "GUIDE" },
+            },
+          },
           include: {
-            reviewer: { select: { id: true, name: true, avatar: true } },
+            reviewer: { select: { id: true, name: true, avatar: true, role: true } },
             guide: { select: { id: true, name: true, avatar: true } },
           },
           orderBy: { createdAt: "desc" },
