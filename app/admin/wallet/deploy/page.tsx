@@ -80,8 +80,8 @@ export default function DeployEscrowPage() {
       return;
     }
 
-    if (Number(avaxBalance) < 0.01) {
-      toast.error(`Insufficient AVAX for gas. Balance: ${avaxBalance} AVAX. Needed: ~0.015 AVAX.`);
+    if (Number(avaxBalance) < 0.0001) {
+      toast.error(`Insufficient AVAX for gas. Balance: ${avaxBalance} AVAX.`);
       return;
     }
 
