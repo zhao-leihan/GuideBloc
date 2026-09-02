@@ -22,52 +22,60 @@
 
 ## 📖 Overview
 
-**Explomate.ly** is a state-of-the-art Web3 decentralized travel marketplace (DApp) that connects global travelers (*Tourists*) with verified local insiders (*Tour Guides*). Powered by smart escrow contracts on **Avalanche C-Chain**, Explomate eliminates middleman fees, ensures zero-trust payment safety, and delivers an immersive, gamified travel experience worldwide.
+**Explomate.ly** is a state-of-the-art Web3 decentralized travel marketplace (DApp) connecting global travelers (*Tourists*) with verified local insiders (*Tour Guides*). Powered by pure Web3 smart escrow contracts on **Avalanche C-Chain**, Explomate eliminates middleman lockups, ensures zero-trust payment safety, guarantees 100% net earnings for tour guides, and delivers an immersive, gamified travel experience worldwide.
 
 ---
 
 ## ⚡ Core Platform Features
 
-### 🛡️ 1. Smart Escrow Protection
-- **Zero-Trust Settlement**: Traveler payments in **USDC/USDT** are securely locked in immutable smart escrow contracts on **Avalanche C-Chain**.
-- **Automated Payout Release**: Funds are safely transferred to the Tour Guide's wallet only after the traveler confirms successful tour completion.
-- **Payout Wallet Enforcement**: Guides must link an EVM-compatible payout wallet before publishing any tour offer.
+### 🛡️ 1. Pure Web3 Escrow V2 (Serverless & Bot-Proof)
+- **Zero-Trust Settlement**: Traveler payments in **Native USDC/USDT** are securely locked in immutable smart escrow contracts on **Avalanche C-Chain**.
+- **100% Guide Net Guarantee**: A transparent buyer-pays model ensures guides receive exactly 100% of their designated take-home payout upon completion, while tourist checkout seamlessly covers the 10% protocol fee.
+- **On-Chain Atomic Distribution**: Upon tour verification, escrow funds are transferred simultaneously and atomically on-chain (90% to the guide's registered wallet + 10% to the protocol treasury).
+- **Zero Server Custody**: Completely decentralized settlement without server private key custody.
 
-### 📡 2. Real-Time GPS Meetup Radar & Haversine Engine
+### 📸 2. Mandatory Proof of Tour Photo Verification
+- **Dual Verification Requirement**: Prior to releasing escrow funds, tourists and guides are required to provide verified photographic documentation of the completed experience directly inside the verification modal.
+- **Auditable Records**: Cryptographic hashes and proof media links are recorded permanently for audit trail integrity.
+
+### 📡 3. Real-Time GPS Meetup Radar & Haversine Engine
 - **Live Proximity Tracking**: Real-time GPS coordinate calculation using the Haversine formula to detect when Tourist & Guide are within 50 meters of the meeting point.
-- **Double Selfie Biometric Verification**: Both parties upload facial verification selfies to ensure maximum safety before releasing escrow funds.
+- **Dynamic Booking QR Verification**: Cryptographically signed single-use booking QR codes verify arrival in real-time.
 
-### 🎮 3. Gamification & Leaderboard (XP & Leveling System)
-- **Dynamic XP Earned**: Guides earn +10 XP per USD on every completed tour.
+### 🎮 4. Gamification & Leaderboard (XP & Leveling System)
+- **Dynamic XP System**: Guides earn +10 XP per USD on every completed tour.
 - **Dynamic Leveling**: Automatic level-ups for every 1,000 XP, boosting search visibility algorithms.
-- **Global Leaderboard & System Mailbox**: Live interactive rankings and automated reward inbox.
+- **Global Leaderboard & System Mailbox**: Live interactive rankings, achievement tiers, and notification inbox.
 
-### 📈 4. Algorithmic Boost Engine
-- Guides can boost their tour listing to top search results for 7 days by paying a 1 USDC Web3 network fee directly via smart contract.
+### 📈 5. Fractional Pricing ($0.01 Minimum) & Algorithmic Boost
+- **Micro-Experiences**: Supports flexible fractional pricing starting at just $0.01 USDC.
+- **Listing Promotion**: Guides can boost their tour listing to top search results for 7 days with on-chain boost activation.
 
-### 🎨 5. Dynamic Dual-Theme System (Light & Dark Mode)
+### 🎨 6. Dynamic Dual-Theme System (Light & Dark Mode)
 - Built with a dynamic state observer (`MutationObserver`) supporting instant theme toggling between clean Soft Pastel Blue (`#e8effe`) in Light Mode and luxury Dark Slate Navy (`#1e293b`) in Dark Mode.
-
-### 🔒 6. Tour Guide View-Only Mode
-- Prevents Tour Guides from self-booking their own gigs or booking other tours, enforcing strict view-only permissions for guide accounts.
 
 ---
 
 ## 📜 Deployed Smart Contracts
 
-| Network | Network Type | Contract Address | Chain ID |
-| :--- | :--- | :--- | :--- |
-| 🔺 **Avalanche C-Chain** | **Mainnet** | [`0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8`](https://snowtrace.io/address/0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8) | `43114` |
-| 🔺 **Avalanche Fuji** | **Testnet** | [`0x8A74C711B3207611C76b4d6d305C930BE8326902`](https://testnet.snowtrace.io/address/0x8A74C711B3207611C76b4d6d305C930BE8326902) | `43113` |
+| Network | Network Type | Contract Address | Explorer Link | Chain ID |
+| :--- | :--- | :--- | :--- | :--- |
+| 🔺 **Avalanche C-Chain** | **Mainnet (Active)** | `0x2D4eC9380218C252F9468078b35F90B559331d19` | [SnowTrace Mainnet](https://snowtrace.io/address/0x2D4eC9380218C252F9468078b35F90B559331d19) | `43114` |
+| 🔺 **Avalanche Fuji** | **Testnet** | `0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2` | [SnowTrace Fuji](https://testnet.snowtrace.io/address/0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2) | `43113` |
+
+### 🪙 Official Mainnet Token Addresses (Avalanche C-Chain)
+- **Circle Native USDC**: [`0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E`](https://snowtrace.io/token/0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E) (Decimals: 6)
+- **Tether USD (USDT)**: [`0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7`](https://snowtrace.io/token/0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7) (Decimals: 6)
+- **Platform Treasury Address**: `0x079D9c349741C27565ee04e31E4174F640F512aE`
 
 ---
 
 ## 🛠️ Technology Stack
 
 - **Frontend & App Framework**: Next.js 14 (App Router), React 18, TypeScript
-- **Styling & Icons**: Vanilla CSS / Tailwind CSS, Lucide React Icons
+- **Styling & Animation**: Tailwind CSS, Framer Motion, Lucide React Icons
 - **Database & ORM**: PostgreSQL (Neon Cloud DB), Prisma ORM
-- **Smart Contracts & Web3**: Solidity 0.8.20, Hardhat, Ethers.js v6
+- **Smart Contracts & Web3**: Solidity 0.8.20, OpenZeppelin, Hardhat, Ethers.js v6
 - **Authentication**: NextAuth.js (Google OAuth & Credentials Provider)
 
 ---
@@ -87,13 +95,12 @@ Copy `.env.example` to `.env` and fill in your database and Web3 configurations:
 DATABASE_URL="postgresql://neondb_owner:password@ep-sweet-bar.neon.tech/neondb?sslmode=require"
 NEXTAUTH_SECRET="your-nextauth-secret"
 NEXTAUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_ESCROW_ADDRESS="0x37DA6Bb53A3973Dee2ed7b766f5e341ff123E8C8"
+NEXT_PUBLIC_ESCROW_ADDRESS="0x2D4eC9380218C252F9468078b35F90B559331d19"
 ```
 
 ### 3. Database Migration & Seeding
 ```bash
 npx prisma db push
-npx ts-node scripts/seed-neon-db.ts
 ```
 
 ### 4. Run Development Server
