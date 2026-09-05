@@ -102,25 +102,9 @@ export default function TourVerificationModal({
         setIsProcessing(false);
       }
     } else {
-      // Tourist flow: Real Web3 on-chain release transaction via MetaMask
-      const toastId = toast.loading("Confirming on-chain escrow release in MetaMask...");
+      // Tourist flow: Sponsored on-chain escrow release (0 AVAX needed!)
+      const toastId = toast.loading("Processing sponsored on-chain escrow release...");
       try {
-        let releaseHash = "";
-
-        // Execute smart contract release
-        try {
-          releaseHash = await releaseToGuide(booking.id, "avalanche");
-          setConfirmedTxHash(releaseHash);
-          toast.loading("On-chain release confirmed! Saving completion records...", { id: toastId });
-        } catch (chainErr: any) {
-          console.warn("Direct on-chain release encountered an error, trying fallback claim record:", chainErr);
-          // If contract was already released or direct call returned
-          if (chainErr.message?.includes("User rejected") || chainErr.message?.includes("denied")) {
-            throw chainErr;
-          }
-          releaseHash = booking.txHash || `0xAUTO_${Date.now()}`;
-        }
-
         const res = await fetch("/api/bookings/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -128,13 +112,17 @@ export default function TourVerificationModal({
             bookingId: booking.id,
             action: "TOURIST_RELEASE",
             proofPhoto: photoUrl || booking?.proofPhoto,
-            txHash: releaseHash,
           }),
         });
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
           throw new Error(errorData.message || "Failed to finalize escrow release records");
+        }
+
+        const data = await res.json();
+        if (data.releaseHash) {
+          setConfirmedTxHash(data.releaseHash);
         }
 
         setIsSuccess(true);

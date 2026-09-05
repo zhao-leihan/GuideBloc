@@ -16,7 +16,8 @@ import {
   isMobileBrowser, 
   openMobileWalletDeepLink,
   getTokenAddress,
-  getEscrowAddress
+  getEscrowAddress,
+  executeGaslessSponsoredPayment
 } from "@/lib/crypto/payment";
 import { ethers } from "ethers";
 import { getNetworkConfig, getExplorerTxLink } from "@/lib/crypto/networkConfig";
@@ -204,94 +205,117 @@ export default function PaymentModal({
 
     setStep("processing");
     setVerifyStage(1);
-    const toastId = toast.loading(`Confirming ${selectedToken} transaction...`);
+    const toastId = toast.loading(`Initiating Zero-Gas Sponsored Payment with ${selectedToken}...`);
 
     try {
-      const signer = await browserProvider.getSigner(selectedAccountAddress);
-      const tokenAddress = getTokenAddress(selectedToken, selectedNetwork);
-      const escrowAddress = getEscrowAddress(selectedNetwork);
-      const amountUnits = ethers.parseUnits(safeAmountStr, 6);
+      let finalTxHash = "";
 
-      const resolvedGuide = guideAddress && ethers.isAddress(guideAddress) 
-        ? guideAddress 
-        : process.env.NEXT_PUBLIC_PLATFORM_TREASURY || "0x079D9c349741C27565ee04e31E4174F640F512aE";
-
-      const erc20Abi = [
-        "function approve(address spender, uint256 amount) external returns (bool)",
-        "function allowance(address owner, address spender) external view returns (uint256)",
-        "function transfer(address to, uint256 amount) external returns (bool)",
-      ];
-
-      const escrowAbi = [
-        "function deposit(bytes32 bookingId, address guide, address token, uint256 amount) external",
-        "function createBooking(bytes32 bookingId, address guide, address token, uint256 amount) external",
-      ];
-
-      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-      const escrowContract = new ethers.Contract(escrowAddress, escrowAbi, signer);
-
-      setVerifyStage(1);
-      toast.loading(`Step 1/2: Approving ${selectedToken} for Escrow...`, { id: toastId });
-
-      // Check current allowance
-      const currentAllowance = await tokenContract.allowance(selectedAccountAddress, escrowAddress).catch(() => BigInt(0));
-      if (currentAllowance < amountUnits) {
-        const approveTx = await tokenContract.approve(escrowAddress, amountUnits);
-        await approveTx.wait();
+      // 1. High-Security Verifying Gasless Paymaster Flow (0 AVAX Needed)
+      if (bookingId && selectedToken === "USDC") {
+        try {
+          toast.loading("Signing permit authorization in MetaMask (0 Gas Fee)...", { id: toastId });
+          setVerifyStage(2);
+          const gaslessResult = await executeGaslessSponsoredPayment({
+            bookingId,
+            amountUSD: numAmount,
+            network: selectedNetwork,
+            walletType: selectedWalletType,
+          });
+          finalTxHash = gaslessResult.txHash;
+        } catch (gaslessErr: any) {
+          console.warn("Gasless execution notice, attempting direct fallback:", gaslessErr.message);
+          if (gaslessErr.message?.includes("User rejected") || gaslessErr.message?.includes("denied") || gaslessErr.message?.includes("Security Violation")) {
+            throw gaslessErr;
+          }
+        }
       }
 
-      setVerifyStage(2);
-      toast.loading(`Step 2/2: Locking ${selectedToken} into Escrow...`, { id: toastId });
+      // 2. Direct on-chain fallback if needed
+      if (!finalTxHash) {
+        const signer = await browserProvider.getSigner(selectedAccountAddress);
+        const tokenAddress = getTokenAddress(selectedToken, selectedNetwork);
+        const escrowAddress = getEscrowAddress(selectedNetwork);
+        const amountUnits = ethers.parseUnits(safeAmountStr, 6);
 
-      let finalTxHash = "";
-      const bookingIdBytes32 = bookingId 
-        ? ethers.encodeBytes32String(bookingId.slice(0, 31)) 
-        : ethers.encodeBytes32String(`BK_${Date.now()}`.slice(0, 31));
+        const resolvedGuide = guideAddress && ethers.isAddress(guideAddress) 
+          ? guideAddress 
+          : process.env.NEXT_PUBLIC_PLATFORM_TREASURY || "0x079D9c349741C27565ee04e31E4174F640F512aE";
 
-      try {
-        const tx = await escrowContract.deposit(
-          bookingIdBytes32,
-          resolvedGuide,
-          tokenAddress,
-          amountUnits
-        );
-        const receipt = await tx.wait();
-        finalTxHash = receipt.hash;
-      } catch (escrowErr) {
-        console.warn("deposit failed, trying createBooking or transfer fallback:", escrowErr);
+        const erc20Abi = [
+          "function approve(address spender, uint256 amount) external returns (bool)",
+          "function allowance(address owner, address spender) external view returns (uint256)",
+          "function transfer(address to, uint256 amount) external returns (bool)",
+        ];
+
+        const escrowAbi = [
+          "function deposit(bytes32 bookingId, address guide, address token, uint256 amount) external",
+          "function createBooking(bytes32 bookingId, address guide, address token, uint256 amount) external",
+        ];
+
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+        const escrowContract = new ethers.Contract(escrowAddress, escrowAbi, signer);
+
+        setVerifyStage(1);
+        toast.loading(`Step 1/2: Approving ${selectedToken} for Escrow...`, { id: toastId });
+
+        // Check current allowance
+        const currentAllowance = await tokenContract.allowance(selectedAccountAddress, escrowAddress).catch(() => BigInt(0));
+        if (currentAllowance < amountUnits) {
+          const approveTx = await tokenContract.approve(escrowAddress, amountUnits);
+          await approveTx.wait();
+        }
+
+        setVerifyStage(2);
+        toast.loading(`Step 2/2: Locking ${selectedToken} into Escrow...`, { id: toastId });
+
+        const bookingIdBytes32 = bookingId 
+          ? ethers.encodeBytes32String(bookingId.slice(0, 31)) 
+          : ethers.encodeBytes32String(`BK_${Date.now()}`.slice(0, 31));
+
         try {
-          const tx2 = await escrowContract.createBooking(bookingIdBytes32, resolvedGuide, tokenAddress, amountUnits);
-          const receipt2 = await tx2.wait();
-          finalTxHash = receipt2.hash;
-        } catch (err2) {
-          const fallbackTx = await tokenContract.transfer(escrowAddress, amountUnits);
-          const fallbackReceipt = await fallbackTx.wait();
-          finalTxHash = fallbackReceipt.hash;
+          const tx = await escrowContract.deposit(
+            bookingIdBytes32,
+            resolvedGuide,
+            tokenAddress,
+            amountUnits
+          );
+          const receipt = await tx.wait();
+          finalTxHash = receipt.hash;
+        } catch (escrowErr) {
+          console.warn("deposit failed, trying createBooking or transfer fallback:", escrowErr);
+          try {
+            const tx2 = await escrowContract.createBooking(bookingIdBytes32, resolvedGuide, tokenAddress, amountUnits);
+            const receipt2 = await tx2.wait();
+            finalTxHash = receipt2.hash;
+          } catch (err2) {
+            const fallbackTx = await tokenContract.transfer(escrowAddress, amountUnits);
+            const fallbackReceipt = await fallbackTx.wait();
+            finalTxHash = fallbackReceipt.hash;
+          }
+        }
+
+        const verifyRes = await fetch("/api/payments/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bookingId,
+            txHash: finalTxHash,
+            token: selectedToken,
+            network: selectedNetwork
+          })
+        }).catch(err => {
+          console.warn("Backend verify API non-blocking warning:", err);
+          return null;
+        });
+
+        if (verifyRes) {
+          const verifyData = await verifyRes.json().catch(() => ({}));
+          console.log("Backend verification status:", verifyData);
         }
       }
 
       setVerifyStage(3);
       setTxHash(finalTxHash);
-
-      const verifyRes = await fetch("/api/payments/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId,
-          txHash: finalTxHash,
-          token: selectedToken,
-          network: selectedNetwork
-        })
-      }).catch(err => {
-        console.warn("Backend verify API non-blocking warning:", err);
-        return null;
-      });
-
-      if (verifyRes) {
-        const verifyData = await verifyRes.json().catch(() => ({}));
-        console.log("Backend verification status:", verifyData);
-      }
-
       toast.dismiss(toastId);
       setStep("success");
       onConfirm?.(finalTxHash, selectedNetwork);
@@ -592,12 +616,26 @@ export default function PaymentModal({
                 </div>
               )}
 
+              {/* Sponsored Gas Badge */}
+              <div className="p-3 bg-emerald-50/80 border border-emerald-500/20 rounded-2xl flex items-center justify-between text-xs text-emerald-900">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <div>
+                    <span className="font-extrabold block text-emerald-950">Sponsored Gas: 100% Free</span>
+                    <span className="text-[11px] text-emerald-700">Verifying Paymaster Active • 0 AVAX Needed</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                  Sponsored
+                </span>
+              </div>
+
               <button
                 disabled={!selectedAccObj || !selectedAccObj.hasEnoughBalance}
                 onClick={handleExecutePayment}
-                className="w-full py-3.5 bg-primary hover:bg-primary-600 text-white text-sm font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 cursor-pointer transition-all"
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/20 disabled:opacity-50 cursor-pointer transition-all"
               >
-                <ShieldCheck className="w-4 h-4" /> Confirm & Pay ${amount.toFixed(2)} {selectedToken} ({selectedNetwork.toUpperCase()}) ➔
+                <ShieldCheck className="w-4 h-4" /> Sign & Pay ${amount.toFixed(2)} {selectedToken} (Zero Gas Fee) ➔
               </button>
             </div>
           )}

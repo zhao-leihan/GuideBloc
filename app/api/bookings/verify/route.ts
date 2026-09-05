@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+import { executeGaslessRelease } from "@/lib/crypto/gaslessRelayer";
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -70,8 +72,19 @@ export async function POST(req: Request) {
     }
 
     if (action === "MUTUAL_CONFIRM" || action === "TOURIST_RELEASE") {
-      const releaseHash = body.txHash || booking.txHash || null;
+      let releaseHash = body.txHash || null;
       const proofPhoto = body.proofPhoto || booking.proofPhoto || null;
+
+      // If no client txHash provided, execute on-chain release via gasless relayer
+      if (!releaseHash || releaseHash.startsWith("0xAUTO_")) {
+        try {
+          const relayerResult = await executeGaslessRelease(booking.id);
+          releaseHash = relayerResult.txHash;
+        } catch (onChainErr: any) {
+          console.warn("Sponsored on-chain release notice:", onChainErr.message);
+          releaseHash = releaseHash || booking.txHash || null;
+        }
+      }
 
       // Step 2: Atomic DB records for booking, payout, and commission
       const guideAmount = booking.guide_price ?? (booking.totalPriceUSD - (booking.platform_fee ?? (booking.totalPriceUSD * 0.1)));

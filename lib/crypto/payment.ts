@@ -497,3 +497,120 @@ export async function payBoostFee(
   const receipt = await tx.wait();
   return receipt.hash;
 }
+
+/**
+ * Signs EIP-2612 Permit typed data for Circle Native USDC (0 AVAX gas fee).
+ */
+export async function signUsdcPermit(
+  signer: ethers.Signer,
+  ownerAddress: string,
+  spenderAddress: string,
+  amountUSD: number,
+  network: SupportedNetwork = "avalanche"
+): Promise<{ deadline: number; v: number; r: string; s: string }> {
+  const cfg = getNetworkConfig();
+  const tokenAddress = getTokenAddress("USDC", network);
+  const provider = signer.provider || new ethers.JsonRpcProvider(cfg.rpcUrl);
+
+  const usdcContract = new ethers.Contract(
+    tokenAddress,
+    ["function nonces(address) view returns (uint256)", "function name() view returns (string)", "function version() view returns (string)"],
+    provider
+  );
+
+  let nonce = BigInt(0);
+  try {
+    nonce = await usdcContract.nonces(ownerAddress);
+  } catch (nonceErr) {
+    console.warn("Could not fetch nonces, defaulting to 0:", nonceErr);
+  }
+
+  const safeAmountStr = (Math.round(Number(amountUSD) * 100) / 100).toFixed(2);
+  const value = ethers.parseUnits(safeAmountStr, 6);
+  // Permit deadline: 1 hour from now
+  const deadline = Math.floor(Date.now() / 1000) + 3600;
+
+  const domain = {
+    name: "USD Coin",
+    version: "2",
+    chainId: cfg.chainIdDecimal,
+    verifyingContract: tokenAddress,
+  };
+
+  const types = {
+    Permit: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "nonce", type: "uint256" },
+      { name: "deadline", type: "uint256" },
+    ],
+  };
+
+  const message = {
+    owner: ownerAddress,
+    spender: spenderAddress,
+    value,
+    nonce,
+    deadline,
+  };
+
+  const signature = await signer.signTypedData(domain, types, message);
+  const sig = ethers.Signature.from(signature);
+
+  return {
+    deadline,
+    v: sig.v,
+    r: sig.r,
+    s: sig.s,
+  };
+}
+
+/**
+ * High-Security Gasless (Sponsored) Payment Execution
+ * Tourist signs off-chain permit (0 AVAX) -> Verifying Paymaster Backend relays to Avalanche Mainnet.
+ */
+export async function executeGaslessSponsoredPayment({
+  bookingId,
+  amountUSD,
+  network = "avalanche",
+  walletType,
+}: {
+  bookingId: string;
+  amountUSD: number;
+  network?: SupportedNetwork;
+  walletType?: SupportedWalletType;
+}): Promise<{ txHash: string; explorerUrl: string }> {
+  const { address, provider } = await connectWallet(network, walletType);
+  await ensureCorrectChain(provider);
+  const signer = await provider.getSigner();
+
+  const cfg = getNetworkConfig();
+  const spenderAddress = cfg.escrowContractAddress;
+
+  // 1. Tourist signs EIP-2612 Permit (0 AVAX gas)
+  const permit = await signUsdcPermit(signer, address, spenderAddress, amountUSD, network);
+
+  // 2. Send to Verifying Paymaster Gate Backend
+  const res = await fetch("/api/payments/gasless", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      bookingId,
+      touristAddress: address,
+      permit,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to execute sponsored payment.");
+  }
+
+  const result = await res.json();
+  return {
+    txHash: result.txHash,
+    explorerUrl: result.explorerUrl || `${cfg.explorerUrl}/tx/${result.txHash}`,
+  };
+}
+
