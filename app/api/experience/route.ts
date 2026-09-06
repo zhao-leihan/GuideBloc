@@ -9,6 +9,10 @@ export async function GET() {
       where: {
         status: "COMPLETED",
         proofPhoto: { not: null },
+        tourist: {
+          name: { notIn: ["Alexander Rayhan", "Rayhan Tourist"] },
+          email: { notIn: ["rayhanabbrar233@gmail.com", "tourist@explomate.com"] },
+        },
       },
       select: {
         id: true,

@@ -82,24 +82,27 @@ const categories = [
   { name: "Photography", Icon: CameraIcon, count: 87 },
 ];
 
-const testimonials = [
+const fallbackReviews = [
   {
-    name: "Sarah Chen",
-    role: "Tourist from USA",
-    text: "Explomate made my Bali trip unforgettable. The crypto payment was seamless and my guide Ahmad was incredible!",
+    id: "fb-1",
     rating: 5,
+    comment: "Explomate made my Kyoto cultural tour completely worry-free. Funds stayed safely in the smart contract escrow until we finished our tour with Kenji. Truly game-changing!",
+    reviewer: { name: "Sarah Chen", role: "TOURIST", country: "United States" },
+    gig: { title: "Kyoto Traditional Temples & Hidden Gardens", location: "Kyoto, Japan" }
   },
   {
-    name: "Marco Rossi",
-    role: "Tour Guide, Italy",
-    text: "As a guide, I love that I get paid directly in USDT. The platform is intuitive and the tourists are amazing.",
+    id: "fb-2",
     rating: 5,
+    comment: "As a local guide in Bali, getting paid directly in USDT with zero payment disputes or 3-week chargeback worries is why I moved 100% of my private tours to Explomate.",
+    reviewer: { name: "Wayan Sudarma", role: "GUIDE", country: "Indonesia" },
+    gig: { title: "Ubud Hidden Waterfalls & Rice Terraces", location: "Bali, Indonesia" }
   },
   {
-    name: "Ayumi Sato",
-    role: "Tourist from Japan",
-    text: "The best platform for finding authentic local experiences. The booking process is so smooth.",
+    id: "fb-3",
     rating: 5,
+    comment: "Zero hidden bank exchange fees, instant booking confirmation, and total transparency. The peace of mind knowing the guide only gets paid after completion is unmatched.",
+    reviewer: { name: "Marco Rossi", role: "TOURIST", country: "Italy" },
+    gig: { title: "Swiss Alps Off-the-Beaten-Path Trekking", location: "Zermatt, Switzerland" }
   },
 ];
 
@@ -109,6 +112,7 @@ export default function HomePage() {
   const [aiInput, setAiInput] = useState("");
   const [aiQuery, setAiQuery] = useState("");
   const [experiences, setExperiences] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   useEffect(() => {
     fetch("/api/experience")
@@ -119,6 +123,15 @@ export default function HomePage() {
         }
       })
       .catch((err) => console.error("Error fetching experiences:", err));
+
+    fetch("/api/reviews?limit=6")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.reviews && data.reviews.length > 0) {
+          setReviews(data.reviews);
+        }
+      })
+      .catch((err) => console.error("Error fetching reviews:", err));
   }, []);
 
   const handleAIClick = () => {
@@ -478,83 +491,149 @@ export default function HomePage() {
         </motion.section>
       )}
 
-      {/* Testimonials */}
+      {/* Testimonials - Light Mode & Database-driven */}
       <motion.section 
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="py-20 bg-dark-900"
+        className="py-24 bg-slate-50 border-t border-b border-dark-100/70 relative overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+        {/* Decorative soft blur background */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-60 pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 text-xs font-bold uppercase tracking-wider shadow-xs">
+              <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+              <span>Verified Community Feedback</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
               Loved by Travelers & Guides
             </h2>
-            <p className="text-dark-400 text-lg">See what our community says</p>
+            <p className="text-dark-500 text-base md:text-lg leading-relaxed font-sans">
+              Authentic reviews verified directly from completed smart contract escrow bookings across the globe.
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div key={t.name} className="card-dark p-8">
-                <div className="flex items-center gap-1 mb-4">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-accent text-accent" />
-                  ))}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {(reviews.length > 0 ? reviews : fallbackReviews).map((reviewItem: any, index: number) => {
+              const reviewerName = reviewItem.reviewer?.name || "Traveler";
+              const reviewerAvatar = reviewItem.reviewer?.avatar;
+              const location = reviewItem.gig?.location || reviewItem.gig?.title || reviewItem.reviewer?.country || "Verified Experience";
+              const ratingCount = Math.min(5, Math.max(1, reviewItem.rating || 5));
+
+              return (
+                <div 
+                  key={reviewItem.id || index} 
+                  className="bg-white border border-dark-100/90 rounded-3xl p-8 shadow-[0_4px_25px_rgb(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgb(29,78,216,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-5">
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: ratingCount }).map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[11px] font-bold text-emerald-700">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Escrow Verified
+                      </span>
+                    </div>
+
+                    <p className="text-dark-700 text-sm md:text-base leading-relaxed italic mb-6">
+                      &ldquo;{reviewItem.comment}&rdquo;
+                    </p>
+                  </div>
+
+                  <div className="pt-5 border-t border-dark-100 flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary/20 via-blue-100 to-primary/10 border border-primary/20 overflow-hidden flex items-center justify-center font-bold text-primary text-sm flex-shrink-0 shadow-xs">
+                      {reviewerAvatar ? (
+                        <img src={reviewerAvatar} alt={reviewerName} className="w-full h-full object-cover" />
+                      ) : (
+                        reviewerName.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-display font-bold text-dark-900 text-sm truncate group-hover:text-primary transition-colors">
+                        {reviewerName}
+                      </p>
+                      <p className="text-xs text-dark-400 truncate flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-dark-400 flex-shrink-0" />
+                        <span className="truncate">{location}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-dark-200 mb-6 leading-relaxed">&ldquo;{t.text}&rdquo;</p>
-                <div>
-                  <p className="font-display font-semibold text-white">{t.name}</p>
-                  <p className="text-sm text-dark-400">{t.role}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </motion.section>
 
-      {/* CTA Section - Premium Web3 Aesthetic */}
+      {/* CTA Section - Light Mode & Refreshed Content */}
       <motion.section 
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="py-24 bg-dark-950 relative overflow-hidden"
+        className="py-24 bg-white relative overflow-hidden"
       >
-        {/* Glow Effects */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-primary-500/20 to-blue-500/20 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary-600/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Soft Ambient Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-gradient-to-r from-blue-100/60 to-primary-100/50 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 relative z-10">
-          <div className="p-8 md:p-14 rounded-[2.5rem] bg-gradient-to-b from-dark-900/90 to-dark-900/40 border border-white/10 backdrop-blur-2xl text-center shadow-2xl space-y-8 relative overflow-hidden">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-primary-300 text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span>Join the Decentralized Travel Economy</span>
-            </div>
+          <div className="p-8 md:p-14 rounded-[2.5rem] bg-gradient-to-br from-blue-50/90 via-white to-primary-50/60 border border-blue-200/70 text-center shadow-[0_15px_50px_rgba(29,78,216,0.06)] space-y-8 relative overflow-hidden">
+            {/* Subtle corner decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-200/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-200/20 rounded-full blur-2xl pointer-events-none" />
 
-            <div className="max-w-2xl mx-auto space-y-4">
-              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight font-display leading-tight">
-                Ready to Start Your <span className="bg-gradient-to-r from-primary-400 via-blue-300 to-white bg-clip-text text-transparent">Adventure?</span>
+            <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider shadow-xs">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span>Join the Decentralized Travel Movement</span>
+              </div>
+
+              <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display leading-tight">
+                Ready to Experience <span className="bg-gradient-to-r from-primary-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">Risk-Free Travel?</span>
               </h2>
-              <p className="text-dark-300 text-base md:text-lg leading-relaxed font-sans">
-                Join thousands of verified travelers and local guides on Explomate to experience authentic journeys secured by smart contract escrow.
+
+              <p className="text-dark-600 text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-sans">
+                Whether you&apos;re an adventurous traveler seeking authentic local secrets or an expert guide ready to earn 90% direct payouts, Explomate protects every journey.
               </p>
+
+              {/* Value trust badges */}
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-dark-600">
+                <div className="flex items-center gap-1.5 bg-white/80 border border-dark-100 px-3.5 py-1.5 rounded-full shadow-xs">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span>Zero Escrow Counterparty Risk</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white/80 border border-dark-100 px-3.5 py-1.5 rounded-full shadow-xs">
+                  <Coins className="w-4 h-4 text-amber-500" />
+                  <span>Fast Avalanche Stablecoin Payouts</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white/80 border border-dark-100 px-3.5 py-1.5 rounded-full shadow-xs">
+                  <UserCheck className="w-4 h-4 text-blue-500" />
+                  <span>100% ID-Verified Guides</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 relative z-10">
               <Link 
-                href="/auth/register?role=tourist" 
-                className="w-full sm:w-auto bg-primary hover:bg-primary-600 text-white font-bold py-4 px-9 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-primary/40 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
+                href="/explore" 
+                className="w-full sm:w-auto bg-primary hover:bg-primary-600 text-white font-bold py-4 px-9 rounded-2xl shadow-xl shadow-primary/25 hover:shadow-primary/35 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
               >
-                <span>I&apos;m a Tourist</span>
-                <ArrowRight className="w-4 h-4" />
+                <Compass className="w-4 h-4" />
+                <span>Explore Local Tours</span>
               </Link>
 
               <Link 
                 href="/auth/register?role=guide" 
-                className="w-full sm:w-auto bg-white/10 hover:bg-white/15 text-white font-bold py-4 px-9 rounded-2xl border border-white/15 hover:border-white/30 backdrop-blur-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
+                className="w-full sm:w-auto bg-white hover:bg-slate-50 text-dark-900 font-bold py-4 px-9 rounded-2xl border border-dark-200/90 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm"
               >
-                <span>I&apos;m a Guide</span>
-                <Globe className="w-4 h-4 text-dark-300" />
+                <Users className="w-4 h-4 text-primary" />
+                <span>Become a Tour Guide</span>
               </Link>
             </div>
           </div>

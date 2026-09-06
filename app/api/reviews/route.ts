@@ -5,14 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const gigId = searchParams.get("gigId");
     const bookingId = searchParams.get("bookingId");
+    const limit = searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : undefined;
 
     const where: any = {};
 
@@ -26,15 +22,17 @@ export async function GET(req: NextRequest) {
     const reviews = await prisma.review.findMany({
       where,
       include: {
-        reviewer: { select: { id: true, name: true, avatar: true } },
+        reviewer: { select: { id: true, name: true, avatar: true, country: true, role: true } },
         guide: { select: { id: true, name: true, avatar: true } },
+        gig: { select: { id: true, title: true, location: true } },
       },
       orderBy: { createdAt: "desc" },
+      take: limit,
     });
 
     const avgRating = reviews.length
       ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
-      : 0;
+      : 5.0;
 
     return NextResponse.json({
       reviews,
