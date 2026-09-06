@@ -6,7 +6,7 @@ import { Wallet, ArrowRightLeft, Copy, ExternalLink, RefreshCw, Send, Loader2, S
 import toast from "react-hot-toast";
 import { ethers } from "ethers";
 import { getTokenAddress } from "@/lib/crypto/payment";
-import { getExplorerAddressLink } from "@/lib/crypto/networkConfig";
+import { getNetworkConfig, getExplorerTxLink, getExplorerAddressLink } from "@/lib/crypto/networkConfig";
 
 interface TreasuryStatus {
   address: string;
@@ -142,8 +142,10 @@ export default function AdminWalletPage() {
     return `${addr.substring(0, 8)}...${addr.substring(addr.length - 6)}`;
   };
 
+  const cfg = getNetworkConfig();
+
   const getExplorerLink = (hash: string) => {
-    return `https://testnet.snowtrace.io/tx/${hash}`;
+    return getExplorerTxLink(hash);
   };
 
   return (
@@ -172,7 +174,7 @@ export default function AdminWalletPage() {
           <span className="text-sm font-semibold text-dark-700">Active Blockchain:</span>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-dark-200 shadow-sm text-xs font-bold text-dark-900">
             <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="AVAX" className="w-4 h-4 object-contain" />
-            Avalanche Fuji Testnet (Chain ID: 43113)
+            {cfg.badgeLabel} (Chain ID: {cfg.chainIdDecimal})
           </div>
         </div>
 

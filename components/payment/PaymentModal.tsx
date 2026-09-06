@@ -280,18 +280,13 @@ export default function PaymentModal({
             amountUnits
           );
           const receipt = await tx.wait();
-          finalTxHash = receipt.hash;
-        } catch (escrowErr) {
-          console.warn("deposit failed, trying createBooking or transfer fallback:", escrowErr);
-          try {
-            const tx2 = await escrowContract.createBooking(bookingIdBytes32, resolvedGuide, tokenAddress, amountUnits);
-            const receipt2 = await tx2.wait();
-            finalTxHash = receipt2.hash;
-          } catch (err2) {
-            const fallbackTx = await tokenContract.transfer(escrowAddress, amountUnits);
-            const fallbackReceipt = await fallbackTx.wait();
-            finalTxHash = fallbackReceipt.hash;
+          if (!receipt || !receipt.hash) {
+            throw new Error("Deposit transaction succeeded but hash is missing.");
           }
+          finalTxHash = receipt.hash;
+        } catch (escrowErr: any) {
+          console.error("Escrow deposit failed:", escrowErr);
+          throw new Error(escrowErr.reason || escrowErr.message || "Failed to execute escrow deposit on-chain.");
         }
 
         const verifyRes = await fetch("/api/payments/verify", {

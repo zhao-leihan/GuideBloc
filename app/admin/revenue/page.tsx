@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { ClipboardIcon, CardStackIcon, RocketIcon, TokensIcon } from "@radix-ui/react-icons";
 import toast from "react-hot-toast";
-import { getExplorerTxLink } from "@/lib/crypto/networkConfig";
+import { getExplorerTxLink, getExplorerAddressLink } from "@/lib/crypto/networkConfig";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -640,9 +640,9 @@ export default function AdminRevenuePage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-dark-50 rounded-xl">
-                  <p className="text-xs text-dark-400 mb-1">Official Treasury Address (Avalanche C-Chain / Fuji)</p>
+                  <p className="text-xs text-dark-400 mb-1">Official Treasury Address (Avalanche C-Chain Mainnet)</p>
                   <a
-                    href="https://testnet.snowtrace.io/address/0x079D9c349741C27565ee04e31E4174F640F512aE"
+                    href={getExplorerAddressLink("0x079D9c349741C27565ee04e31E4174F640F512aE")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-indigo-600 hover:underline flex items-center gap-1 font-semibold break-all"
