@@ -85,7 +85,9 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: queryText,
-          history: messages.map((m) => ({ sender: m.sender, text: m.text })),
+          history: messages
+            .filter((m) => m.text && m.text.trim().length > 0)
+            .map((m) => ({ sender: m.sender, text: m.text })),
         }),
       });
 
@@ -122,7 +124,10 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
       console.error(err);
       setMessages((prev) => [
         ...prev,
-        { sender: "ai", text: "Sorry, I lost my connection to the ship! Please try sending that again." },
+        { 
+          sender: "ai", 
+          text: "I'm having a brief network delay, but I'm right here! 🌴✨ You can explore our verified local tours in Bali, Tokyo, or Kyoto, or ask me again anytime!" 
+        },
       ]);
     } finally {
       setLoading(false);
