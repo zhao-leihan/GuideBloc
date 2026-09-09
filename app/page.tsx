@@ -139,7 +139,7 @@ export default function HomePage() {
       setAiQuery(aiInput);
       setAiInput("");
     } else {
-      setAiQuery("Hi Kira!");
+      setAiQuery("Tell me about verified tours in Japan!");
     }
   };
 
@@ -194,7 +194,7 @@ export default function HomePage() {
               </div>
               <input
                 type="text"
-                placeholder="Ask Kira about tours, guides, or bookings..."
+                placeholder="Ask Kira to help find tours in Japan (Tokyo, Kyoto, Osaka)..."
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 onKeyDown={(e) => {

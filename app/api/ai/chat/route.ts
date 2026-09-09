@@ -27,31 +27,36 @@ export async function POST(req: Request) {
     }
 
     // 3. Database Context Injection: Gather actual gigs, bookings, guides, and rankings
-    const gigs = await prisma.gig.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        category: true,
-        location: true,
-        country: true,
-        client_price: true,
-        priceUSD: true,
-        avgRating: true,
-        reviewCount: true,
-        booking_count: true,
-        durationHours: true,
-        guide: {
-          select: {
-            name: true,
-            bio: true,
-            country: true,
-            walletAddress: true,
+    let gigs: any[] = [];
+    try {
+      gigs = await prisma.gig.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          category: true,
+          location: true,
+          country: true,
+          client_price: true,
+          priceUSD: true,
+          avgRating: true,
+          reviewCount: true,
+          booking_count: true,
+          durationHours: true,
+          guide: {
+            select: {
+              name: true,
+              bio: true,
+              country: true,
+              walletAddress: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (dbErr) {
+      console.warn("Could not query gigs from DB for AI context:", dbErr);
+    }
 
     // Format gig descriptions to feed to the AI context
     const toursContext = gigs
@@ -61,30 +66,31 @@ export async function POST(req: Request) {
       })
       .join("\n");
 
-    // 4. Secure AI Persona & System Instructions
-    const systemPrompt = `You are "Kira", a super friendly, casual, and awesome AI travel concierge for Explomate. 
-Explomate is a modern Web3 travel platform where tourists book authentic local tours and pay securely with crypto (USDT/USDC) on Avalanche C-Chain!
+    // 4. Secure AI Persona & System Instructions (Tour Information Assistant)
+    const systemPrompt = `You are "Kira", a friendly, knowledgeable Tour Information Assistant for Explomate, specializing in tours across JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond).
+
+ROLE & BOUNDARIES (CRITICAL):
+- You act strictly as an INFORMATIVE GUIDE (Tour Finder & Travel Information Assistant).
+- You DO NOT automatically book tours, schedule appointments, or handle payments for the user in chat.
+- Your sole purpose is to help users discover matching tours in Japan, explore itineraries, learn about vetted local guides, and understand how Explomate's Avalanche Smart Contract Escrow guarantees their safety.
+- When users ask to book, schedule, or make an appointment (e.g., "make me an appointment"), explain that you are an information assistant, and guide them to browse the tour details and book directly on the official tour page on Explomate!
+
+TARGET DESTINATION:
+- Primary focus is JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, Hokkaido, etc.). Highlight Japan's culture, temples, food tours, and vetted local guides.
+- If a user asks about other destinations like Bali, politely clarify that Explomate specializes in verified tours in Japan, and offer to show top Japan tours.
 
 YOUR VIBE:
-- Super casual, friendly, enthusiastic, and local-savvy.
-- Speak like a helpful travel buddy. Use emojis, exclamation marks, and keep it warm and helpful!
+- Super casual, friendly, enthusiastic, and knowledgeable about Japanese travel and culture.
+- Use emojis (🎌, 🌸, 🏯, 🍣, 🗺️), keep it warm, helpful, and concise!
 - Respond in the same language the user speaks (English or Indonesian).
 
-WHAT YOU CAN DO:
-- Help users find epic tours, suggest cool routes, and find vetted guides using the info below.
-- Point out the most popular or highest-rated spots if they ask!
-- If the user wants to book or search, trigger the appropriate action.
-
-HERE'S WHAT WE GOT (Tours & Guides):
+HERE ARE VERIFIED TOURS IN JAPAN:
 ${toursContext}
 
-ACTION MECHANISM (CRITICAL):
-You can trigger three specific actions for the tourist in our Web3 DApp:
-1. "SEARCH": When the user is asking to look for a tour or browse destinations. Provide a search query string.
-2. "BOOK": When the user explicitly wants to book a specific tour. Identify gigId, bookingDate (YYYY-MM-DD), and groupSize.
-3. "PAY": When the user wants to pay for an existing booking. Provide bookingId, gigTitle, amount (totalPriceUSD), and token ("USDT" or "USDC").
-
-If no action is currently requested or the user is just chatting, use "NONE".
+ACTION MECHANISM:
+- "SEARCH": When the user is looking for a tour, asking for recommendations, or asking about a city in Japan. Provide a search query string.
+- "NONE": When answering general questions about Japan, escrow safety, or travel tips.
+(Do not use "BOOK" or "PAY" - booking is handled directly by the user on the tour page).
 
 You MUST respond strictly in JSON matching the specified output schema. Do not prepend or append any explanation outside the JSON format.`;
 
@@ -140,23 +146,16 @@ You MUST respond strictly in JSON matching the specified output schema. Do not p
                 responseSchema: {
                   type: "OBJECT",
                   properties: {
-                    reply: { type: "STRING", description: "Friendly text response to show the user." },
+                    reply: { type: "STRING", description: "Friendly informative text response to show the user." },
                     action: {
                       type: "STRING",
-                      enum: ["NONE", "SEARCH", "BOOK", "PAY"],
-                      description: "Current action requested by user.",
+                      enum: ["NONE", "SEARCH"],
+                      description: "Current action: SEARCH to show tours, or NONE for conversation.",
                     },
                     actionData: {
                       type: "OBJECT",
                       properties: {
-                        searchQuery: { type: "STRING", description: "Keywords to search gigs" },
-                        gigId: { type: "STRING", description: "Prisma Gig ID to book" },
-                        gigTitle: { type: "STRING", description: "Title of the gig" },
-                        bookingId: { type: "STRING", description: "Prisma Booking ID" },
-                        bookingDate: { type: "STRING", description: "Date of booking (YYYY-MM-DD)" },
-                        groupSize: { type: "INTEGER", description: "Number of participants" },
-                        amount: { type: "NUMBER", description: "Total price of the booking in stablecoins" },
-                        token: { type: "STRING", description: "Crypto token (USDT or USDC)" },
+                        searchQuery: { type: "STRING", description: "Keywords to search gigs in Japan" },
                       },
                     },
                   },
@@ -186,26 +185,53 @@ You MUST respond strictly in JSON matching the specified output schema. Do not p
       }
     }
 
-    // 6. Smart Local Concierge Fallback Engine (Guarantees zero-crash experience)
+    // 6. Smart Local Tour Information Engine (Focused on Japan tours)
     const fallbackResponse = generateLocalKiraResponse(message, gigs);
     return NextResponse.json(fallbackResponse);
   } catch (error) {
     console.error("AI Chat route fatal error:", error);
     return NextResponse.json({
-      reply: "Hi! I'm Kira ✨🌴 Where would you like to explore today? You can search for tours in Bali, Tokyo, Kyoto, or browse our top verified destinations!",
+      reply: "Konnichiwa! 🎌✨ I'm Kira, your local tour information assistant. Tell me which city in Japan you'd like to explore (Tokyo, Kyoto, Osaka) and I'll find the best tours for you!",
       action: "NONE",
     });
   }
 }
 
 /**
- * High-Intelligence Local Concierge Engine
- * Handles user inquiries (Bali, destinations, escrow, guides, booking) gracefully without external API dependency.
+ * High-Intelligence Local Tour Information Assistant Engine
+ * Focuses on Japan tours and informative guidance.
  */
 function generateLocalKiraResponse(message: string, gigs: any[]) {
   const lower = message.toLowerCase().trim();
 
-  // 1. Direct location match with database gigs
+  // 1. Explicit Appointment / Booking requests (Informative boundary clarification)
+  if (
+    lower.includes("appointment") ||
+    lower.includes("schedule") ||
+    lower.includes("make me an") ||
+    lower.includes("pesan") ||
+    lower.includes("jadwal") ||
+    lower.includes("reservasi") ||
+    lower.includes("book")
+  ) {
+    const japanGigs = gigs.filter(
+      (g) =>
+        (g.country || "").toLowerCase().includes("japan") ||
+        (g.location || "").toLowerCase().includes("kyoto") ||
+        (g.location || "").toLowerCase().includes("tokyo")
+    );
+    const top = japanGigs[0] || gigs[0];
+
+    return {
+      reply: `I'm here as your **Tour Information Assistant** to help you search and explore the best local tours in Japan! 🎌✨\n\nI don't schedule appointments or process bookings automatically in the chat. To book a tour, simply click on the tour card below to view the itinerary, choose your preferred date & time, and book directly on Explomate with Avalanche Smart Contract Escrow protection!`,
+      action: "SEARCH",
+      actionData: {
+        searchQuery: top ? (top.location || top.title) : "Kyoto",
+      },
+    };
+  }
+
+  // 2. Direct match with database gigs in Japan
   const matchedGigs = gigs.filter((g) => {
     const loc = (g.location || "").toLowerCase();
     const ctry = (g.country || "").toLowerCase();
@@ -217,33 +243,36 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
     const top = matchedGigs[0];
     const price = top.client_price || top.priceUSD;
     return {
-      reply: `I found an awesome adventure for you! 🌴✨\n\n**${top.title}** in **${top.location}, ${top.country}** hosted by local expert **${top.guide?.name || "Verified Guide"}** ($${price} USD).\n\nYour booking is 100% protected by our Avalanche Smart Contract Escrow. Would you like to check the details or book this tour?`,
+      reply: `I found an authentic local tour in Japan for you! 🎌🏯\n\n**${top.title}** in **${top.location}, ${top.country}** hosted by verified guide **${top.guide?.name || "Local Expert"}** ($${price} USD).\n\nCheck out the tour details below to explore the itinerary and book directly!`,
       action: "SEARCH",
       actionData: {
         searchQuery: top.location || top.title,
-        gigId: top.id,
-        gigTitle: top.title,
-        amount: price,
-        token: "USDC",
       },
     };
   }
 
-  // 2. Bali / Indonesian inquiry
-  if (lower.includes("bali") || lower.includes("ubud") || lower.includes("kuta") || lower.includes("seminyak") || lower.includes("canggu") || lower.includes("indonesia")) {
+  // 3. Japan / Tokyo / Kyoto / Osaka inquiry
+  if (
+    lower.includes("japan") ||
+    lower.includes("tokyo") ||
+    lower.includes("kyoto") ||
+    lower.includes("osaka") ||
+    lower.includes("jepang") ||
+    lower.includes("fuji")
+  ) {
     return {
-      reply: `Bali is an incredible paradise! 🌺🏝️ From Ubud's serene rice terraces and secret waterfalls to Uluwatu's sunset cliff temples, our verified local guides are ready to show you the real authentic island.\n\nAll tours on Explomate are 100% secured by Smart Contract Escrow — your guide is only paid after your trip is safely completed! What kind of adventure are you looking for in Bali?`,
+      reply: `Konnichiwa! 🎌🏯 Japan is our premier destination! We have verified local guides ready for cultural temple tours, hidden alley dining, and scenic castle explorations in Kyoto & Tokyo.\n\nBrowse through our verified Japan tours below to find your perfect experience!`,
       action: "SEARCH",
       actionData: {
-        searchQuery: "Bali",
+        searchQuery: lower.includes("tokyo") ? "Tokyo" : "Kyoto",
       },
     };
   }
 
-  // 3. Japan / Tokyo / Kyoto inquiry
-  if (lower.includes("japan") || lower.includes("tokyo") || lower.includes("kyoto") || lower.includes("jepang")) {
+  // 4. Bali / Non-Japan inquiry (Redirect politely to Japan)
+  if (lower.includes("bali") || lower.includes("indonesia")) {
     return {
-      reply: `Konnichiwa! 🎌🏯 Japan is one of our most popular destinations! We have verified local guides ready for cultural temple tours, hidden alley dining, and scenic castle explorations in Kyoto & Tokyo.\n\nBrowse through our Japan tours below to find your perfect experience!`,
+      reply: `Explomate specializes primarily in authentic local experiences across **Japan** (Tokyo, Kyoto, Osaka, and more)! 🎌🗻\n\nI can help you find amazing tours in Japan like traditional temple explorations in Kyoto or dynamic city tours in Tokyo. Would you like to check out our top tours in Japan?`,
       action: "SEARCH",
       actionData: {
         searchQuery: "Kyoto",
@@ -251,7 +280,7 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
     };
   }
 
-  // 4. Questions about Escrow, safety, or payments
+  // 5. Escrow and safety questions
   if (
     lower.includes("escrow") ||
     lower.includes("aman") ||
@@ -264,38 +293,44 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
     lower.includes("avalanche")
   ) {
     return {
-      reply: `At Explomate, your safety is 100% guaranteed by **Avalanche Smart Contract Escrow** 🛡️🔒!\n\n1. When you book a tour, your payment (USDC/USDT) is locked in the on-chain smart contract.\n2. The guide **cannot** take your funds early.\n3. Payment is released to the guide **only after you meet in person and confirm your tour is completed**.\n\nNo advance payment risk, zero chargeback scams, pure peace of mind!`,
+      reply: `At Explomate, every tour in Japan is 100% protected by **Avalanche Smart Contract Escrow** 🛡️🔒!\n\n1. When you book a tour on the tour page, your payment (USDC/USDT) is safely locked on-chain.\n2. The guide **cannot** take your funds early.\n3. Payment is released to the guide **only after you meet in person and confirm your tour is completed**.\n\nZero advance payment risk, zero chargeback scams, pure peace of mind!`,
       action: "NONE",
     };
   }
 
-  // 5. Questions about becoming a guide or guide earnings
+  // 6. Questions about becoming a guide
   if (lower.includes("guide") || lower.includes("pemandu") || lower.includes("daftar guide") || lower.includes("earning")) {
     return {
-      reply: `Interested in becoming a local guide? 🎒🗺️ Explomate offers local guides 90% direct earnings paid instantly in stablecoins (USDC/USDT) to your crypto wallet with **zero fraud or chargeback risk**!\n\nYou can click **Become a Tour Guide** in the navigation bar to register and start listing your tours!`,
+      reply: `Interested in becoming a local guide in Japan? 🎒🗺️ Explomate offers local guides 90% direct earnings paid instantly in stablecoins (USDC/USDT) with **zero fraud or chargeback risk**!\n\nYou can click **Become a Tour Guide** in the navigation bar to register and list your custom tours!`,
       action: "NONE",
     };
   }
 
-  // 6. Greetings or test messages
+  // 7. Greetings or test messages
   if (lower === "test" || lower === "hi" || lower === "halo" || lower === "hello" || lower === "p" || lower.includes("kira")) {
     return {
-      reply: `Hey there! 🌟 I'm **Kira**, your personal AI concierge at Explomate! I'm here to help you discover hidden travel gems, match you with vetted local guides, and ensure every booking is protected on Avalanche C-Chain.\n\nWhich destination are we exploring today? (Try asking for Bali, Tokyo, Kyoto, or cultural tours!)`,
+      reply: `Konnichiwa! 🌟 I'm **Kira**, your local tour information assistant at Explomate! I'm here to help you search and discover authentic local tours across **Japan** (Tokyo, Kyoto, Osaka, and more) 🎌🏯.\n\nWhich city or experience in Japan would you like to explore today?`,
       action: "NONE",
     };
   }
 
-  // 7. General search fallback with popular tours
-  const sampleGigs = gigs.slice(0, 2);
+  // 8. General search fallback focusing on Japan
+  const japanGigs = gigs.filter(
+    (g) =>
+      (g.country || "").toLowerCase().includes("japan") ||
+      (g.location || "").toLowerCase().includes("kyoto") ||
+      (g.location || "").toLowerCase().includes("tokyo")
+  );
+  const sampleGigs = (japanGigs.length > 0 ? japanGigs : gigs).slice(0, 2);
   const gigList = sampleGigs.length > 0
-    ? `\n\nHere are some trending local tours:\n` + sampleGigs.map((g) => `• **${g.title}** (${g.location})`).join("\n")
+    ? `\n\nTrending tours in Japan right now:\n` + sampleGigs.map((g) => `• **${g.title}** (${g.location})`).join("\n")
     : "";
 
   return {
-    reply: `I'd love to help you plan that! 🗺️✨ Tell me what kind of travel experience or destination you have in mind (e.g. "Cultural tour in Kyoto", "Beach adventure in Bali", or "Tokyo food tour").${gigList}`,
+    reply: `I'd love to help you find the best tour in Japan! 🎌✨ Tell me what kind of travel experience you have in mind (e.g. "Kyoto castle tour", "Tokyo food tour", or "temple visits").${gigList}`,
     action: "SEARCH",
     actionData: {
-      searchQuery: message.trim().slice(0, 30),
+      searchQuery: "Kyoto",
     },
   };
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { MessageSquare, X, Send, Bot, Loader2, ArrowRight, Calendar, Users, ShieldAlert, CreditCard } from "lucide-react";
 import PaymentModal from "../payment/PaymentModal";
 import toast from "react-hot-toast";
@@ -53,7 +54,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
         },
         {
           sender: "ai",
-          text: `Hi! I'm **Kira**, your personal AI travel companion at Explomate! ✨🌴\n\nI'm super excited to help you discover beautiful spots, connect with local guides, and handle payments securely on-chain. 🎒💸\n\nWhat kind of adventure are we looking for today?`,
+          text: `Konnichiwa! 🎌✨ I'm **Kira**, your local tour information assistant at Explomate!\n\nI'm here to **help you explore and find authentic local tours across Japan** (Tokyo, Kyoto, Osaka, Mount Fuji, and more) 🏯🌸.\n\nTell me which city in Japan you'd like to explore, or what kind of tour experience you're looking for!`,
         },
       ]);
     }
@@ -285,12 +286,12 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                   <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <h4 className="font-display font-semibold text-white text-sm">Kira · AI Concierge</h4>
+                  <h4 className="font-display font-semibold text-white text-sm">Kira · Tour Information</h4>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                    <span className="text-[10px] text-dark-400 font-medium uppercase tracking-wide">Online</span>
+                    <span className="text-[10px] text-primary-300 font-medium tracking-wide">Japan Tour Finder</span>
                     <span className="text-dark-600">·</span>
-                    <a href="mailto:admin@explomate.com" className="text-[10px] text-cyan-400 hover:underline font-semibold">Human Support</a>
+                    <a href="mailto:admin@explomate.com" className="text-[10px] text-cyan-400 hover:underline font-semibold">Support</a>
                   </div>
                 </div>
               </div>
@@ -344,7 +345,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                     {/* 1. SEARCH ACTION RESULT CARDS */}
                     {msg.action === "SEARCH" && msg.gigs && msg.gigs.length > 0 && (
                       <div className="mt-3 space-y-2 border-t border-dark-700/60 pt-3">
-                        <p className="text-[11px] text-dark-400 uppercase font-bold tracking-wider">Matching Tours:</p>
+                        <p className="text-[11px] text-dark-400 uppercase font-bold tracking-wider">Matching Tours in Japan:</p>
                         {msg.gigs.map((g) => (
                           <div key={g.id} className="bg-dark-900 border border-dark-700 rounded-xl p-3 flex gap-3 hover:border-primary/50 transition-colors">
                             {g.images?.[0] && (
@@ -355,76 +356,16 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                               <p className="text-[10px] text-dark-400 truncate">{g.location}</p>
                               <div className="flex items-center justify-between mt-1">
                                 <span className="text-xs font-bold text-primary-300">{parseFloat(g.client_price || g.priceUSD || "0").toFixed(2)} USDT</span>
-                                <button
-                                  onClick={() => handleConfirmBooking(g.id, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], 1, index)}
-                                  className="text-[10px] font-bold text-white bg-primary hover:bg-primary-600 px-2.5 py-1 rounded-md flex items-center gap-1 transition-all"
+                                <Link
+                                  href={`/gigs/${g.id}`}
+                                  className="text-[10px] font-bold text-white bg-primary hover:bg-primary-600 px-3 py-1 rounded-md flex items-center gap-1 transition-all"
                                 >
-                                  Book <ArrowRight className="w-2.5 h-2.5" />
-                                </button>
+                                  View Tour <ArrowRight className="w-2.5 h-2.5" />
+                                </Link>
                               </div>
                             </div>
                           </div>
                         ))}
-                      </div>
-                    )}
-
-                    {/* 2. BOOK ACTION CONFIRMATION CARD */}
-                    {msg.action === "BOOK" && msg.actionData?.gigId && !msg.bookingId && (
-                      <div className="mt-3 border-t border-dark-700/60 pt-3 space-y-2">
-                        <div className="bg-dark-900 border border-primary/20 rounded-xl p-3 space-y-2">
-                          <div className="flex items-center gap-2 text-primary">
-                            <Calendar className="w-4 h-4" />
-                            <span className="text-xs font-semibold text-white">Booking Details</span>
-                          </div>
-                          <div className="text-xs text-dark-300 space-y-1">
-                            <p>ðŸ“… Date: <strong>{msg.actionData.bookingDate || "Next week"}</strong></p>
-                            <p>ðŸ‘¥ Guests: <strong>{msg.actionData.groupSize || 1} Participant(s)</strong></p>
-                          </div>
-                          <button
-                            onClick={() =>
-                              handleConfirmBooking(
-                                msg.actionData.gigId,
-                                msg.actionData.bookingDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-                                msg.actionData.groupSize || 1,
-                                index
-                              )
-                            }
-                            className="w-full btn-primary py-1.5 text-xs flex items-center justify-center gap-1"
-                          >
-                            Confirm Booking & Save
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 3. PAY ACTION CARD */}
-                    {msg.action === "PAY" && msg.actionData?.bookingId && (
-                      <div className="mt-3 border-t border-dark-700/60 pt-3">
-                        <div className="bg-dark-900 border border-secondary/35 rounded-xl p-3 space-y-2">
-                          <div className="flex items-center gap-2 text-secondary">
-                            <CreditCard className="w-4 h-4" />
-                            <span className="text-xs font-semibold text-white">Secure Escrow Payment</span>
-                          </div>
-                          <div className="text-xs text-dark-300">
-                            <p>Tour: <strong>{msg.actionData.gigTitle}</strong></p>
-                            <p>Amount: <strong>{Number(msg.actionData.amount).toFixed(2)} {msg.actionData.token}</strong></p>
-                            <p className="text-[10px] text-dark-400 mt-1">Locked in escrow on Avalanche C-Chain.</p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setActivePayment({
-                                bookingId: msg.actionData.bookingId,
-                                gigTitle: msg.actionData.gigTitle,
-                                amount: msg.actionData.amount,
-                                token: msg.actionData.token,
-                              });
-                              setPayModalOpen(true);
-                            }}
-                            className="w-full bg-secondary hover:bg-secondary-600 text-white rounded-lg py-1.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-secondary/25"
-                          >
-                            Pay {Number(msg.actionData.amount).toFixed(2)} {msg.actionData.token} Now
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
@@ -440,7 +381,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                   </div>
                   <div className="bg-dark-800 text-dark-300 rounded-2xl rounded-tl-none px-4 py-3 text-sm flex items-center gap-2 border border-dark-700/40">
                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                    <span>Kira is searching the map...</span>
+                    <span>Kira is searching tours in Japan...</span>
                   </div>
                 </div>
               )}
@@ -451,7 +392,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
             <div className="p-4 border-t border-dark-700/50 bg-dark-950 flex gap-2">
               <input
                 type="text"
-                placeholder="Ask Kira about Bali tours..."
+                placeholder="Ask Kira about tours in Japan (Tokyo, Kyoto, Osaka)..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
