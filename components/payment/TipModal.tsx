@@ -93,7 +93,7 @@ export default function TipModal({ isOpen, onClose, bookingId, gigTitle }: TipMo
                   <h3 className="font-bold text-dark-900">Tip the App</h3>
                 </div>
                 <p className="text-xs text-dark-400 leading-relaxed">
-                  Your tip goes directly to Explomate to support platform development.
+                  Your tip goes directly to GuideBloc. to support platform development.
                   Pay any amount in USDC.
                 </p>
               </div>
@@ -189,7 +189,7 @@ export default function TipModal({ isOpen, onClose, bookingId, gigTitle }: TipMo
               <div>
                 <h3 className="font-bold text-dark-900">Tip Sent</h3>
                 <p className="text-sm text-dark-500 mt-1">
-                  ${tipAmount.toFixed(2)} USDC sent to the Explomate platform. Thank you.
+                  ${tipAmount.toFixed(2)} USDC sent to the GuideBloc. platform. Thank you.
                 </p>
               </div>
               {txHash && (

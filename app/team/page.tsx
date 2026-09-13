@@ -20,7 +20,7 @@ export default function TeamPage() {
             Our Team & Ecosystem
           </h1>
           <p className="text-lg text-dark-300 max-w-2xl mx-auto">
-            Explomate is powered by a global network of open-source contributors, Web3 security auditors, and passionate local tour guides.
+            GuideBloc. is powered by a global network of open-source contributors, Web3 security auditors, and passionate local tour guides.
           </p>
         </div>
 

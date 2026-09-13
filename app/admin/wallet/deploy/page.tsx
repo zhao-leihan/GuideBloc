@@ -92,7 +92,7 @@ export default function DeployEscrowPage() {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
 
-      // Factory for ExplomateEscrowV2
+      // Factory for GuideBlocEscrowV2
       const factory = new ethers.ContractFactory(
         escrowArtifact.abi,
         escrowArtifact.bytecode,
@@ -114,7 +114,7 @@ export default function DeployEscrowPage() {
 
       setDeployedAddress(targetAddress);
       toast.dismiss(toastId);
-      toast.success(`ExplomateEscrowV2 deployed at: ${targetAddress}!`);
+      toast.success(`GuideBloc. Escrow deployed at: ${targetAddress}!`);
 
       // Update backend environment
       await fetch("/api/admin/escrow/update", {
@@ -152,7 +152,7 @@ export default function DeployEscrowPage() {
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-bold text-dark-900 text-base">ExplomateEscrowV2 Specifications</h3>
+              <h3 className="font-bold text-dark-900 text-base">GuideBloc. Escrow Specifications</h3>
               <ul className="text-xs text-dark-600 space-y-1.5 list-disc list-inside">
                 <li><strong>Pure Peer-to-Peer:</strong> Tourist pays directly to Escrow ➡️ 90% Guide + 10% Admin Treasury.</li>
                 <li><strong>0 Server Dependency:</strong> No backend wallets, no private keys on server, completely bot-proof.</li>
@@ -195,7 +195,7 @@ export default function DeployEscrowPage() {
             <div className="p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
               <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
                 <CheckCircle2 className="w-5 h-5" />
-                ExplomateEscrowV2 Is Active On-Chain!
+                GuideBloc. Escrow Is Active On-Chain!
               </div>
               <p className="text-xs font-mono text-dark-800 break-all bg-white p-3 rounded-xl border border-emerald-500/20">
                 {deployedAddress}
@@ -236,7 +236,7 @@ export default function DeployEscrowPage() {
               ) : (
                 <>
                   <Rocket className="w-4 h-4" />
-                  Deploy ExplomateEscrowV2 via MetaMask (~0.015 AVAX)
+                  Deploy GuideBloc. Escrow via MetaMask (~0.015 AVAX)
                 </>
               )}
             </button>

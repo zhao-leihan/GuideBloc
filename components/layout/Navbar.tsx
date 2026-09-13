@@ -69,8 +69,8 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center group py-0.5">
           <img 
-            src="/assets/navbaronly.png" 
-            alt="Explomate Logo" 
+            src="/assets/assemble.png" 
+            alt="GuideBloc. Logo" 
             className="h-8 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>

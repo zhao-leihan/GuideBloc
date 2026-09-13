@@ -74,12 +74,12 @@ function RegisterContent() {
         <div className="w-full max-w-md">
           <div className="card p-8">
             <div className="text-center mb-8">
-              <img src="/assets/logo.png" alt="Explomate Logo" className="w-24 h-24 object-contain mx-auto mb-4" />
+              <img src="/assets/logo.png" alt="GuideBloc. Logo" className="w-24 h-24 object-contain mx-auto mb-4" />
               <h1 className="text-3xl font-bold text-dark-900">
                 {form.role === "GUIDE" ? "Register as a Tour Guide" : "Create your account"}
               </h1>
               <p className="text-dark-500 mt-2">
-                {form.role === "GUIDE" ? "Join Explomate as a local expert" : "Join the Explomate community"}
+                {form.role === "GUIDE" ? "Join GuideBloc. as a local expert" : "Join the GuideBloc. community"}
               </p>
             </div>
 

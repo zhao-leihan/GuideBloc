@@ -54,7 +54,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
         },
         {
           sender: "ai",
-          text: `Konnichiwa! 🎌✨ I'm **Kira**, your local tour information assistant at Explomate!\n\nI'm here to **help you explore and find authentic local tours across Japan** (Tokyo, Kyoto, Osaka, Mount Fuji, and more) 🏯🌸.\n\nTell me which city in Japan you'd like to explore, or what kind of tour experience you're looking for!`,
+          text: `Konnichiwa! 🎌✨ I'm **Kira**, your local tour information assistant at GuideBloc.!\n\nI'm here to **help you explore and find authentic local tours across Japan** (Tokyo, Kyoto, Osaka, Mount Fuji, and more) 🏯🌸.\n\nTell me which city in Japan you'd like to explore, or what kind of tour experience you're looking for!`,
         },
       ]);
     }
@@ -291,7 +291,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                     <span className="text-[10px] text-primary-300 font-medium tracking-wide">Japan Tour Finder</span>
                     <span className="text-dark-600">·</span>
-                    <a href="mailto:admin@explomate.com" className="text-[10px] text-cyan-400 hover:underline font-semibold">Support</a>
+                    <a href="mailto:admin@guidebloc.com" className="text-[10px] text-cyan-400 hover:underline font-semibold">Support</a>
                   </div>
                 </div>
               </div>

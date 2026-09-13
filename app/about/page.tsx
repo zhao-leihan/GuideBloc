@@ -11,7 +11,7 @@ export default function AboutPage() {
       <section className="relative pt-36 pb-32 overflow-hidden bg-dark-950">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=1200')] bg-cover bg-center opacity-30" />
         <div className="relative max-w-4xl mx-auto px-4 text-center z-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">About Explomate</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">About GuideBloc.</h1>
           <p className="text-xl text-dark-200">
             Where Adventure Meets Web3. Connecting tourists with local guides worldwide through blockchain-powered trust.
           </p>
@@ -37,7 +37,7 @@ export default function AboutPage() {
                 Our Mission & Vision
               </h2>
               <p className="text-dark-600 leading-relaxed mb-5 text-base sm:text-lg">
-                Explomate was born from a simple idea: travel should be authentic, accessible, and fair for everyone.
+                GuideBloc. was born from a simple idea: travel should be authentic, accessible, and fair for everyone.
                 We connect tourists directly with local tour guides, cutting out middlemen and using blockchain
                 technology to ensure secure, transparent payments.
               </p>

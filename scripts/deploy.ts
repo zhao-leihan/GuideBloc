@@ -13,18 +13,18 @@ async function main() {
     throw new Error("Treasury or Vault addresses are not set in .env");
   }
 
-  console.log("Deploying ExplomateEscrow with Vaults:");
+  console.log("Deploying GuideBlocEscrow with Vaults:");
   console.log("Gas & Ops Vault:", gasOpsVault);
   console.log("SaaS Growth Vault:", saasGrowthVault);
   console.log("Holding Dividends Vault:", holdingDividendsVault);
 
-  const ExplomateEscrow = await hre.ethers.getContractFactory("ExplomateEscrow");
-  const escrow = await ExplomateEscrow.deploy(gasOpsVault, saasGrowthVault, holdingDividendsVault);
+  const GuideBlocEscrow = await hre.ethers.getContractFactory("GuideBlocEscrow");
+  const escrow = await GuideBlocEscrow.deploy(gasOpsVault, saasGrowthVault, holdingDividendsVault);
 
   await escrow.waitForDeployment();
   const address = await escrow.getAddress();
 
-  console.log(`ExplomateEscrow successfully deployed to: ${address}`);
+  console.log(`GuideBlocEscrow successfully deployed to: ${address}`);
   console.log(`Don't forget to update NEXT_PUBLIC_ESCROW_ADDRESS in your .env with this address!`);
 }
 

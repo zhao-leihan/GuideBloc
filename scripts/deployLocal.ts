@@ -12,12 +12,12 @@ async function main() {
   const usdcAddress = await usdc.getAddress();
   console.log("MockUSDC deployed to:", usdcAddress);
 
-  // 2. Deploy ExplomateEscrow (Treasury Splitters are deployer for now)
-  const ExplomateEscrow = await hre.ethers.getContractFactory("ExplomateEscrow");
-  const escrow = await ExplomateEscrow.deploy(deployer.address, deployer.address, deployer.address);
+  // 2. Deploy GuideBlocEscrow (Treasury Splitters are deployer for now)
+  const GuideBlocEscrow = await hre.ethers.getContractFactory("GuideBlocEscrow");
+  const escrow = await GuideBlocEscrow.deploy(deployer.address, deployer.address, deployer.address);
   await escrow.waitForDeployment();
   const escrowAddress = await escrow.getAddress();
-  console.log("ExplomateEscrow deployed to:", escrowAddress);
+  console.log("GuideBlocEscrow deployed to:", escrowAddress);
 
   // 3. Mint 100,000 USDC to deployer
   const mintAmount = hre.ethers.parseUnits("100000", 6);

@@ -79,7 +79,7 @@ export default function FreelancerPage() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-lg md:text-xl text-dark-200 max-w-3xl mx-auto mb-10 leading-relaxed font-normal"
           >
-            Become an Explomate Freelance Tour Guide. Share your city&apos;s best hidden spots, host unique experiences for global travelers, and get paid instantly in crypto.
+            Become a GuideBloc. Freelance Tour Guide. Share your city&apos;s best hidden spots, host unique experiences for global travelers, and get paid instantly in crypto.
           </motion.p>
  
           <motion.div 
@@ -111,13 +111,13 @@ export default function FreelancerPage() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span>Why Explomate?</span>
+              <span>Why GuideBloc.?</span>
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
               Why Freelance with Us?
             </h2>
             <p className="text-dark-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mt-3">
-              Explomate is designed to give power back to local experts with modern technology.
+              GuideBloc. is designed to give power back to local experts with modern technology.
             </p>
           </div>
 
@@ -136,7 +136,7 @@ export default function FreelancerPage() {
                 badge: "Keep 90% Cut",
                 badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
                 title: "Keep 90% of Earnings",
-                desc: "Traditional agencies take up to 40% cut. With Explomate, platform commission is only 10%. You keep what is rightfully yours."
+                desc: "Traditional agencies take up to 40% cut. With GuideBloc., platform commission is only 10%. You keep what is rightfully yours."
               },
               {
                 icon: Wallet,
@@ -263,7 +263,7 @@ export default function FreelancerPage() {
             <div className="relative order-2 lg:order-1">
               <img 
                 src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?w=800" 
-                alt="Explomate Guide showing sights to tourists" 
+                alt="GuideBloc. Guide showing sights to tourists" 
                 className="relative rounded-3xl overflow-hidden border border-dark-100 shadow-2xl w-full h-[440px] object-cover" 
               />
             </div>

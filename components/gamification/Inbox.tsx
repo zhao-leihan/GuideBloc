@@ -144,8 +144,8 @@ export default function Inbox() {
         )}
 
         <div className="border-t border-dark-100 pt-4 text-[10px] text-dark-400 flex items-center justify-between mt-6">
-          <span>Explomate Rewards & Achievements</span>
-          <span>© 2026 Explomate</span>
+          <span>GuideBloc. Rewards & Achievements</span>
+          <span>© 2026 GuideBloc.</span>
         </div>
       </div>
     </div>

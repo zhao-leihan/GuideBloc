@@ -1,8 +1,8 @@
 <div align="center">
 
-  <img src="https://www.explomate.com/assets/navbaronly.png" alt="Explomate Logo" width="220" />
+  <img src="https://www.guidebloc.com/assets/assemble.png" alt="GuideBloc. Logo" width="220" />
 
-  # Explomate
+  # GuideBloc.
   ### Decentralized P2P travel gig marketplace built on Avalanche C-Chain for local guide escrow bookings
 
   [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=nextdotjs)](https://nextjs.org)
@@ -22,7 +22,7 @@
 
 ## 📖 Overview
 
-**Explomate.ly** is a state-of-the-art Web3 decentralized travel marketplace (DApp) connecting global travelers (*Tourists*) with verified local insiders (*Tour Guides*). Powered by pure Web3 smart escrow contracts on **Avalanche C-Chain**, Explomate eliminates middleman lockups, ensures zero-trust payment safety, guarantees 100% net earnings for tour guides, and delivers an immersive, gamified travel experience worldwide.
+**GuideBloc.** is a state-of-the-art Web3 decentralized travel marketplace (DApp) connecting global travelers (*Tourists*) with verified local insiders (*Tour Guides*). Powered by pure Web3 smart escrow contracts on **Avalanche C-Chain**, GuideBloc. eliminates middleman lockups, ensures zero-trust payment safety, guarantees 100% net earnings for tour guides, and delivers an immersive, gamified travel experience worldwide.
 
 ---
 
@@ -84,8 +84,8 @@
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone https://github.com/zhao-leihan/explomate.git
-cd explomate
+git clone https://github.com/zhao-leihan/guidebloc.git
+cd guidebloc
 npm install
 ```
 
@@ -119,5 +119,5 @@ This repository and its source code are strictly proprietary. Unauthorized copyi
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by the Explomate Team</sub>
+  <sub>Built with ❤️ by the GuideBloc. Team</sub>
 </div>

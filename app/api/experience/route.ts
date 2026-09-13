@@ -11,7 +11,7 @@ export async function GET() {
         proofPhoto: { not: null },
         tourist: {
           name: { notIn: ["Alexander Rayhan", "Rayhan Tourist"] },
-          email: { notIn: ["rayhanabbrar233@gmail.com", "tourist@explomate.com"] },
+          email: { notIn: ["rayhanabbrar233@gmail.com", "tourist@guidebloc.com"] },
         },
       },
       select: {

@@ -209,7 +209,7 @@ export async function connectWallet(
     if (walletType === "core") {
       throw new Error(
         isMobileBrowser()
-          ? "Please open Explomate inside Core Wallet's in-app browser on mobile, or select MetaMask."
+          ? "Please open GuideBloc. inside Core Wallet's in-app browser on mobile, or select MetaMask."
           : "Core Wallet extension not found. Please install Core from core.app"
       );
     }

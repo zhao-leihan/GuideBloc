@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title ExplomateEscrowV2 - Pure Decentralized Peer-to-Peer Web3 Escrow
+ * @title GuideBlocEscrowV2 - Pure Decentralized Peer-to-Peer Web3 Escrow
  * @notice Zero Server Custody. Zero Bot Risk. Direct Tourist -> Guide (90%) + Admin (10%).
  */
-contract ExplomateEscrowV2 is Ownable, ReentrancyGuard {
+contract GuideBlocEscrowV2 is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     enum BookingStatus {

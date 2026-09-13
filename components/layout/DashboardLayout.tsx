@@ -126,7 +126,7 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
             <div className="space-y-2">
               <h2 className="text-2xl font-display font-bold text-dark-900">Application Under Review</h2>
               <p className="text-sm text-dark-500 leading-relaxed">
-                Hi <span className="font-semibold text-dark-800">{user?.name}</span>, thank you for registering as a Tour Guide on Explomate!
+                Hi <span className="font-semibold text-dark-800">{user?.name}</span>, thank you for registering as a Tour Guide on GuideBloc.!
               </p>
               <p className="text-xs text-dark-400">
                 Your submitted certification and details are currently being verified by our administrator. You will be granted full dashboard access once approved.

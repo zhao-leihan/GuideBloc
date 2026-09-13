@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         success: true,
         step: 2,
         message: "Dynamic Booking QR Code Verified Successfully!",
-        qrCode: qrCode || `EXPLOMATE-SAFE-QR-${bookingId.slice(-6).toUpperCase()}`,
+        qrCode: qrCode || `GUIDEBLOC-SAFE-QR-${bookingId.slice(-6).toUpperCase()}`,
         verifiedAt: new Date().toISOString(),
       });
     }

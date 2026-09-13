@@ -31,21 +31,21 @@ export default function TermsOfServicePage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing and using Explomate.ly (the &quot;Platform&quot;), you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use the Platform.
+              By accessing and using GuideBloc. (the &quot;Platform&quot;), you agree to comply with and be bound by these Terms of Service. If you do not agree to these terms, please do not use the Platform.
             </p>
 
             <h2 className="text-lg font-bold text-dark-900 font-display border-b border-dark-100 pb-2 pt-4">
               2. User Accounts & Vetting
             </h2>
             <p>
-              Users register as either Tourists or Tour Guides. Tour Guides are subject to verification check processes, but Explomate does not guarantee the behavior or safety of users. You are responsible for keeping your account credentials confidential.
+              Users register as either Tourists or Tour Guides. Tour Guides are subject to verification check processes, but GuideBloc. does not guarantee the behavior or safety of users. You are responsible for keeping your account credentials confidential.
             </p>
 
             <h2 className="text-lg font-bold text-dark-900 font-display border-b border-dark-100 pb-2 pt-4">
               3. Escrow Payments & Fees
             </h2>
             <p>
-              Explomate uses Web3 smart contracts to hold bookings payments in escrow. A 10% platform commission is automatically deducted from guide payouts upon booking completion. Refund terms are detailed in our Cancellation Policy.
+              GuideBloc. uses Web3 smart contracts to hold bookings payments in escrow. A 10% platform commission is automatically deducted from guide payouts upon booking completion. Refund terms are detailed in our Cancellation Policy.
             </p>
 
             <h2 className="text-lg font-bold text-dark-900 font-display border-b border-dark-100 pb-2 pt-4">
@@ -59,7 +59,7 @@ export default function TermsOfServicePage() {
               5. Dispute Resolution
             </h2>
             <p>
-              Disputed escrow releases are arbitrated by Explomate&apos;s administration panel, whose decision is final and binding on both guides and tourists.
+              Disputed escrow releases are arbitrated by GuideBloc.&apos;s administration panel, whose decision is final and binding on both guides and tourists.
             </p>
 
             <h2 className="text-lg font-bold text-amber-600 dark:text-amber-400 font-display border-b border-dark-100 pb-2 pt-4 flex items-center gap-2">
@@ -70,10 +70,10 @@ export default function TermsOfServicePage() {
                 Important Notice:
               </p>
               <p>
-                <strong>Explomate operates solely as a marketplace platform provider</strong> connecting Tourists with independent Tour Guides. Explomate does not own, manage, or operate physical tour services directly.
+                <strong>GuideBloc. operates solely as a marketplace platform provider</strong> connecting Tourists with independent Tour Guides. GuideBloc. does not own, manage, or operate physical tour services directly.
               </p>
               <p>
-                All travel risks, incidents, physical accidents, injuries, property damage, or losses occurring during any tour are <strong>solely and fully the personal responsibility of the Tour Guide and Tourist (Tour Guide & Traveler Responsibility)</strong>. Explomate, as a marketplace platform facilitator, is exempt and released from any legal claims, lawsuits, damages, or liabilities arising from accidents or unforeseen events during the execution of any tour.
+                All travel risks, incidents, physical accidents, injuries, property damage, or losses occurring during any tour are <strong>solely and fully the personal responsibility of the Tour Guide and Tourist (Tour Guide & Traveler Responsibility)</strong>. GuideBloc., as a marketplace platform facilitator, is exempt and released from any legal claims, lawsuits, damages, or liabilities arising from accidents or unforeseen events during the execution of any tour.
               </p>
             </div>
           </div>

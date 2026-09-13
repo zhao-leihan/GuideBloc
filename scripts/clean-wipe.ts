@@ -51,20 +51,20 @@ async function fullWipe() {
   // Seed pristine base accounts
   const admin = await prisma.user.create({
     data: {
-      email: "rayhan@explomate.com",
+      email: "rayhan@guidebloc.com",
       name: "Rayhan Abbrar (Platform Admin)",
       password: adminPasswordHash,
       role: "ADMIN",
       country: "Indonesia",
       walletAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
-      bio: "Platform Administrator for Explomate Escrow & Tour Booking System",
+      bio: "Platform Administrator for GuideBloc. Escrow & Tour Booking System",
     },
   });
   console.log("👑 Admin created:", admin.email);
 
   const guide = await prisma.user.create({
     data: {
-      email: "guide@explomate.com",
+      email: "guide@guidebloc.com",
       name: "Gracia Tour Guide",
       password: guidePasswordHash,
       role: "GUIDE",
@@ -78,7 +78,7 @@ async function fullWipe() {
 
   const tourist = await prisma.user.create({
     data: {
-      email: "tourist@explomate.com",
+      email: "tourist@guidebloc.com",
       name: "Rayhan Tourist",
       password: touristPasswordHash,
       role: "TOURIST",

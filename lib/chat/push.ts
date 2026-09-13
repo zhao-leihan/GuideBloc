@@ -7,7 +7,7 @@ const vapidKeys = {
 
 if (vapidKeys.publicKey && vapidKeys.privateKey) {
   webpush.setVapidDetails(
-    "mailto:notifications@explomate.ly",
+    "mailto:notifications@guidebloc.com",
     vapidKeys.publicKey,
     vapidKeys.privateKey
   );

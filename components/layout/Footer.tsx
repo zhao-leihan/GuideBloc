@@ -11,8 +11,8 @@ export default function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
               <img 
-                src="/assets/navbaronly.png" 
-                alt="Explomate Logo" 
+                src="/assets/assemble.png" 
+                alt="GuideBloc. Logo" 
                 className="h-9 md:h-11 w-auto object-contain" 
               />
             </Link>
@@ -32,7 +32,7 @@ export default function Footer() {
             </div>
             <div className="pt-2">
               <a 
-                href="https://www.instagram.com/explomatee" 
+                href="https://www.instagram.com/guidebloc" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="inline-flex items-center gap-2 text-sm text-dark-400 hover:text-primary transition-colors"
@@ -40,7 +40,7 @@ export default function Footer() {
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
                 </svg>
-                <span>@explomatee</span>
+                <span>@guidebloc</span>
               </a>
             </div>
           </div>
@@ -72,8 +72,8 @@ export default function Footer() {
             <h4 className="font-display font-semibold text-white mb-4">Support & Emergency</h4>
             <ul className="space-y-2.5">
               <li><Link href="/help-center" className="text-sm hover:text-primary transition-colors">Help Center</Link></li>
-              <li><a href="mailto:admin@explomate.com" className="text-sm hover:text-primary transition-colors text-cyan-400 font-medium flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-cyan-400 inline-block" /> admin@explomate.com</a></li>
-              <li><a href="mailto:rayhan@explomate.com" className="text-sm hover:text-primary transition-colors text-cyan-400 font-medium flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-cyan-400 inline-block" /> rayhan@explomate.com</a></li>
+              <li><a href="mailto:admin@guidebloc.com" className="text-sm hover:text-primary transition-colors text-cyan-400 font-medium flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-cyan-400 inline-block" /> admin@guidebloc.com</a></li>
+              <li><a href="mailto:rayhan@guidebloc.com" className="text-sm hover:text-primary transition-colors text-cyan-400 font-medium flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-cyan-400 inline-block" /> rayhan@guidebloc.com</a></li>
               <li><Link href="/safety" className="text-sm hover:text-primary transition-colors">Safety & Escrow</Link></li>
               <li><Link href="/terms-of-service" className="text-sm hover:text-primary transition-colors">Terms of Service</Link></li>
               <li><Link href="/privacy-policy" className="text-sm hover:text-primary transition-colors">Privacy Policy</Link></li>
@@ -83,7 +83,7 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-dark-700 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-dark-500">
-            &copy; {new Date().getFullYear()} Explomate. All rights reserved.
+            &copy; {new Date().getFullYear()} GuideBloc. All rights reserved.
           </p>
           <p className="text-sm text-dark-500">
             Built with <HeartFilledIcon className="w-3.5 h-3.5 text-danger inline-block" /> - Where Adventure Meets Web3

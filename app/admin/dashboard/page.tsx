@@ -330,9 +330,9 @@ export default async function AdminDashboardPage() {
               <div className="flex justify-between items-center border-b border-dark-100 pb-3">
                 <div>
                   <h3 className="font-display font-bold text-dark-900 text-lg flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-secondary" /> Explomate Platform Reviews
+                    <FileText className="w-5 h-5 text-secondary" /> GuideBloc. Platform Reviews
                   </h3>
-                  <p className="text-xs text-dark-400">Direct feedback sent by users about the Explomate.ly platform</p>
+                  <p className="text-xs text-dark-400">Direct feedback sent by users about the GuideBloc. platform</p>
                 </div>
               </div>
 

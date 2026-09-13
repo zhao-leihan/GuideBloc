@@ -86,14 +86,14 @@ const fallbackReviews = [
   {
     id: "fb-1",
     rating: 5,
-    comment: "Explomate made my Kyoto cultural tour completely worry-free. Funds stayed safely in the smart contract escrow until we finished our tour with Kenji. Truly game-changing!",
+    comment: "GuideBloc. made my Kyoto cultural tour completely worry-free. Funds stayed safely in the smart contract escrow until we finished our tour with Kenji. Truly game-changing!",
     reviewer: { name: "Sarah Chen", role: "TOURIST", country: "United States" },
     gig: { title: "Kyoto Traditional Temples & Hidden Gardens", location: "Kyoto, Japan" }
   },
   {
     id: "fb-2",
     rating: 5,
-    comment: "As a local guide in Bali, getting paid directly in USDT with zero payment disputes or 3-week chargeback worries is why I moved 100% of my private tours to Explomate.",
+    comment: "As a local guide in Bali, getting paid directly in USDT with zero payment disputes or 3-week chargeback worries is why I moved 100% of my private tours to GuideBloc..",
     reviewer: { name: "Wayan Sudarma", role: "GUIDE", country: "Indonesia" },
     gig: { title: "Ubud Hidden Waterfalls & Rice Terraces", location: "Bali, Indonesia" }
   },
@@ -177,7 +177,7 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
               className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans"
             >
-              Say goodbye to travel scams, hidden platform markups, and payment delays! Explomate locks your booking funds in next-generation <b>Smart Contract Escrow</b> - releasing payment to your guide only after your tour is complete.
+              Say goodbye to travel scams, hidden platform markups, and payment delays! GuideBloc. locks your booking funds in next-generation <b>Smart Contract Escrow</b> - releasing payment to your guide only after your tour is complete.
             </motion.p>
 
           {/* AI Talk Box */}
@@ -262,7 +262,7 @@ export default function HomePage() {
               <span>Decentralized Escrow Protection</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-black text-dark-900 tracking-tight font-display">
-              Why Travelers & Guides Trust Explomate
+              Why Travelers & Guides Trust GuideBloc.
             </h2>
             <p className="text-dark-500 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
               We leverage Avalanche C-Chain smart contract technology to ensure 100% payout security, zero upfront payment risk, and seamless peer-to-peer travel.
@@ -599,7 +599,7 @@ export default function HomePage() {
               </h2>
 
               <p className="text-dark-600 text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-sans">
-                Whether you&apos;re an adventurous traveler seeking authentic local secrets or an expert guide ready to earn 90% direct payouts, Explomate protects every journey.
+                Whether you&apos;re an adventurous traveler seeking authentic local secrets or an expert guide ready to earn 90% direct payouts, GuideBloc. protects every journey.
               </p>
 
               {/* Value trust badges */}

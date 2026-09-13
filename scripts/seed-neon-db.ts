@@ -17,7 +17,7 @@ async function main() {
 
   // 2. Admin: Rayhan
   const admin = await prisma.user.upsert({
-    where: { email: "rayhan@explomate.com" },
+    where: { email: "rayhan@guidebloc.com" },
     update: {
       password: hashedPassword,
       role: "ADMIN",
@@ -26,11 +26,11 @@ async function main() {
     },
     create: {
       name: "Rayhan",
-      email: "rayhan@explomate.com",
+      email: "rayhan@guidebloc.com",
       password: hashedPassword,
       role: "ADMIN",
       walletAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
-      bio: "Official Explomate Platform Administrator",
+      bio: "Official GuideBloc. Platform Administrator",
     },
   });
   console.log("Admin seeded:", admin.email);

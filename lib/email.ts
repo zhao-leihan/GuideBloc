@@ -15,14 +15,14 @@ interface EmailPayload {
 
 /**
  * Helper to wrap email bodies in a premium, responsive gradient banner layout.
- * Uses CID (Content-ID) inline attachment "cid:explomate_logo" so Gmail & mobile mail clients load navbar.png 100% reliably.
+ * Uses CID (Content-ID) inline attachment "cid:guidebloc_logo" so Gmail & mobile mail clients load navbar.png 100% reliably.
  */
 function getEmailLayout(title: string, contentHtml: string): string {
   return `
     <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
       <!-- Premium Gradient Banner Header Block -->
       <div style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); padding: 32px 24px; text-align: center;">
-        <img src="cid:explomate_logo" alt="Explomate Logo" style="height: 42px; width: auto; max-width: 220px; display: block; margin: 0 auto 8px auto;" />
+        <img src="cid:guidebloc_logo" alt="GuideBloc. Logo" style="height: 42px; width: auto; max-width: 220px; display: block; margin: 0 auto 8px auto;" />
         <div style="color: rgba(255, 255, 255, 0.85); font-size: 11px; font-weight: 600; text-transform: uppercase; margin-top: 4px; letter-spacing: 0.1em;">
           ${title}
         </div>
@@ -35,8 +35,8 @@ function getEmailLayout(title: string, contentHtml: string): string {
 
       <!-- Footer -->
       <div style="padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid #f3f4f6; text-align: center; font-size: 11px; color: #9ca3af;">
-        <div>Explomate Travel & Secure Escrow Platform</div>
-        <div style="margin-top: 4px;">&copy; 2026 Explomate. All rights reserved.</div>
+        <div>GuideBloc. Travel & Secure Escrow Platform</div>
+        <div style="margin-top: 4px;">&copy; 2026 GuideBloc. All rights reserved.</div>
       </div>
     </div>
   `;
@@ -49,7 +49,7 @@ function getEmailLayout(title: string, contentHtml: string): string {
 export async function sendTransactionalEmail(payload: EmailPayload): Promise<boolean> {
   try {
     const apiKey = process.env.RESEND_API_KEY;
-    const fromEmail = (process.env.EMAIL_FROM && !process.env.EMAIL_FROM.includes("explomate.com")) 
+    const fromEmail = (process.env.EMAIL_FROM && !process.env.EMAIL_FROM.includes("guidebloc.com")) 
       ? process.env.EMAIL_FROM 
       : "onboarding@resend.dev";
 
@@ -70,7 +70,7 @@ export async function sendTransactionalEmail(payload: EmailPayload): Promise<boo
       const inlineLogoAttachment = logoBase64 ? [{
         filename: "navbar.png",
         content: logoBase64,
-        content_id: "explomate_logo"
+        content_id: "guidebloc_logo"
       }] : [];
 
       // Convert external attachments into base64 for Resend API
@@ -98,7 +98,7 @@ export async function sendTransactionalEmail(payload: EmailPayload): Promise<boo
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          from: `Explomate <${fromEmail}>`,
+          from: `GuideBloc. <${fromEmail}>`,
           to: payload.to,
           subject: payload.subject,
           html: payload.html,
@@ -128,11 +128,11 @@ export async function sendTransactionalEmail(payload: EmailPayload): Promise<boo
  * Triggered automatically upon a user registration to welcome them.
  */
 export async function triggerWelcomeEmail(recipientEmail: string, name: string, role: string) {
-  const subject = `👋 Welcome to explomate, ${name}!`;
+  const subject = `👋 Welcome to GuideBloc., ${name}!`;
   const content = `
-    <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Welcome to explomate!</h2>
+    <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Welcome to GuideBloc.!</h2>
     <p>Hello <strong>${name}</strong>,</p>
-    <p>Thank you for joining explomate! We are thrilled to welcome you to our community of global travelers and local tour guides.</p>
+    <p>Thank you for joining GuideBloc.! We are thrilled to welcome you to our community of global travelers and local tour guides.</p>
     <p>Your account has been successfully configured as a <strong>${role === "GUIDE" ? "Tour Guide" : "Tourist"}</strong>.</p>
     
     ${role === "GUIDE" 
@@ -144,7 +144,7 @@ export async function triggerWelcomeEmail(recipientEmail: string, name: string, 
       <a href="${process.env.NEXTAUTH_URL || "http://localhost:3000"}" style="background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); color: white; padding: 12px 28px; text-decoration: none; border-radius: 9999px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">Go to Dashboard</a>
     </div>
     
-    <p>Warm regards,<br/>The Explomate Onboarding Team</p>
+    <p>Warm regards,<br/>The GuideBloc. Onboarding Team</p>
   `;
 
   const html = getEmailLayout("User Onboarding", content);
@@ -155,11 +155,11 @@ export async function triggerWelcomeEmail(recipientEmail: string, name: string, 
  * Triggered when a user requests a password reset.
  */
 export async function triggerPasswordResetEmail(recipientEmail: string, resetLink: string) {
-  const subject = `🔑 Reset Your Password - explomate`;
+  const subject = `🔑 Reset Your Password - GuideBloc.`;
   const content = `
     <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Password Reset Request</h2>
     <p>Hello,</p>
-    <p>We received a request to reset the password for your account on explomate.</p>
+    <p>We received a request to reset the password for your account on GuideBloc..</p>
     <p>Please click the button below to reset your password. This link is valid for 1 hour:</p>
     
     <div style="margin: 32px 0; text-align: center;">
@@ -189,14 +189,14 @@ export async function triggerBookingSuccessEmail(bookingId: string, recipientEma
   }
   sentReceiptBookings.add(bookingId);
 
-  const subject = `Booking Confirmed & Funds Escrowed - Explomate`;
+  const subject = `Booking Confirmed & Funds Escrowed - GuideBloc.`;
   const content = `
     <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Booking Confirmed</h2>
     <p>Hello,</p>
     <p>Your payment of <strong>$${amount.toFixed(2)} USDC</strong> for the tour <strong>"${gigTitle}"</strong> (Booking ID: ${bookingId}) has been securely deposited into the Avalanche Escrow smart contract.</p>
     <p>The funds will remain locked in the contract until the tour is completed or marked finished by you.</p>
     <p>Your official transaction receipt PDF is attached to this email.</p>
-    <p>Thank you for exploring with Explomate.</p>
+    <p>Thank you for exploring with GuideBloc..</p>
   `;
 
   const html = getEmailLayout("Transaction Receipt", content);
@@ -214,13 +214,13 @@ export async function triggerBookingSuccessEmail(bookingId: string, recipientEma
  * Triggered automatically when funds are released/tour is completed.
  */
 export async function triggerBookingCompletionEmail(bookingId: string, recipientEmail: string, gigTitle: string, amount: number) {
-  const subject = `Payout Released to Wallet - Explomate`;
+  const subject = `Payout Released to Wallet - GuideBloc.`;
   const content = `
     <h2 style="color: #10b981; margin-top: 0; font-size: 20px; font-weight: 700;">Payout Released</h2>
     <p>Hello,</p>
     <p>The escrow funds for the tour <strong>"${gigTitle}"</strong> (Booking ID: ${bookingId}) have been successfully released to the Guide's payout address.</p>
     <p>Amount: <strong>$${amount.toFixed(2)} USDC</strong> (platform commission fee split distributed).</p>
-    <p>Thank you for exploring with Explomate.</p>
+    <p>Thank you for exploring with GuideBloc..</p>
   `;
 
   const html = getEmailLayout("Escrow Release", content);
@@ -237,7 +237,7 @@ export async function triggerTouristCompletionEmail(
   guideName: string,
   totalPaid: number
 ) {
-  const subject = `Tour Complete - Thank You for Exploring with Explomate`;
+  const subject = `Tour Complete - Thank You for Exploring with GuideBloc.`;
   const content = `
     <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Tour Completed</h2>
     <p>Hello,</p>
@@ -251,7 +251,7 @@ export async function triggerTouristCompletionEmail(
       </p>
     </div>
     <p>Feel free to leave a review to help other travelers discover quality experiences.</p>
-    <p>Thank you for traveling with us.<br/>The Explomate Team</p>
+    <p>Thank you for traveling with us.<br/>The GuideBloc. Team</p>
   `;
 
   const html = getEmailLayout("Tour Completion", content);
@@ -283,8 +283,8 @@ export async function triggerGuidePayoutEmail(
         <strong>XP Earned:</strong> +${xpEarned} XP
       </p>
     </div>
-    <p>Thank you for delivering great experiences on Explomate.</p>
-    <p>Best regards,<br/>The Explomate Team</p>
+    <p>Thank you for delivering great experiences on GuideBloc..</p>
+    <p>Best regards,<br/>The GuideBloc. Team</p>
   `;
 
   const html = getEmailLayout("Payout Confirmed", content);
@@ -299,11 +299,11 @@ export async function triggerSubscriptionActivatedEmail(
   guideName: string,
   expiryDate: string
 ) {
-  const subject = `Pro Subscription Activated - Explomate`;
+  const subject = `Pro Subscription Activated - GuideBloc.`;
   const content = `
     <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">Welcome to Pro</h2>
     <p>Hello <strong>${guideName}</strong>,</p>
-    <p>Your <strong>Pro Guide Subscription</strong> is now active. Your profile and gigs are now highlighted across the Explomate platform.</p>
+    <p>Your <strong>Pro Guide Subscription</strong> is now active. Your profile and gigs are now highlighted across the GuideBloc. platform.</p>
     <div style="background: #eef2ff; border-left: 4px solid #4f46e5; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
       <p style="margin: 0; font-size: 13px; color: #3730a3;">
         - Priority ranking in search results<br/>
@@ -313,7 +313,7 @@ export async function triggerSubscriptionActivatedEmail(
         <strong>Active until:</strong> ${expiryDate}
       </p>
     </div>
-    <p>Best regards,<br/>The Explomate Team</p>
+    <p>Best regards,<br/>The GuideBloc. Team</p>
   `;
 
   const html = getEmailLayout("Pro Subscription Active", content);
@@ -334,7 +334,7 @@ export async function triggerGigBoostEmail(
   const content = `
     <h2 style="color: #8b5cf6; margin-top: 0; font-size: 20px; font-weight: 700;">Your Gig is Boosted</h2>
     <p>Hello <strong>${guideName}</strong>,</p>
-    <p>Your tour <strong>"${gigTitle}"</strong> has been boosted to a <strong>Featured</strong> position on Explomate.</p>
+    <p>Your tour <strong>"${gigTitle}"</strong> has been boosted to a <strong>Featured</strong> position on GuideBloc..</p>
     <div style="background: #faf5ff; border-left: 4px solid #8b5cf6; padding: 14px 18px; border-radius: 8px; margin: 20px 0;">
       <p style="margin: 0; font-size: 13px; color: #5b21b6;">
         <strong>Gig:</strong> ${gigTitle}<br/>
@@ -343,7 +343,7 @@ export async function triggerGigBoostEmail(
         <strong>Boost Type:</strong> Top Search Placement
       </p>
     </div>
-    <p>Thank you for choosing to grow with Explomate.<br/>The Explomate Team</p>
+    <p>Thank you for choosing to grow with GuideBloc..<br/>The GuideBloc. Team</p>
   `;
 
   const html = getEmailLayout("Gig Boost Active", content);
@@ -360,7 +360,7 @@ export async function triggerTipReceivedEmail(
   amountUSD: number,
   gigTitle: string
 ) {
-  const subject = `Thank You for Your Tip - Explomate`;
+  const subject = `Thank You for Your Tip - GuideBloc.`;
   const content = `
     <h2 style="color: #f59e0b; margin-top: 0; font-size: 20px; font-weight: 700;">Thank You for Your Support</h2>
     <p>Hello <strong>${tipperName}</strong>,</p>
@@ -373,7 +373,7 @@ export async function triggerTipReceivedEmail(
         <strong>Paid on-chain via:</strong> USDC (Avalanche Fuji)
       </p>
     </div>
-    <p>Warm regards,<br/>The Explomate Team</p>
+    <p>Warm regards,<br/>The GuideBloc. Team</p>
   `;
 
   const html = getEmailLayout("Tip Received", content);
@@ -399,7 +399,7 @@ export async function triggerNewBookingForGuideEmail(
   const content = `
     <h2 style="color: #4f46e5; margin-top: 0; font-size: 20px; font-weight: 700;">New Tour Booking Received!</h2>
     <p>Hello <strong>${guideName}</strong>,</p>
-    <p>Great news! <strong>${touristName}</strong> has just booked your tour <strong>"${gigTitle}"</strong> on Explomate.</p>
+    <p>Great news! <strong>${touristName}</strong> has just booked your tour <strong>"${gigTitle}"</strong> on GuideBloc..</p>
     
     <div style="background: #eef2ff; border-left: 4px solid #4f46e5; padding: 16px 20px; border-radius: 8px; margin: 20px 0;">
       <p style="margin: 0; font-size: 13px; color: #3730a3; line-height: 1.8;">
@@ -419,15 +419,15 @@ export async function triggerNewBookingForGuideEmail(
     </p>
 
     <div style="margin: 28px 0; text-align: center;">
-      <a href="https://www.explomate.com/dashboard/guide/bookings" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">
+      <a href="https://www.guidebloc.com/dashboard/guide/bookings" style="background-color: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);">
         View Booking in Guide Dashboard &rarr;
       </a>
     </div>
 
     <p style="font-size: 13px; color: #6b7280;">
-      Need to coordinate meetup details with your guest? You can chat with them directly through the Explomate messaging system.<br/><br/>
+      Need to coordinate meetup details with your guest? You can chat with them directly through the GuideBloc. messaging system.<br/><br/>
       Best regards,<br/>
-      <strong>The Explomate Team</strong>
+      <strong>The GuideBloc. Team</strong>
     </p>
   `;
 

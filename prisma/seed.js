@@ -55,19 +55,19 @@ async function main() {
   // 2. Create Super-Admin Rayhan
   const adminPassword = await bcrypt.hash("Rayhan3723", 10);
   const admin = await prisma.user.upsert({
-    where: { email: "rayhan@explomate.com" },
+    where: { email: "rayhan@guidebloc.com" },
     update: {
       password: adminPassword,
       role: "ADMIN",
       name: "Rayhan",
     },
     create: {
-      email: "rayhan@explomate.com",
+      email: "rayhan@guidebloc.com",
       name: "Rayhan",
       password: adminPassword,
       role: "ADMIN",
       avatar: "",
-      bio: "Official Explomate Platform Administrator",
+      bio: "Official GuideBloc. Platform Administrator",
       country: "",
       language: [],
     },

@@ -21,7 +21,7 @@ export default function SafetyPage() {
               Trust & Safety
             </h1>
             <p className="text-dark-300 text-sm max-w-xl mx-auto leading-relaxed">
-              We design every feature of Explomate to protect our tourist community and vetted local guides. Discover our safety pillars.
+              We design every feature of GuideBloc. to protect our tourist community and vetted local guides. Discover our safety pillars.
             </p>
           </div>
         </section>
@@ -32,7 +32,7 @@ export default function SafetyPage() {
             {[
               {
                 title: "1. Vetted Tour Guides",
-                desc: "Every guide on Explomate goes through a mandatory verification process including ID/passport checks, profile vetting, and rating-based quality checks before they can list tours.",
+                desc: "Every guide on GuideBloc. goes through a mandatory verification process including ID/passport checks, profile vetting, and rating-based quality checks before they can list tours.",
                 icon: FileCheck,
                 color: "text-primary bg-primary/10",
               },
@@ -44,13 +44,13 @@ export default function SafetyPage() {
               },
               {
                 title: "3. Dispute Resolution Center",
-                desc: "If anything goes wrong during a booking, the tourist or guide can dispute the booking. Explomate's admin panel acts as an impartial arbiter to resolve disputes fairly.",
+                desc: "If anything goes wrong during a booking, the tourist or guide can dispute the booking. GuideBloc.'s admin panel acts as an impartial arbiter to resolve disputes fairly.",
                 icon: ShieldAlert,
                 color: "text-accent bg-accent/10",
               },
               {
                 title: "4. Marketplace Liability Disclaimer",
-                desc: "Explomate operates solely as a marketplace platform connecting travelers with independent tour guides. Any travel incidents, physical injuries, or unforeseen circumstances during the tour are the direct and sole responsibility of the Tour Guide and Traveler, not the Explomate platform.",
+                desc: "GuideBloc. operates solely as a marketplace platform connecting travelers with independent tour guides. Any travel incidents, physical injuries, or unforeseen circumstances during the tour are the direct and sole responsibility of the Tour Guide and Traveler, not the GuideBloc. platform.",
                 icon: ShieldAlert,
                 color: "text-amber-500 bg-amber-500/10",
               },
@@ -78,7 +78,7 @@ export default function SafetyPage() {
                   <CheckCircle className="w-5 h-5 text-primary" /> Safety Tips for Tourists
                 </h3>
                 <ul className="space-y-4 text-xs text-dark-600 leading-relaxed list-disc list-inside">
-                  <li>Keep all chat communications inside Explomate&apos;s secure chat box.</li>
+                  <li>Keep all chat communications inside GuideBloc.&apos;s secure chat box.</li>
                   <li>Verify the tour details, duration, meeting points, and included services before booking.</li>
                   <li>Do not agree to pay cash or send cryptocurrency directly to the guide offline. All payments must go through the escrow checkout.</li>
                   <li>In case of anomalies or problems during the tour, click &quot;Dispute&quot; immediately to hold the funds.</li>

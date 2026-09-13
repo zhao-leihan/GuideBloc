@@ -62,12 +62,12 @@ async function main() {
   console.log("Deleting gigs...");
   await prisma.gig.deleteMany({});
 
-  // 2. Delete all users except rayhan@explomate.com
+  // 2. Delete all users except rayhan@guidebloc.com
   console.log("Deleting users (except super admin)...");
   const deleteResult = await prisma.user.deleteMany({
     where: {
       email: {
-        not: "rayhan@explomate.com"
+        not: "rayhan@guidebloc.com"
       }
     }
   });

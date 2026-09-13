@@ -1,4 +1,4 @@
-// Auto-generated artifact for ExplomateEscrowV2
+// Auto-generated artifact for GuideBlocEscrowV2
 export const ESCROW_V2_ABI = [
   {
     "inputs": [
@@ -244,7 +244,7 @@ export const ESCROW_V2_ABI = [
         "type": "uint256"
       },
       {
-        "internalType": "enum ExplomateEscrowV2.BookingStatus",
+        "internalType": "enum GuideBlocEscrowV2.BookingStatus",
         "name": "status",
         "type": "uint8"
       }
@@ -336,12 +336,12 @@ export const ESCROW_V2_ABI = [
             "type": "uint256"
           },
           {
-            "internalType": "enum ExplomateEscrowV2.BookingStatus",
+            "internalType": "enum GuideBlocEscrowV2.BookingStatus",
             "name": "status",
             "type": "uint8"
           }
         ],
-        "internalType": "struct ExplomateEscrowV2.Booking",
+        "internalType": "struct GuideBlocEscrowV2.Booking",
         "name": "",
         "type": "tuple"
       }

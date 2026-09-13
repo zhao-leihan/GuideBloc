@@ -250,7 +250,7 @@ export default function SubscriptionPage() {
                 {
                   icon: HeadphonesIcon,
                   label: "Priority Support",
-                  desc: "Faster response times from the Explomate support team.",
+                  desc: "Faster response times from the GuideBloc. support team.",
                 },
               ].map(({ icon: Icon, label, desc }) => (
                 <div key={label} className="flex items-start gap-3">

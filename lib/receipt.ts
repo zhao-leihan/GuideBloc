@@ -24,7 +24,7 @@ interface ReceiptBookingPayload {
 /**
  * Generates an A4 PDF Receipt for a successfully funded tour escrow.
  * Header & Footer feature background.jpeg with dark overlay for maximum white text contrast.
- * Logo uses logo.png badge (without redundant 'EXPLOMATE' text).
+ * Logo uses logo.png badge (without redundant 'GUIDEBLOC.' text).
  */
 export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
   const doc = new jsPDF({
@@ -69,7 +69,7 @@ export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
     doc.rect(0, 0, 210, 42, "F");
   }
 
-  // 2. Draw logo.png Image in Header (NO redundant "EXPLOMATE" text as requested)
+  // 2. Draw logo.png Image in Header (NO redundant "GUIDEBLOC." text as requested)
   let logoDrawn = false;
   try {
     const logoPath = path.join(process.cwd(), "public/assets/logo.png");
@@ -94,7 +94,7 @@ export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(203, 213, 225); // Slate 300
-  doc.text("https://explomate.com", textX, 26);
+  doc.text("https://guidebloc.com", textX, 26);
 
   // Header Right: Title & Receipt Metadata
   doc.setFont("helvetica", "bold");
@@ -195,7 +195,7 @@ export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
   doc.setFontSize(8.5);
   doc.setTextColor(lightGray.r, lightGray.g, lightGray.b);
   doc.text("This receipt serves as digital confirmation of successful funding. Funds are held securely inside the", 15, 166);
-  doc.text("Explomate Smart Contract Escrow and will be released to the guide once you finalize completion.", 15, 170);
+  doc.text("GuideBloc. Smart Contract Escrow and will be released to the guide once you finalize completion.", 15, 170);
 
   // Transaction Hash Card
   doc.setFillColor(bgLight.r, bgLight.g, bgLight.b);
@@ -241,8 +241,8 @@ export function generateReceiptPdf(booking: ReceiptBookingPayload): Buffer {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(255, 255, 255);
-  doc.text("© 2026 Explomate · Web3 Travel Escrow System · All rights reserved.", 15, 277);
-  doc.text("Support: support@explomate.com | Thank you for exploring with Explomate!", 15, 282);
+  doc.text("© 2026 GuideBloc. · Web3 Travel Escrow System · All rights reserved.", 15, 277);
+  doc.text("Support: support@guidebloc.com | Thank you for exploring with GuideBloc.!", 15, 282);
 
   const arrayBuffer = doc.output("arraybuffer");
   return Buffer.from(arrayBuffer);

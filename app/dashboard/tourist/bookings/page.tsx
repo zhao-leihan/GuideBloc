@@ -270,9 +270,9 @@ export default function TouristBookingsPage() {
 
             <!-- Left: Logo & Title -->
             <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="/assets/logo.png" alt="Explomate Logo" style="height: 38px; width: 38px; object-fit: contain;" />
+                <img src="/assets/logo.png" alt="GuideBloc. Logo" style="height: 38px; width: 38px; object-fit: contain;" />
                 <div>
-                    <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">EXPLOMATE</h2>
+                    <h2 style="margin: 0; font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">GUIDEBLOC.</h2>
                     <p style="margin: 2px 0 0 0; font-size: 8.5px; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600;">Official Booking Receipt</p>
                 </div>
             </div>
@@ -410,7 +410,7 @@ export default function TouristBookingsPage() {
         <div style="position: absolute; inset: 0; background: rgba(15, 23, 42, 0.5); pointer-events: none;"></div>
 
         <span style="font-weight: 500; color: #f8fafc; font-size: 8.5px; letter-spacing: 0.04em; position: relative; z-index: 1;">
-            © 2026 Explomate.ly · All rights reserved
+            © 2026 GuideBloc. · All rights reserved
         </span>
 
         <span style="font-weight: 600; color: #ffffff; font-size: 8px; letter-spacing: 0.04em; background: rgba(255,255,255,0.2); padding: 3px 12px; border-radius: 20px; backdrop-filter: blur(4px); position: relative; z-index: 1;">
@@ -440,7 +440,7 @@ export default function TouristBookingsPage() {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Explomate_Receipt_${booking.id}.pdf`);
+      pdf.save(`GuideBloc_Receipt_${booking.id}.pdf`);
 
       toast.success("Receipt downloaded successfully!");
     } catch (error) {
@@ -799,7 +799,7 @@ export default function TouristBookingsPage() {
             
             <div className="p-6 border-b border-dark-100 bg-dark-50/50">
               <h2 className="text-xl font-bold text-dark-900">Leave Your Feedback</h2>
-              <p className="text-xs text-dark-500 mt-1">Help us improve by reviewing both your Tour Guide and your Explomate platform experience.</p>
+              <p className="text-xs text-dark-500 mt-1">Help us improve by reviewing both your Tour Guide and your GuideBloc. platform experience.</p>
             </div>
 
             <form onSubmit={handleSubmitReviews} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
@@ -874,8 +874,8 @@ export default function TouristBookingsPage() {
               </div>
 
               <div className="border-t border-dark-100 pt-6 space-y-4">
-                {/* Section 2: Review for Explomate */}
-                <h3 className="text-sm font-bold text-secondary uppercase tracking-wider">2. Review for Explomate Platform</h3>
+                {/* Section 2: Review for GuideBloc. */}
+                <h3 className="text-sm font-bold text-secondary uppercase tracking-wider">2. Review for GuideBloc. Platform</h3>
                 
                 {/* Platform Rating */}
                 <div>
@@ -903,7 +903,7 @@ export default function TouristBookingsPage() {
                     value={platformComment}
                     onChange={(e) => setPlatformComment(e.target.value)}
                     rows={3}
-                    placeholder="Tell us what you think of Explomate (escrow system, web speed, layouts)..."
+                    placeholder="Tell us what you think of GuideBloc. (escrow system, web speed, layouts)..."
                     className="input py-2 px-3 text-sm resize-none"
                     required
                   />

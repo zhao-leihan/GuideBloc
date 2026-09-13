@@ -44,7 +44,7 @@ const faqs = [
   },
   {
     q: "Are the tour guides verified?",
-    a: "Yes. Every tour guide on Explomate must complete a verification process, including government-issued ID/passport checking, background screenings, and experience reviews before they are allowed to list tours on the platform.",
+    a: "Yes. Every tour guide on GuideBloc. must complete a verification process, including government-issued ID/passport checking, background screenings, and experience reviews before they are allowed to list tours on the platform.",
   },
   {
     q: "How do I pay if I do not own any cryptocurrency?",

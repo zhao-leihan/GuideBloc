@@ -41,11 +41,11 @@ async function main() {
   });
   console.log("Current users in NeonDB:", allUsers);
 
-  const adminEmail = "rayhan@explomate.com";
+  const adminEmail = "rayhan@guidebloc.com";
   const rawPassword = "Rayhan3723";
   const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-  // 2. Remove or clean up previous admin accounts (e.g. zhaohan@explomate.com, zhaohan@explormate.com, etc.)
+  // 2. Remove or clean up previous admin accounts (e.g. zhaohan@guidebloc.com, etc.)
   const otherAdmins = allUsers.filter(
     (u) => u.role === "ADMIN" && u.email.toLowerCase() !== adminEmail.toLowerCase()
   );
@@ -65,11 +65,11 @@ async function main() {
     console.log(`Deleted old admin account: ${oldAdmin.email}`);
   }
 
-  // Also check if any non-admin account with email zhaohan@explomate.com or zhaohan@explormate.com exists, delete them to clean up
+  // Also check if any non-admin account with email zhaohan exists, delete them to clean up
   const zhaoAccounts = await prisma.user.findMany({
     where: {
       email: {
-        in: ["zhaohan@explomate.com", "zhaohan@explormate.com"]
+        contains: "zhaohan"
       }
     }
   });
@@ -79,7 +79,7 @@ async function main() {
     await prisma.user.delete({ where: { id: acc.id } }).catch(() => {});
   }
 
-  // 3. Create or update rayhan@explomate.com as the SINGLE admin
+  // 3. Create or update rayhan@guidebloc.com as the SINGLE admin
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
@@ -93,7 +93,7 @@ async function main() {
       email: adminEmail,
       password: hashedPassword,
       role: "ADMIN",
-      bio: "Official Explomate Platform Super Administrator",
+      bio: "Official GuideBloc. Platform Super Administrator",
       isBlocked: false,
     },
   });

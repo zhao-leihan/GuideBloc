@@ -5,7 +5,7 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import MaintenanceOverlay from "@/components/layout/MaintenanceOverlay";
 
 export const metadata: Metadata = {
-  title: "Explomate | Explore the World,Pay in the Future",
+  title: "GuideBloc. | Explore the World, Pay in the Future",
   description: "Connect with local tour guides worldwide. Book unique experiences and pay with USDT/USDC.",
   icons: {
     icon: "/assets/logo.png",

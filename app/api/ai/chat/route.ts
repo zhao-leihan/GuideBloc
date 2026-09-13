@@ -67,17 +67,17 @@ export async function POST(req: Request) {
       .join("\n");
 
     // 4. Secure AI Persona & System Instructions (Tour Information Assistant)
-    const systemPrompt = `You are "Kira", a friendly, knowledgeable Tour Information Assistant for Explomate, specializing in tours across JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond).
+    const systemPrompt = `You are "Kira", a friendly, knowledgeable Tour Information Assistant for GuideBloc., specializing in tours across JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond).
 
 ROLE & BOUNDARIES (CRITICAL):
 - You act strictly as an INFORMATIVE GUIDE (Tour Finder & Travel Information Assistant).
 - You DO NOT automatically book tours, schedule appointments, or handle payments for the user in chat.
-- Your sole purpose is to help users discover matching tours in Japan, explore itineraries, learn about vetted local guides, and understand how Explomate's Avalanche Smart Contract Escrow guarantees their safety.
-- When users ask to book, schedule, or make an appointment (e.g., "make me an appointment"), explain that you are an information assistant, and guide them to browse the tour details and book directly on the official tour page on Explomate!
+- Your sole purpose is to help users discover matching tours in Japan, explore itineraries, learn about vetted local guides, and understand how GuideBloc.'s Avalanche Smart Contract Escrow guarantees their safety.
+- When users ask to book, schedule, or make an appointment (e.g., "make me an appointment"), explain that you are an information assistant, and guide them to browse the tour details and book directly on the official tour page on GuideBloc.!
 
 TARGET DESTINATION:
 - Primary focus is JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, Hokkaido, etc.). Highlight Japan's culture, temples, food tours, and vetted local guides.
-- If a user asks about other destinations like Bali, politely clarify that Explomate specializes in verified tours in Japan, and offer to show top Japan tours.
+- If a user asks about other destinations like Bali, politely clarify that GuideBloc. specializes in verified tours in Japan, and offer to show top Japan tours.
 
 YOUR VIBE:
 - Super casual, friendly, enthusiastic, and knowledgeable about Japanese travel and culture.
@@ -223,7 +223,7 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
     const top = japanGigs[0] || gigs[0];
 
     return {
-      reply: `I'm here as your **Tour Information Assistant** to help you search and explore the best local tours in Japan! 🎌✨\n\nI don't schedule appointments or process bookings automatically in the chat. To book a tour, simply click on the tour card below to view the itinerary, choose your preferred date & time, and book directly on Explomate with Avalanche Smart Contract Escrow protection!`,
+      reply: `I'm here as your **Tour Information Assistant** to help you search and explore the best local tours in Japan! 🎌✨\n\nI don't schedule appointments or process bookings automatically in the chat. To book a tour, simply click on the tour card below to view the itinerary, choose your preferred date & time, and book directly on GuideBloc. with Avalanche Smart Contract Escrow protection!`,
       action: "SEARCH",
       actionData: {
         searchQuery: top ? (top.location || top.title) : "Kyoto",
@@ -272,7 +272,7 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
   // 4. Bali / Non-Japan inquiry (Redirect politely to Japan)
   if (lower.includes("bali") || lower.includes("indonesia")) {
     return {
-      reply: `Explomate specializes primarily in authentic local experiences across **Japan** (Tokyo, Kyoto, Osaka, and more)! 🎌🗻\n\nI can help you find amazing tours in Japan like traditional temple explorations in Kyoto or dynamic city tours in Tokyo. Would you like to check out our top tours in Japan?`,
+      reply: `GuideBloc. specializes primarily in authentic local experiences across **Japan** (Tokyo, Kyoto, Osaka, and more)! 🎌🗻\n\nI can help you find amazing tours in Japan like traditional temple explorations in Kyoto or dynamic city tours in Tokyo. Would you like to check out our top tours in Japan?`,
       action: "SEARCH",
       actionData: {
         searchQuery: "Kyoto",
@@ -293,7 +293,7 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
     lower.includes("avalanche")
   ) {
     return {
-      reply: `At Explomate, every tour in Japan is 100% protected by **Avalanche Smart Contract Escrow** 🛡️🔒!\n\n1. When you book a tour on the tour page, your payment (USDC/USDT) is safely locked on-chain.\n2. The guide **cannot** take your funds early.\n3. Payment is released to the guide **only after you meet in person and confirm your tour is completed**.\n\nZero advance payment risk, zero chargeback scams, pure peace of mind!`,
+      reply: `At GuideBloc., every tour in Japan is 100% protected by **Avalanche Smart Contract Escrow** 🛡️🔒!\n\n1. When you book a tour on the tour page, your payment (USDC/USDT) is safely locked on-chain.\n2. The guide **cannot** take your funds early.\n3. Payment is released to the guide **only after you meet in person and confirm your tour is completed**.\n\nZero advance payment risk, zero chargeback scams, pure peace of mind!`,
       action: "NONE",
     };
   }
@@ -301,7 +301,7 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
   // 6. Questions about becoming a guide
   if (lower.includes("guide") || lower.includes("pemandu") || lower.includes("daftar guide") || lower.includes("earning")) {
     return {
-      reply: `Interested in becoming a local guide in Japan? 🎒🗺️ Explomate offers local guides 90% direct earnings paid instantly in stablecoins (USDC/USDT) with **zero fraud or chargeback risk**!\n\nYou can click **Become a Tour Guide** in the navigation bar to register and list your custom tours!`,
+      reply: `Interested in becoming a local guide in Japan? 🎒🗺️ GuideBloc. offers local guides 90% direct earnings paid instantly in stablecoins (USDC/USDT) with **zero fraud or chargeback risk**!\n\nYou can click **Become a Tour Guide** in the navigation bar to register and list your custom tours!`,
       action: "NONE",
     };
   }
@@ -309,7 +309,7 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
   // 7. Greetings or test messages
   if (lower === "test" || lower === "hi" || lower === "halo" || lower === "hello" || lower === "p" || lower.includes("kira")) {
     return {
-      reply: `Konnichiwa! 🌟 I'm **Kira**, your local tour information assistant at Explomate! I'm here to help you search and discover authentic local tours across **Japan** (Tokyo, Kyoto, Osaka, and more) 🎌🏯.\n\nWhich city or experience in Japan would you like to explore today?`,
+      reply: `Konnichiwa! 🌟 I'm **Kira**, your local tour information assistant at GuideBloc.! I'm here to help you search and discover authentic local tours across **Japan** (Tokyo, Kyoto, Osaka, and more) 🎌🏯.\n\nWhich city or experience in Japan would you like to explore today?`,
       action: "NONE",
     };
   }

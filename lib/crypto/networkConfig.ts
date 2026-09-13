@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * EXPLOMATE BLOCKCHAIN NETWORK SWITCH CONFIGURATION
+ * GUIDEBLOC. BLOCKCHAIN NETWORK SWITCH CONFIGURATION
  * ============================================================================
  * To switch the ENTIRE platform between Testnet (Fuji) and Mainnet:
  * Simply change ACTIVE_NETWORK below to "fuji" or "mainnet".

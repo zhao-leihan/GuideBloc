@@ -300,7 +300,7 @@ export default function GuideBookingsPage() {
             
             <div className="p-6 border-b border-dark-100 bg-dark-50/50">
               <h2 className="text-xl font-bold text-dark-900">Leave Your Feedback</h2>
-              <p className="text-xs text-dark-500 mt-1">Help us improve by reviewing both the Tourist and your Explomate platform experience.</p>
+              <p className="text-xs text-dark-500 mt-1">Help us improve by reviewing both the Tourist and your GuideBloc. platform experience.</p>
             </div>
 
             <form 
@@ -349,8 +349,8 @@ export default function GuideBookingsPage() {
               </div>
 
               <div className="border-t border-dark-100 pt-6 space-y-4">
-                {/* Section 2: Review for Explomate */}
-                <h3 className="text-sm font-bold text-secondary uppercase tracking-wider">2. Review for Explomate Platform</h3>
+                {/* Section 2: Review for GuideBloc. */}
+                <h3 className="text-sm font-bold text-secondary uppercase tracking-wider">2. Review for GuideBloc. Platform</h3>
                 
                 {/* Platform Rating */}
                 <div>
@@ -378,7 +378,7 @@ export default function GuideBookingsPage() {
                     value={platformComment}
                     onChange={(e) => setPlatformComment(e.target.value)}
                     rows={3}
-                    placeholder="Tell us what you think of Explomate (escrow system, payouts, guide tools, layout)..."
+                    placeholder="Tell us what you think of GuideBloc. (escrow system, payouts, guide tools, layout)..."
                     className="w-full bg-dark-50 border border-dark-200 rounded-xl p-3 text-sm focus:border-primary outline-none resize-none"
                     required
                   />

@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       ],
       customer_details: {
         first_name: booking.tourist?.name || "Tourist",
-        email: booking.tourist?.email || "tourist@explomate.com"
+        email: booking.tourist?.email || "tourist@guidebloc.com"
       },
       credit_card: {
         secure: true
