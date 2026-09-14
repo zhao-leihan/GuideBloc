@@ -3,11 +3,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
-import AIChatAssistant from "@/components/ai/AIChatAssistant";
+
+const AIChatAssistant = dynamic(() => import("@/components/ai/AIChatAssistant"), {
+  ssr: false,
+});
 import {
   Search,
   Shield,
@@ -42,32 +47,32 @@ const featuredDestinations = [
   {
     id: "1",
     title: "Raja Ampat, Indonesia",
-    images: ["https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "2",
     title: "Kyoto, Japan",
-    images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "3",
     title: "Swiss Alps, Switzerland",
-    images: ["https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "4",
     title: "Labuan Bajo, Indonesia",
-    images: ["https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "5",
     title: "Paris, France",
-    images: ["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "6",
     title: "Reykjavik, Iceland",
-    images: ["https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
 ];
 
@@ -145,40 +150,34 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-dark-50 relative overflow-hidden">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: loaded ? 1 : 0 }}
-        transition={{ duration: 1.2, ease: "easeInOut" }}
-      >
+      <div>
         <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-dark-900 via-dark-800 to-primary/20 pt-24 pb-44">
-        <div className="absolute inset-0 bg-[url('/assets/background.jpg')] bg-cover bg-center" />
-        <div className="absolute inset-0 bg-dark-950/45" />
+        {/* Next.js Optimized Priority WebP Background */}
+        <Image
+          src="/assets/background.webp"
+          alt="GuideBloc Hero Background"
+          fill
+          priority
+          quality={80}
+          sizes="100vw"
+          className="object-cover object-center pointer-events-none -z-0"
+        />
+        <div className="absolute inset-0 bg-dark-950/45 z-[1]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
 
-
-            {/* Title */}
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="font-display text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6"
-            >
+            {/* Title - Instant LCP rendering */}
+            <h1 className="font-display text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6">
               The Future of Travel is Here.
               <br />
               <span className="bg-gradient-to-r from-primary-300 via-blue-200 to-white bg-clip-text text-transparent">Zero Risk, 100% Guaranteed Payouts.</span>
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-              className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans"
-            >
+            <p className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans">
               Say goodbye to travel scams, hidden platform markups, and payment delays! GuideBloc. locks your booking funds in next-generation <b>Smart Contract Escrow</b> - releasing payment to your guide only after your tour is complete.
-            </motion.p>
+            </p>
 
           {/* AI Talk Box */}
           <motion.div
@@ -342,10 +341,13 @@ export default function HomePage() {
             {featuredDestinations.map((dest) => (
               <div key={dest.id} className="group relative overflow-hidden rounded-2xl cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 aspect-[4/3]">
                 <div className="absolute inset-0">
-                  <img 
+                  <Image 
                     src={dest.images[0]} 
                     alt={dest.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    fill
+                    loading="lazy"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-dark-900/20 to-transparent"></div>
                 </div>
@@ -462,6 +464,8 @@ export default function HomePage() {
                     <img 
                       src={exp.proofPhoto} 
                       alt={exp.gig?.title} 
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
@@ -476,7 +480,7 @@ export default function HomePage() {
                     <div className="flex items-center gap-2 border-t border-dark-100 pt-3">
                       <div className="w-6 h-6 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center font-bold text-primary text-[10px]">
                         {exp.tourist?.avatar ? (
-                          <img src={exp.tourist.avatar} alt="" className="w-full h-full object-cover" />
+                          <img src={exp.tourist.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         ) : (
                           exp.tourist?.name[0]
                         )}
@@ -549,7 +553,7 @@ export default function HomePage() {
                   <div className="pt-5 border-t border-dark-100 flex items-center gap-3">
                     <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary/20 via-blue-100 to-primary/10 border border-primary/20 overflow-hidden flex items-center justify-center font-bold text-primary text-sm flex-shrink-0 shadow-xs">
                       {reviewerAvatar ? (
-                        <img src={reviewerAvatar} alt={reviewerName} className="w-full h-full object-cover" />
+                        <img src={reviewerAvatar} alt={reviewerName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       ) : (
                         reviewerName.charAt(0).toUpperCase()
                       )}
@@ -642,7 +646,7 @@ export default function HomePage() {
 
       <Footer />
       <AIChatAssistant initialQuery={aiQuery} onCloseInput={() => setAiQuery("")} />
-      </motion.div>
+      </div>
     </div>
   );
 }

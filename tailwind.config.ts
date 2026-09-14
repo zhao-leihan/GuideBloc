@@ -58,9 +58,9 @@ const config: Config = {
         danger: "#EF4444",
       },
       fontFamily: {
-        display: ['"Plus Jakarta Sans"', "sans-serif"],
-        body: ['"Inter"', "sans-serif"],
-        mono: ['"JetBrains Mono"', "monospace"],
+        display: ["var(--font-display)", '"Plus Jakarta Sans"', "sans-serif"],
+        body: ["var(--font-body)", '"Inter"', "sans-serif"],
+        mono: ["var(--font-mono)", '"JetBrains Mono"', "monospace"],
       },
       borderRadius: {
         gig: "12px",

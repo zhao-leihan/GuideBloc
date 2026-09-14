@@ -49,7 +49,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
       setMessages([
         {
           sender: "ai",
-          sticker: "/assets/emote.png",
+          sticker: "/assets/emote.webp",
           text: "",
         },
         {

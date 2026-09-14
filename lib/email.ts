@@ -49,9 +49,7 @@ function getEmailLayout(title: string, contentHtml: string): string {
 export async function sendTransactionalEmail(payload: EmailPayload): Promise<boolean> {
   try {
     const apiKey = process.env.RESEND_API_KEY;
-    const fromEmail = (process.env.EMAIL_FROM && !process.env.EMAIL_FROM.includes("guidebloc.com")) 
-      ? process.env.EMAIL_FROM 
-      : "onboarding@resend.dev";
+    const fromEmail = process.env.EMAIL_FROM || "onboarding@resend.dev";
 
     if (apiKey) {
       console.log(`[Email] Sending real email to ${payload.to} via Resend.com API...`);

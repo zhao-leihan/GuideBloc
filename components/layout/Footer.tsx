@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { HeartFilledIcon } from "@radix-ui/react-icons";
 import { Mail, User } from "lucide-react";
 
@@ -10,9 +11,12 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center">
-              <img 
-                src="/assets/assemble.png" 
+              <Image 
+                src="/assets/assemble.webp" 
                 alt="GuideBloc. Logo" 
+                width={140}
+                height={40}
+                loading="lazy"
                 className="h-9 md:h-11 w-auto object-contain" 
               />
             </Link>
@@ -21,13 +25,13 @@ export default function Footer() {
             </p>
             <div className="flex gap-2 items-center">
               <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="USDT Accepted">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" alt="USDT" className="h-5 w-5 object-contain" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/USDT_Logo.png" alt="USDT" loading="lazy" decoding="async" className="h-5 w-5 object-contain" />
               </div>
               <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="USDC Accepted">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" alt="USDC" className="h-5 w-5 object-contain" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Circle_USDC_Logo.svg/1280px-Circle_USDC_Logo.svg.png" alt="USDC" loading="lazy" decoding="async" className="h-5 w-5 object-contain" />
               </div>
               <div className="bg-dark-800 border border-dark-700 hover:border-primary/50 p-2 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Avalanche C-Chain Supported">
-                <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="Avalanche" className="h-5 w-5 object-contain" />
+                <img src="https://cryptologos.cc/logos/avalanche-avax-logo.png" alt="Avalanche" loading="lazy" decoding="async" className="h-5 w-5 object-contain" />
               </div>
             </div>
             <div className="pt-2">

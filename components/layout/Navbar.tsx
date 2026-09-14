@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -68,9 +69,12 @@ export default function Navbar() {
       )}>
         {/* Logo */}
         <Link href="/" className="flex items-center group py-0.5">
-          <img 
-            src="/assets/assemble.png" 
+          <Image 
+            src="/assets/assemble.webp" 
             alt="GuideBloc. Logo" 
+            width={140}
+            height={36}
+            priority
             className="h-8 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
           />
         </Link>
