@@ -232,22 +232,23 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        {/* SVG Curved Wave Divider */}
-        <div className="absolute bottom-[-1px] left-0 right-0 w-full overflow-hidden leading-[0]">
-          <svg className="relative block w-full h-[60px] md:h-[80px]" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.33,90,26.9,165.73,46.56,252.1,69.28,321.39,56.44Z" fill="#FFFFFF" className="fill-white dark:fill-[#0b0f17]"></path>
+        {/* Seamless Pure White Wave Divider */}
+        <div className="absolute -bottom-px left-0 right-0 w-full overflow-hidden leading-none z-20 pointer-events-none">
+          <svg 
+            className="relative block w-full h-[45px] sm:h-[60px] md:h-[75px]" 
+            viewBox="0 0 1440 100" 
+            preserveAspectRatio="none"
+          >
+            <path 
+              d="M0,35 C320,75 520,15 760,50 C1000,85 1200,20 1440,40 L1440,100 L0,100 Z" 
+              fill="#FFFFFF"
+            />
           </svg>
         </div>
       </section>
 
       {/* Safe Escrow Travel Protocol Section */}
-      <motion.section 
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="py-24 bg-white relative overflow-hidden"
-      >
+      <section className="py-24 bg-white relative overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none overflow-hidden">
           <div className="absolute top-1/4 -left-20 w-80 h-80 bg-primary-50 rounded-full blur-3xl opacity-60" />
@@ -318,7 +319,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Featured Gigs */}
       <motion.section 
