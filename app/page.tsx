@@ -60,7 +60,7 @@ const featuredDestinations = [
     id: "3",
     title: "Osaka, Japan",
     query: "Osaka",
-    images: ["/assets/destinations/osaka.webp"],
+    images: ["/assets/destinations/osaka.jpg"],
   },
   {
     id: "4",
@@ -134,13 +134,13 @@ const heroDestinations = [
     id: "tokyo",
     name: "Tokyo Tower & Cityscape",
     location: "Tokyo, Japan",
-    image: "/assets/hero/hero-tokyo.webp",
+    image: "/assets/hero/tokyo.jpg",
   },
   {
     id: "osaka",
     name: "Osaka Castle",
     location: "Osaka, Japan",
-    image: "/assets/hero/hero-osaka.webp",
+    image: "/assets/hero/castle.jpg",
   },
 ];
 
