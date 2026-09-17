@@ -169,14 +169,15 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
 
             {/* Title - Instant LCP rendering */}
-            <h1 className="font-display text-5xl md:text-7xl font-extrabold text-white leading-tight mb-6">
-              The Future of Travel is Here.
-              <br />
-              <span className="bg-gradient-to-r from-primary-300 via-blue-200 to-white bg-clip-text text-transparent">Zero Risk, 100% Guaranteed Payouts.</span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight mb-4 sm:mb-6">
+              The Modern Standard for Global Travel Commerce.
+              <span className="block mt-2 sm:mt-3 text-3xl sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-primary-300 via-blue-200 to-white bg-clip-text text-transparent">
+                Direct Bookings. Automated Escrow. Instant Payouts.
+              </span>
             </h1>
 
-            <p className="text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans">
-              Say goodbye to travel scams, hidden platform markups, and payment delays! GuideBloc. locks your booking funds in next-generation <b>Smart Contract Escrow</b> - releasing payment to your guide only after your tour is complete.
+            <p className="text-base sm:text-xl text-dark-300 max-w-3xl mx-auto mb-8 leading-relaxed font-sans">
+              Eliminate booking scams and cross-border payment delays. GuideBloc holds funds securely in automated escrow, releasing direct settlement to local guides the moment the tour is completed.
             </p>
 
           {/* AI Talk Box */}
