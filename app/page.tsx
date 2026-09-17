@@ -117,6 +117,33 @@ const fallbackReviews = [
   },
 ];
 
+const heroDestinations = [
+  {
+    id: "fuji",
+    name: "Mount Fuji",
+    location: "Honshu, Japan",
+    image: "/assets/background.webp",
+  },
+  {
+    id: "kyoto",
+    name: "Yasaka Pagoda",
+    location: "Kyoto, Japan",
+    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1920&q=80&fm=webp",
+  },
+  {
+    id: "tokyo",
+    name: "Tokyo Tower & Cityscape",
+    location: "Tokyo, Japan",
+    image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1920&q=80&fm=webp",
+  },
+  {
+    id: "osaka",
+    name: "Osaka Castle",
+    location: "Osaka, Japan",
+    image: "https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=1920&q=80&fm=webp",
+  },
+];
+
 export default function HomePage() {
   const { data: session } = useSession();
   const [loaded, setLoaded] = useState(true);
@@ -124,6 +151,15 @@ export default function HomePage() {
   const [aiQuery, setAiQuery] = useState("");
   const [experiences, setExperiences] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [activeBgIndex, setActiveBgIndex] = useState(0);
+
+  // Auto transition hero background every 6.5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveBgIndex((prev) => (prev + 1) % heroDestinations.length);
+    }, 6500);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetch("/api/experience")
@@ -161,16 +197,25 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-dark-900 via-dark-800 to-primary/20 pt-24 pb-44">
-        {/* Next.js Optimized Priority WebP Background */}
-        <Image
-          src="/assets/background.webp"
-          alt="GuideBloc Hero Background"
-          fill
-          priority
-          quality={80}
-          sizes="100vw"
-          className="object-cover object-center pointer-events-none -z-0"
-        />
+        {/* Dynamic Hero Background Carousel with Smooth Crossfade */}
+        {heroDestinations.map((dest, idx) => (
+          <div
+            key={dest.id}
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out pointer-events-none -z-0 ${
+              activeBgIndex === idx ? "opacity-100 scale-100" : "opacity-0 scale-105"
+            }`}
+          >
+            <Image
+              src={dest.image}
+              alt={dest.name}
+              fill
+              priority={idx === 0}
+              quality={80}
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+          </div>
+        ))}
         <div className="absolute inset-0 bg-dark-950/65 z-[1]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
 
@@ -225,7 +270,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={loaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.8, delay: 0.7, ease: "easeOut" }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
           >
             <Link 
               href="/explore" 
@@ -239,6 +284,34 @@ export default function HomePage() {
             >
               <Users className="w-4 h-4" /> Become a Tour Guide
             </Link>
+          </motion.div>
+
+          {/* Destination Switcher / Indicator Tag */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={loaded ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex flex-wrap items-center justify-center gap-3 z-10"
+          >
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-dark-900/70 backdrop-blur-md border border-white/10 text-xs text-slate-300 shadow-xl">
+              <MapPin className="w-3.5 h-3.5 text-primary-400 animate-pulse" />
+              <span className="font-semibold text-white">{heroDestinations[activeBgIndex].name}</span>
+              <span className="text-slate-400">· {heroDestinations[activeBgIndex].location}</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-dark-900/50 backdrop-blur-md border border-white/10 px-2.5 py-1.5 rounded-full">
+              {heroDestinations.map((dest, i) => (
+                <button
+                  key={dest.id}
+                  onClick={() => setActiveBgIndex(i)}
+                  aria-label={`Switch background to ${dest.name}`}
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${
+                    activeBgIndex === i
+                      ? "w-6 h-1.5 bg-primary shadow-sm shadow-primary/50"
+                      : "w-1.5 h-1.5 bg-white/40 hover:bg-white/80"
+                  }`}
+                />
+              ))}
+            </div>
           </motion.div>
         </div>
 
