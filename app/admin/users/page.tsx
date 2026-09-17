@@ -454,26 +454,26 @@ export default function AdminUsersPage() {
                 {/* ID card info */}
                 {selectedIdentityUser.idCardNumber && (
                   <div className="bg-dark-50 p-4 rounded-xl border border-dark-100 space-y-2">
-                    <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">KTP / NIK Number</p>
+                    <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">Government ID / Passport Number</p>
                     <p className="text-sm font-bold text-dark-900 font-mono bg-white px-2.5 py-1.5 rounded-lg border border-dark-150 inline-block">{selectedIdentityUser.idCardNumber}</p>
                     
                     {selectedIdentityUser.idCardPhoto ? (
                       <div className="mt-2.5 space-y-2">
-                        <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">KTP Document Photograph</p>
+                        <p className="text-xs font-bold text-dark-500 uppercase tracking-wider">Identity Document Photograph</p>
                         <div className="relative w-full max-h-60 overflow-hidden rounded-xl border border-dark-200 bg-white flex items-center justify-center p-2">
                           <img 
                             src={selectedIdentityUser.idCardPhoto} 
-                            alt="KTP Document" 
+                            alt="Identity Document" 
                             className="max-w-full max-h-56 object-contain rounded-lg"
                           />
                         </div>
                         <div className="flex gap-2">
                           <a
                             href={selectedIdentityUser.idCardPhoto}
-                            download={`${selectedIdentityUser.name.replace(/\s+/g, "_")}_ktp.png`}
+                            download={`${selectedIdentityUser.name.replace(/\s+/g, "_")}_id.png`}
                             className="flex-1 text-center bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer"
                           >
-                            Download KTP
+                            Download Document
                           </a>
                           <a
                             href={selectedIdentityUser.idCardPhoto}
@@ -486,7 +486,7 @@ export default function AdminUsersPage() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-dark-400 italic">No KTP photograph uploaded.</p>
+                      <p className="text-xs text-dark-400 italic">No identity photograph uploaded.</p>
                     )}
                   </div>
                 )}

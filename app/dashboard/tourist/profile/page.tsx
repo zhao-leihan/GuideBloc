@@ -372,7 +372,7 @@ export default function TouristProfilePage() {
                   <Shield className="w-6 h-6 text-primary animate-pulse" />
                   <div>
                     <h3 className="font-bold text-dark-900 font-display">Identity Verification</h3>
-                    <p className="text-xs text-dark-400">Verify your KTP and Passport documents</p>
+                    <p className="text-xs text-dark-400">Verify your Government ID or Passport documents</p>
                   </div>
                 </div>
 
@@ -456,21 +456,21 @@ export default function TouristProfilePage() {
                         </div>
                       </div>
 
-                      {/* KTP Card */}
+                      {/* Government ID Card */}
                       <div className="p-4 border border-dark-200 rounded-2xl bg-white space-y-3.5">
-                        <h4 className="font-bold text-dark-800 text-sm">KTP (ID Card) Verification</h4>
+                        <h4 className="font-bold text-dark-800 text-sm">Government ID Verification</h4>
                         <input 
                           type="text"
                           className="input text-xs"
                           value={idCardNumber}
                           onChange={e => setIdCardNumber(e.target.value)}
-                          placeholder="NIK / ID Number (e.g. 3273...)"
+                          placeholder="Government ID / National ID Number"
                         />
                         
                         <div className="border border-dashed border-dark-300 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-dark-50 transition-colors relative min-h-[120px]">
                           {idCardPhoto ? (
                             <>
-                              <img src={idCardPhoto} alt="KTP Preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
+                              <img src={idCardPhoto} alt="ID Document Preview" className="absolute inset-0 w-full h-full object-cover rounded-xl" />
                               <button 
                                 type="button" 
                                 onClick={(e) => { e.stopPropagation(); setIdCardPhoto(null); }}
@@ -482,7 +482,7 @@ export default function TouristProfilePage() {
                           ) : (
                             <label className="flex flex-col items-center justify-center cursor-pointer w-full h-full">
                               <Plus className="w-5 h-5 text-dark-400 mb-1" />
-                              <span className="text-[10px] font-bold text-dark-500 uppercase tracking-wider">Upload KTP Photo</span>
+                              <span className="text-[10px] font-bold text-dark-500 uppercase tracking-wider">Upload ID Photo</span>
                               <input 
                                 type="file" 
                                 accept="image/*" 

@@ -46,33 +46,39 @@ import GigCard from "@/components/gigs/GigCard";
 const featuredDestinations = [
   {
     id: "1",
-    title: "Raja Ampat, Indonesia",
-    images: ["https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    title: "Tokyo, Japan",
+    query: "Tokyo",
+    images: ["https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "2",
     title: "Kyoto, Japan",
+    query: "Kyoto",
     images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "3",
-    title: "Swiss Alps, Switzerland",
-    images: ["https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    title: "Osaka, Japan",
+    query: "Osaka",
+    images: ["https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "4",
-    title: "Labuan Bajo, Indonesia",
-    images: ["https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    title: "Mount Fuji, Japan",
+    query: "Fuji",
+    images: ["https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "5",
-    title: "Paris, France",
-    images: ["https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    title: "Hokkaido, Japan",
+    query: "Hokkaido",
+    images: ["https://images.unsplash.com/photo-1545063914-a1a6ec821c88?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
   {
     id: "6",
-    title: "Reykjavik, Iceland",
-    images: ["https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    title: "Nara, Japan",
+    query: "Nara",
+    images: ["https://images.unsplash.com/photo-1570459027562-4a916cc6113f?auto=format&fit=crop&w=800&q=75&fm=webp"],
   },
 ];
 
@@ -98,16 +104,16 @@ const fallbackReviews = [
   {
     id: "fb-2",
     rating: 5,
-    comment: "As a local guide in Bali, getting paid directly in USDT with zero payment disputes or 3-week chargeback worries is why I moved 100% of my private tours to GuideBloc..",
-    reviewer: { name: "Wayan Sudarma", role: "GUIDE", country: "Indonesia" },
-    gig: { title: "Ubud Hidden Waterfalls & Rice Terraces", location: "Bali, Indonesia" }
+    comment: "As a local guide in Tokyo, getting paid directly in USDT with zero payment disputes or 3-week chargeback worries is why I moved 100% of my private tours to GuideBloc..",
+    reviewer: { name: "Kenji Takahashi", role: "GUIDE", country: "Japan" },
+    gig: { title: "Tokyo Street Food & Shibuya Night Explorer", location: "Tokyo, Japan" }
   },
   {
     id: "fb-3",
     rating: 5,
-    comment: "Zero hidden bank exchange fees, instant booking confirmation, and total transparency. The peace of mind knowing the guide only gets paid after completion is unmatched.",
+    comment: "Zero hidden bank exchange fees, instant booking confirmation, and total transparency. The peace of mind knowing the guide only gets paid after tour completion is unmatched.",
     reviewer: { name: "Marco Rossi", role: "TOURIST", country: "Italy" },
-    gig: { title: "Swiss Alps Off-the-Beaten-Path Trekking", location: "Zermatt, Switzerland" }
+    gig: { title: "Mount Fuji Panoramic Trekking & Hot Springs", location: "Yamanashi, Japan" }
   },
 ];
 
@@ -306,7 +312,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold text-dark-900 mb-2 font-display tracking-tight group-hover:text-primary transition-colors">Vetted Local Guides</h3>
               <p className="text-dark-500 text-sm leading-relaxed">
-                Every guide undergoes identity document verification (KTP/ID) and community reviews before taking bookings.
+                Every guide undergoes identity document verification (Government ID / Passport) and community reviews before taking bookings.
               </p>
             </div>
 
@@ -337,14 +343,21 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-dark-900 mb-3">
-                Top Destinations
+                Top Destinations in Japan
               </h2>
-              <p className="text-dark-500 text-lg">Explore the most beautiful places around the globe</p>
+              <p className="text-dark-500 text-lg">Explore iconic cities, cultural landmarks, and hidden gems across Japan</p>
             </div>
+            <Link href="/explore" className="hidden md:inline-flex btn-outline items-center gap-2">
+              View All Tours <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredDestinations.map((dest) => (
-              <div key={dest.id} className="group relative overflow-hidden rounded-2xl cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 aspect-[4/3]">
+              <Link 
+                key={dest.id} 
+                href={`/explore?search=${encodeURIComponent(dest.query || dest.title.split(",")[0].trim())}`}
+                className="group relative overflow-hidden rounded-2xl cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 aspect-[4/3] block"
+              >
                 <div className="absolute inset-0">
                   <Image 
                     src={dest.images[0]} 
@@ -361,7 +374,7 @@ export default function HomePage() {
                     {dest.title}
                   </h3>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="mt-8 text-center md:hidden">
