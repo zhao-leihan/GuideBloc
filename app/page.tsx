@@ -48,37 +48,37 @@ const featuredDestinations = [
     id: "1",
     title: "Tokyo, Japan",
     query: "Tokyo",
-    images: ["https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    images: ["/assets/destinations/tokyo.webp"],
   },
   {
     id: "2",
     title: "Kyoto, Japan",
     query: "Kyoto",
-    images: ["https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    images: ["/assets/destinations/kyoto.webp"],
   },
   {
     id: "3",
     title: "Osaka, Japan",
     query: "Osaka",
-    images: ["https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    images: ["/assets/destinations/osaka.webp"],
   },
   {
     id: "4",
     title: "Mount Fuji, Japan",
     query: "Fuji",
-    images: ["https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    images: ["/assets/destinations/fuji.webp"],
   },
   {
     id: "5",
     title: "Hokkaido, Japan",
     query: "Hokkaido",
-    images: ["https://images.unsplash.com/photo-1545063914-a1a6ec821c88?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    images: ["/assets/destinations/hokkaido.webp"],
   },
   {
     id: "6",
     title: "Nara, Japan",
     query: "Nara",
-    images: ["https://images.unsplash.com/photo-1570459027562-4a916cc6113f?auto=format&fit=crop&w=800&q=75&fm=webp"],
+    images: ["/assets/destinations/nara.webp"],
   },
 ];
 
@@ -122,25 +122,25 @@ const heroDestinations = [
     id: "fuji",
     name: "Mount Fuji",
     location: "Honshu, Japan",
-    image: "/assets/background.webp",
+    image: "/assets/hero/hero-fuji.webp",
   },
   {
     id: "kyoto",
     name: "Yasaka Pagoda",
     location: "Kyoto, Japan",
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1920&q=80&fm=webp",
+    image: "/assets/hero/hero-kyoto.webp",
   },
   {
     id: "tokyo",
     name: "Tokyo Tower & Cityscape",
     location: "Tokyo, Japan",
-    image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1920&q=80&fm=webp",
+    image: "/assets/hero/hero-tokyo.webp",
   },
   {
     id: "osaka",
     name: "Osaka Castle",
     location: "Osaka, Japan",
-    image: "https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=1920&q=80&fm=webp",
+    image: "/assets/hero/hero-osaka.webp",
   },
 ];
 
