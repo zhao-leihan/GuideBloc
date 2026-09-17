@@ -56,7 +56,7 @@ export default function Navbar() {
     { label: "Explore", href: "/explore" },
     { label: "How It Works", href: "/how-it-works" },
     { label: "About", href: "/about" },
-    { label: "Freelancer", href: "/freelancer" },
+    { label: "For Guides", href: "/freelancer" },
   ];
 
   return (

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { MessageSquare, X, Send, Bot, Loader2, ArrowRight, Calendar, Users, ShieldAlert, CreditCard } from "lucide-react";
+import { MessageSquare, X, Send, Bot, Loader2, ArrowRight, Calendar, Users, ShieldAlert, CreditCard, Sparkles } from "lucide-react";
 import PaymentModal from "../payment/PaymentModal";
 import toast from "react-hot-toast";
 
@@ -49,12 +49,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
       setMessages([
         {
           sender: "ai",
-          sticker: "/assets/emote.webp",
-          text: "",
-        },
-        {
-          sender: "ai",
-          text: `Konnichiwa! 🎌✨ I'm **Kira**, your local tour information assistant at GuideBloc.!\n\nI'm here to **help you explore and find authentic local tours across Japan** (Tokyo, Kyoto, Osaka, Mount Fuji, and more) 🏯🌸.\n\nTell me which city in Japan you'd like to explore, or what kind of tour experience you're looking for!`,
+          text: `Welcome to GuideBloc.! 🎌 I am your **AI Travel Concierge**, dedicated to discovering verified local tours and cultural experiences across Japan (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond).\n\nWhich destination or travel experience can I assist you with today?`,
         },
       ]);
     }
@@ -261,11 +256,10 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
           whileTap={{ scale: 0.95 }}
           className="flex items-center gap-2.5 px-4 py-3 bg-primary hover:bg-primary-600 text-white rounded-full shadow-2xl border border-white/10 relative group cursor-pointer"
         >
-          <div className="absolute inset-0 bg-primary rounded-full blur-md opacity-35 group-hover:opacity-60 transition-opacity -z-10" />
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
-            <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
+          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-400 via-primary-400 to-cyan-300 flex items-center justify-center text-white flex-shrink-0 shadow-sm">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <span className="text-sm font-semibold tracking-wide font-sans text-white relative z-10">Ask Kira</span>
+          <span className="text-sm font-semibold tracking-wide font-sans text-white relative z-10">AI Concierge</span>
         </motion.button>
       </div>
 
@@ -282,14 +276,14 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
             {/* Header */}
             <div className="p-4 border-b border-dark-700/50 flex items-center justify-between bg-dark-950">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center bg-transparent">
-                  <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-primary to-cyan-400 flex items-center justify-center text-white border border-white/10 shadow-sm flex-shrink-0">
+                  <Sparkles className="w-4.5 h-4.5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-display font-semibold text-white text-sm">Kira · Tour Information</h4>
+                  <h4 className="font-display font-semibold text-white text-sm">AI Travel Concierge</h4>
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                    <span className="text-[10px] text-primary-300 font-medium tracking-wide">Japan Tour Finder</span>
+                    <span className="text-[10px] text-slate-300 font-medium tracking-wide">Japan Tour Discovery</span>
                     <span className="text-dark-600">·</span>
                     <a href="mailto:admin@guidebloc.com" className="text-[10px] text-cyan-400 hover:underline font-semibold">Support</a>
                   </div>
@@ -376,12 +370,12 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
 
               {loading && (
                 <div className="flex items-start gap-2.5">
-                  <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center bg-transparent flex-shrink-0 animate-pulse">
-                    <img src="/assets/michelle.webp" alt="Kira" className="w-full h-full object-cover" />
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 via-primary to-cyan-400 flex items-center justify-center text-white flex-shrink-0 animate-pulse">
+                    <Sparkles className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div className="bg-dark-800 text-dark-300 rounded-2xl rounded-tl-none px-4 py-3 text-sm flex items-center gap-2 border border-dark-700/40">
                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                    <span>Kira is searching tours in Japan...</span>
+                    <span>AI Concierge is searching verified tours in Japan...</span>
                   </div>
                 </div>
               )}
@@ -392,7 +386,7 @@ export default function AIChatAssistant({ initialQuery = "", onCloseInput }: { i
             <div className="p-4 border-t border-dark-700/50 bg-dark-950 flex gap-2">
               <input
                 type="text"
-                placeholder="Ask Kira about tours in Japan (Tokyo, Kyoto, Osaka)..."
+                placeholder="Ask AI Concierge about tours in Japan (Tokyo, Kyoto, Osaka)..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

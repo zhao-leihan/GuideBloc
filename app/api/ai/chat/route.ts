@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (!apiKey || !dbUrl) {
       return NextResponse.json({
-        reply: "⚠️ Hosting Environment Variables Missing: Please configure GEMINI_API_KEY and DATABASE_URL in your hosting platform dashboard (e.g. Vercel Project Settings > Environment Variables) so Kira can connect and retrieve local tours.",
+        reply: "⚠️ Hosting Environment Variables Missing: Please configure GEMINI_API_KEY and DATABASE_URL in your hosting platform dashboard (e.g. Vercel Project Settings > Environment Variables) so the AI Concierge can connect and retrieve local tours.",
         action: "NONE",
       });
     }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       .join("\n");
 
     // 4. Secure AI Persona & System Instructions (Tour Information Assistant)
-    const systemPrompt = `You are "Kira", a friendly, knowledgeable Tour Information Assistant for GuideBloc., specializing in tours across JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond).
+    const systemPrompt = `You are "AI Concierge", an institutional, knowledgeable Tour Discovery and Escrow Assistant for GuideBloc., specializing in verified tours across JAPAN (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond).
 
 ROLE & BOUNDARIES (CRITICAL):
 - You act strictly as an INFORMATIVE GUIDE (Tour Finder & Travel Information Assistant).
@@ -191,7 +191,7 @@ You MUST respond strictly in JSON matching the specified output schema. Do not p
   } catch (error) {
     console.error("AI Chat route fatal error:", error);
     return NextResponse.json({
-      reply: "Konnichiwa! 🎌✨ I'm Kira, your local tour information assistant. Tell me which city in Japan you'd like to explore (Tokyo, Kyoto, Osaka) and I'll find the best tours for you!",
+      reply: "Welcome to GuideBloc.! 🎌 I am your AI Travel Concierge. Tell me which destination in Japan you'd like to explore (Tokyo, Kyoto, Osaka) and I'll find the best verified tours for you!",
       action: "NONE",
     });
   }
@@ -307,9 +307,9 @@ function generateLocalKiraResponse(message: string, gigs: any[]) {
   }
 
   // 7. Greetings or test messages
-  if (lower === "test" || lower === "hi" || lower === "halo" || lower === "hello" || lower === "p" || lower.includes("kira")) {
+  if (lower === "test" || lower === "hi" || lower === "halo" || lower === "hello" || lower === "p" || lower.includes("kira") || lower.includes("concierge")) {
     return {
-      reply: `Konnichiwa! 🌟 I'm **Kira**, your local tour information assistant at GuideBloc.! I'm here to help you search and discover authentic local tours across **Japan** (Tokyo, Kyoto, Osaka, and more) 🎌🏯.\n\nWhich city or experience in Japan would you like to explore today?`,
+      reply: `Welcome to GuideBloc.! 🎌 I am your **AI Travel Concierge**. I am here to help you search and discover verified local tours and authentic experiences across **Japan** (Tokyo, Kyoto, Osaka, Mount Fuji, and beyond) 🏯🌸.\n\nWhich destination or travel experience can I assist you with today?`,
       action: "NONE",
     };
   }

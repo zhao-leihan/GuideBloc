@@ -137,7 +137,7 @@ export default function HelpCenterPage() {
             <MessageCircle className="w-10 h-10 text-primary mx-auto animate-bounce" />
             <h3 className="text-xl font-bold font-display">Still need help?</h3>
             <p className="text-dark-300 text-xs leading-relaxed">
-              Our AI Assistant **Kira** is available 24/7 to solve your booking questions, guide vetting, or transaction issues.
+              Our **AI Concierge** is available 24/7 to solve your booking questions, guide vetting, or tour discovery.
             </p>
             <button
               onClick={() => {
@@ -146,7 +146,7 @@ export default function HelpCenterPage() {
               }}
               className="btn-primary inline-flex items-center gap-2 text-xs font-bold px-6 py-2.5 rounded-xl cursor-pointer"
             >
-              Ask Kira Now <ArrowRight className="w-4 h-4" />
+              Ask AI Concierge <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </section>
