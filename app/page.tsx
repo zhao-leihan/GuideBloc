@@ -128,7 +128,7 @@ const heroDestinations = [
     id: "kyoto",
     name: "Yasaka Pagoda",
     location: "Kyoto, Japan",
-    image: "/assets/hero/hero-kyoto.webp",
+    image: "/assets/hero/kyoto.jpg",
   },
   {
     id: "tokyo",
@@ -201,7 +201,7 @@ export default function HomePage() {
         {heroDestinations.map((dest, idx) => (
           <div
             key={dest.id}
-            className={`absolute inset-0 transition-all duration-1000 ease-in-out pointer-events-none -z-0 ${
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out pointer-events-none z-0 ${
               activeBgIndex === idx ? "opacity-100 scale-100" : "opacity-0 scale-105"
             }`}
           >
@@ -209,7 +209,7 @@ export default function HomePage() {
               src={dest.image}
               alt={dest.name}
               fill
-              priority={idx === 0}
+              priority
               quality={80}
               sizes="100vw"
               className="object-cover object-center"
