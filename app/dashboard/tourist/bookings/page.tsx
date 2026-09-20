@@ -759,7 +759,7 @@ export default function TouristBookingsPage() {
                     <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-950 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
                         <QrCode className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                        <span><strong>Guide requested tour completion.</strong> Scan guide's phone QR code or release escrow below. (24h fallback auto-release active)</span>
+                        <span><strong>Guide requested tour completion.</strong> Scan guide&apos;s phone QR code or release escrow below. (24h fallback auto-release active)</span>
                       </div>
                     </div>
                   )}
