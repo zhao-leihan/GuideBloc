@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2, ShieldCheck, Clock } from "lucide-react";
+import { 
+  CheckCircle, MapPin, Calendar, ExternalLink, Download, Loader2, 
+  MessageSquare, Compass, X, Star, Upload, ChevronDown, Trash2, 
+  ShieldCheck, Clock, FileCheck, QrCode, AlertTriangle 
+} from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
@@ -65,11 +69,134 @@ export default function TouristBookingsPage() {
   const [tipBooking, setTipBooking] = useState<any | null>(null);
 
   const [hiddenBookingIds, setHiddenBookingIds] = useState<string[]>([]);
+  const [signingBookingId, setSigningBookingId] = useState<string | null>(null);
+
+  // Dispute modal states (optional photo evidence per specification)
+  const [disputeBooking, setDisputeBooking] = useState<any | null>(null);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [disputePhoto, setDisputePhoto] = useState("");
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   useEffect(() => {
     const hidden = JSON.parse(localStorage.getItem("hidden_bookings") || "[]");
     setHiddenBookingIds(hidden);
+
+    // Check if user redirected back from QR scan completion
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const completedId = params.get("completed");
+      if (completedId) {
+        toast.success("🎉 Tour completion handshake verified! Escrow successfully released to guide.", { duration: 6000 });
+      }
+    }
   }, []);
+
+  const handleSignAgreement = async (booking: any) => {
+    if (typeof window === "undefined" || !(window as any).ethereum) {
+      toast.error("Please install MetaMask or a Web3 wallet to sign the agreement terms.");
+      return;
+    }
+    setSigningBookingId(booking.id);
+    const toastId = toast.loading("Requesting EIP-712 agreement signature in wallet...");
+    try {
+      const { ethers } = await import("ethers");
+      const provider = new ethers.BrowserProvider((window as any).ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      const signerAddress = accounts[0];
+
+      const { buildBookingAgreementTypedData } = await import("@/lib/crypto/eip712");
+      const typedData = buildBookingAgreementTypedData({
+        bookingId: booking.id,
+        gigTitle: booking.tourName || booking.gig?.title || "Tour Experience",
+        totalPriceUSD: booking.amountUSD || booking.totalPriceUSD || 0,
+        bookingDate: booking.bookingDate || new Date().toISOString(),
+        touristAddress: signerAddress,
+        nonce: Date.now(),
+      });
+
+      const signature = await provider.send("eth_signTypedData_v4", [
+        signerAddress.toLowerCase(),
+        JSON.stringify(typedData),
+      ]);
+
+      if (signature) {
+        const signRes = await fetch(`/api/bookings/${booking.id}/sign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            signature,
+            touristAddress: signerAddress,
+            nonce: typedData.message.nonce,
+          }),
+        });
+
+        if (!signRes.ok) {
+          throw new Error("Failed to record signature on server");
+        }
+
+        toast.dismiss(toastId);
+        toast.success("Agreement terms signed via EIP-712!");
+        fetchBookings();
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      console.error("Sign agreement error:", err);
+      toast.error(err.message || "Could not complete EIP-712 signature.");
+    } finally {
+      setSigningBookingId(null);
+    }
+  };
+
+  const handleOpenDispute = async (bookingId: string) => {
+    if (!disputeReason.trim()) {
+      toast.error("Please explain the reason for the dispute.");
+      return;
+    }
+    setIsSubmittingDispute(true);
+    const toastId = toast.loading("Submitting dispute and pausing auto-release...");
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "DISPUTED",
+          proofPhoto: disputePhoto || undefined,
+        }),
+      });
+      toast.dismiss(toastId);
+      if (res.ok) {
+        toast.success("Dispute opened. 24-hour auto-release is paused pending resolution.");
+        setDisputeBooking(null);
+        setDisputeReason("");
+        setDisputePhoto("");
+        fetchBookings();
+      } else {
+        toast.error("Failed to open dispute");
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setIsSubmittingDispute(false);
+    }
+  };
+
+  const handleDisputePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        setDisputePhoto(reader.result);
+        toast.success("Dispute evidence photo attached!");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleHideBooking = (bookingId: string) => {
     const nextHidden = [...hiddenBookingIds, bookingId];
@@ -606,6 +733,21 @@ export default function TouristBookingsPage() {
                     <span className={`badge text-xs font-bold px-2.5 py-1 rounded-lg ${getStatusBadgeStyle(booking.status)}`}>
                       {booking.status}
                     </span>
+                    {booking.bookingSignature ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-lg">
+                        <FileCheck className="w-3.5 h-3.5 text-emerald-600" /> EIP-712 Signed
+                      </span>
+                    ) : ["PENDING", "CONFIRMED", "PAID", "FUNDED"].includes(booking.status) ? (
+                      <button
+                        onClick={() => handleSignAgreement(booking)}
+                        disabled={signingBookingId === booking.id}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        title="Sign pre-trip booking agreement terms using EIP-712 typed data"
+                      >
+                        <FileCheck className="w-3.5 h-3.5 text-indigo-600" />
+                        {signingBookingId === booking.id ? "Signing..." : "Sign Agreement (EIP-712)"}
+                      </button>
+                    ) : null}
                     {booking.status === "PENDING" && (
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 rounded-lg">
                         <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
@@ -613,6 +755,14 @@ export default function TouristBookingsPage() {
                       </span>
                     )}
                   </div>
+                  {booking.completionRequestedAt && (booking.status === "CONFIRMED" || booking.status === "PAID" || booking.status === "FUNDED") && (
+                    <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-950 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <QrCode className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                        <span><strong>Guide requested tour completion.</strong> Scan guide's phone QR code or release escrow below. (24h fallback auto-release active)</span>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="flex flex-wrap gap-4 text-sm text-dark-500">
                     <div className="flex items-center gap-1">
@@ -724,6 +874,18 @@ export default function TouristBookingsPage() {
                               >
                                 <MessageSquare className="w-3.5 h-3.5 text-dark-400" /> Chat with Guide
                               </button>
+
+                              {["CONFIRMED", "PAID", "FUNDED"].includes(booking.status) && (
+                                <button
+                                  onClick={() => {
+                                    setDisputeBooking(booking);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-2.5 text-xs text-amber-400 hover:bg-dark-800 flex items-center gap-2 cursor-pointer font-medium transition-colors border-t border-dark-800/80"
+                                >
+                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Open Dispute
+                                </button>
+                              )}
 
                               {["CANCELLED", "REJECTED"].includes(booking.status) && (
                                 <button
@@ -1049,6 +1211,110 @@ export default function TouristBookingsPage() {
           bookingId={tipBooking.id}
           gigTitle={tipBooking.tourName}
         />
+      )}
+
+      {/* Dispute Modal (with optional dispute evidence photo) */}
+      {disputeBooking && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl border border-dark-100 animate-in zoom-in duration-200 my-8 p-6 space-y-4">
+            <button
+              onClick={() => {
+                setDisputeBooking(null);
+                setDisputeReason("");
+                setDisputePhoto("");
+              }}
+              className="absolute top-4 right-4 p-2 text-dark-400 hover:text-dark-900 rounded-full hover:bg-dark-50 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 flex-shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-dark-900">Open Tour Dispute</h3>
+                <p className="text-xs text-dark-500">Pauses 24-hour automated escrow release</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+              Filing a dispute pauses the 24-hour time-lock auto-release and flags this tour for manual dispute resolution by platform arbiters.
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleOpenDispute(disputeBooking.id);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold text-dark-700 uppercase mb-1">
+                  Reason for Dispute *
+                </label>
+                <textarea
+                  value={disputeReason}
+                  onChange={(e) => setDisputeReason(e.target.value)}
+                  rows={3}
+                  required
+                  placeholder="Explain why the tour was incomplete, no-show, or unsatisfactory..."
+                  className="w-full p-3 bg-dark-50 border border-dark-200 rounded-xl text-xs focus:border-primary outline-none resize-none"
+                />
+              </div>
+
+              {/* Optional Dispute Photo Evidence */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-dark-700 uppercase">
+                    Photo Evidence (Optional)
+                  </label>
+                  <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    Optional
+                  </span>
+                </div>
+                {disputePhoto ? (
+                  <div className="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                    <img src={disputePhoto} alt="Dispute evidence preview" className="w-14 h-14 object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => setDisputePhoto("")}
+                      className="text-xs text-rose-600 font-semibold hover:underline"
+                    >
+                      Remove Photo
+                    </button>
+                  </div>
+                ) : (
+                  <label className="btn-outline w-full py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer font-semibold">
+                    <Upload className="w-3.5 h-3.5" /> Attach Photo Evidence
+                    <input type="file" accept="image/*" onChange={handleDisputePhotoUpload} className="hidden" />
+                  </label>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDisputeBooking(null);
+                    setDisputeReason("");
+                    setDisputePhoto("");
+                  }}
+                  className="btn-outline flex-1 py-2.5 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingDispute || !disputeReason.trim()}
+                  className="btn-primary flex-1 py-2.5 text-xs font-bold bg-amber-600 hover:bg-amber-500 border-amber-600 text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isSubmittingDispute ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Dispute"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );

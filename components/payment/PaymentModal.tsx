@@ -210,10 +210,49 @@ export default function PaymentModal({
     try {
       let finalTxHash = "";
 
+      // 0. Pre-trip EIP-712 Typed Data Agreement Signature
+      if (bookingId && browserProvider && selectedAccountAddress) {
+        try {
+          toast.loading("Step 1/3: Signing pre-trip agreement terms via EIP-712...", { id: toastId });
+          const { buildBookingAgreementTypedData } = await import("@/lib/crypto/eip712");
+          const typedData = buildBookingAgreementTypedData({
+            bookingId,
+            gigTitle: gigTitle || "Tour Experience",
+            totalPriceUSD: numAmount,
+            bookingDate: bookingDate || new Date().toISOString(),
+            touristAddress: selectedAccountAddress,
+            nonce: Date.now(),
+          });
+
+          const signature = await browserProvider.send("eth_signTypedData_v4", [
+            selectedAccountAddress.toLowerCase(),
+            JSON.stringify(typedData),
+          ]);
+
+          if (signature) {
+            await fetch(`/api/bookings/${bookingId}/sign`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                signature,
+                touristAddress: selectedAccountAddress,
+                nonce: typedData.message.nonce,
+              }),
+            });
+            console.log("[PaymentModal] EIP-712 pre-trip agreement signed successfully.");
+          }
+        } catch (signErr: any) {
+          console.warn("[PaymentModal] EIP-712 non-blocking signature notice:", signErr.message);
+          if (signErr.message?.includes("User rejected") || signErr.message?.includes("denied")) {
+            throw new Error("Pre-trip agreement signature was declined. Please sign the agreement terms in your wallet to proceed.");
+          }
+        }
+      }
+
       // 1. High-Security Verifying Gasless Paymaster Flow (0 AVAX Needed)
       if (bookingId && selectedToken === "USDC") {
         try {
-          toast.loading("Signing permit authorization in MetaMask (0 Gas Fee)...", { id: toastId });
+          toast.loading("Step 2/3: Authorizing permit in wallet (0 Gas Fee)...", { id: toastId });
           setVerifyStage(2);
           const gaslessResult = await executeGaslessSponsoredPayment({
             bookingId,
@@ -625,12 +664,17 @@ export default function PaymentModal({
                 </span>
               </div>
 
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 justify-center">
+                <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                <span>Web3 EIP-712 Agreement Terms + Zero-Gas Escrow Deposit</span>
+              </div>
+
               <button
                 disabled={!selectedAccObj || !selectedAccObj.hasEnoughBalance}
                 onClick={handleExecutePayment}
                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/20 disabled:opacity-50 cursor-pointer transition-all"
               >
-                <ShieldCheck className="w-4 h-4" /> Sign & Pay ${amount.toFixed(2)} {selectedToken} (Zero Gas Fee) ➔
+                <ShieldCheck className="w-4 h-4" /> Sign Terms & Pay ${amount.toFixed(2)} {selectedToken} (Zero Gas Fee) ➔
               </button>
             </div>
           )}

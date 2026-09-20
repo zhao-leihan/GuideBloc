@@ -59,12 +59,7 @@ export default function TourVerificationModal({
   };
 
   const handleAction = async () => {
-    // 1. Mandatory Photo Proof validation
-    if (!photoUrl && !booking?.proofPhoto) {
-      toast.error("Please upload a proof photo of the tour (Tourist & Tour Guide) first.");
-      return;
-    }
-
+    // Photo proof is optional per user specification (only needed for dispute evidence)
     setIsProcessing(true);
 
     if (isGuide) {
@@ -208,15 +203,15 @@ export default function TourVerificationModal({
           </div>
         </div>
 
-        {/* Mandatory Proof Photo Upload Section */}
+        {/* Optional Proof Photo Upload Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-dark-800 uppercase tracking-wider flex items-center gap-1.5">
               <Camera className="w-3.5 h-3.5 text-primary" />
-              Proof of Tour Photo (Tourist & Guide) *
+              Tour Photo (Dispute Evidence)
             </label>
-            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-              Mandatory
+            <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+              Optional
             </span>
           </div>
 

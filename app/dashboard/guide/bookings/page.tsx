@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Calendar, CheckCircle, XCircle, Clock, Eye, X, Star, Loader2, ShieldCheck } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, Clock, Eye, X, Star, Loader2, ShieldCheck, QrCode } from "lucide-react";
 import toast from "react-hot-toast";
 import DotsLoader from "@/components/ui/DotsLoader";
 import { useSession } from "next-auth/react";
 import TourVerificationModal from "@/components/verification/TourVerificationModal";
+import GuideQRModal from "@/components/verification/GuideQRModal";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-500/10 text-yellow-600",
@@ -41,6 +42,7 @@ export default function GuideBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [verificationBookingModal, setVerificationBookingModal] = useState<any | null>(null);
+  const [qrHandshakeBooking, setQrHandshakeBooking] = useState<any | null>(null);
   const { data: session } = useSession();
 
   // Double Review system states
@@ -257,21 +259,20 @@ export default function GuideBookingsPage() {
                               </>
                             )}
                             {(b.status === "CONFIRMED" || b.status === "FUNDED" || b.status === "PAID") && (
-                              <>
-                                {b.proofPhoto ? (
-                                  <span className="text-xs px-2.5 py-1.5 bg-amber-500/10 text-amber-600 rounded-lg font-bold flex items-center gap-1">
-                                    <Clock className="w-3.5 h-3.5" /> Awaiting Tourist Release
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setQrHandshakeBooking(b)}
+                                  className="btn-ghost text-xs px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-600 text-indigo-600 hover:text-white rounded-lg font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                                  title="Generate Dynamic QR Code for Tour Completion Handshake"
+                                >
+                                  <QrCode className="w-3.5 h-3.5" /> Complete Tour (QR)
+                                </button>
+                                {b.completionRequestedAt && (
+                                  <span className="text-[10px] px-2 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/20 rounded-lg font-semibold flex items-center gap-1">
+                                    <Clock className="w-3 h-3 text-amber-600" /> QR Active (24h Auto-Release)
                                   </span>
-                                ) : (
-                                  <button
-                                    onClick={() => setVerificationBookingModal(b)}
-                                    className="btn-ghost text-xs px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-lg font-bold flex items-center gap-1 cursor-pointer"
-                                    title="Mark Tour as Completed"
-                                  >
-                                    <ShieldCheck className="w-3.5 h-3.5" /> Mark Tour Completed
-                                  </button>
                                 )}
-                              </>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -404,6 +405,19 @@ export default function GuideBookingsPage() {
       )}
 
 
+
+      {/* Dynamic QR Code Mutual Handshake Modal */}
+      {qrHandshakeBooking && (
+        <GuideQRModal
+          isOpen={!!qrHandshakeBooking}
+          booking={qrHandshakeBooking}
+          onClose={() => setQrHandshakeBooking(null)}
+          onSuccess={() => {
+            fetchBookings();
+            toast.success("Tour Verified & Escrow Payout Released Successfully!");
+          }}
+        />
+      )}
 
       {/* 3-Step Safe Verification Protocol Modal (QR + GPS + Mutual Confirm) */}
       {verificationBookingModal && (
