@@ -65,9 +65,11 @@ export default function TeamPage() {
               <div className="flex items-center gap-5 mb-6">
                 <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-md flex-shrink-0 bg-dark-200">
                   <Image
-                    src="/assets/rayhan.jpg"
+                    src="/assets/rayhan.jpeg"
                     alt="Rayhan Aziel Abbrar"
                     fill
+                    unoptimized
+                    priority
                     className="object-cover object-top"
                   />
                 </div>
