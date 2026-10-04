@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Navbar from "./Navbar";
+import AdminGasRelayerAlert from "@/components/admin/AdminGasRelayerAlert";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -246,6 +247,11 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {role === "admin" && (
+              <div className="mb-6">
+                <AdminGasRelayerAlert />
               </div>
             )}
             {children}
