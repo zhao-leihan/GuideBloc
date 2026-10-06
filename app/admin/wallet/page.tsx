@@ -86,7 +86,7 @@ export default function AdminWalletPage() {
   const handleTopUpRelayer = async (amountAvax: string = "0.01") => {
     if (!relayerInfo?.relayerAddress) return;
     if (typeof window === "undefined" || !(window as any).ethereum) {
-      toast.error("MetaMask tidak terdeteksi!");
+      toast.error("MetaMask extension not detected!");
       return;
     }
 
@@ -94,33 +94,33 @@ export default function AdminWalletPage() {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
 
-      const loadId = toast.loading(`Buka MetaMask untuk transfer ${amountAvax} AVAX ke relayer...`);
+      const loadId = toast.loading(`Please confirm ${amountAvax} AVAX transfer in MetaMask...`);
       const tx = await signer.sendTransaction({
         to: relayerInfo.relayerAddress,
         value: ethers.parseEther(amountAvax),
       });
 
-      toast.loading("Menunggu konfirmasi blok Avalanche...", { id: loadId });
+      toast.loading("Awaiting block confirmation on Avalanche...", { id: loadId });
       await tx.wait(1);
 
       toast.dismiss(loadId);
-      toast.success(`Berhasil top-up ${amountAvax} AVAX ke relayer!`);
+      toast.success(`Successfully funded ${amountAvax} AVAX to relayer!`);
       fetchStatus();
     } catch (err: any) {
       console.error(err);
-      toast.error(err.reason || err.message || "Gagal mengirim AVAX");
+      toast.error(err.reason || err.message || "Failed to send AVAX");
     }
   };
 
   const handleManualRelease = async () => {
     if (!manualBookingId.trim()) {
-      toast.error("Masukkan Booking ID terlebih dahulu");
+      toast.error("Please provide a valid Booking ID");
       return;
     }
 
     try {
       setReleasing(true);
-      const loadId = toast.loading("Memicu transaksi release on-chain dari smart contract...");
+      const loadId = toast.loading("Executing on-chain release transaction...");
 
       const res = await fetch("/api/admin/release-escrow", {
         method: "POST",
@@ -132,15 +132,15 @@ export default function AdminWalletPage() {
       toast.dismiss(loadId);
 
       if (res.ok) {
-        toast.success(data.message || "Escrow berhasil dicairkan ke Guide & Admin!");
+        toast.success(data.message || "Escrow released successfully on-chain!");
         fetchStatus();
         fetchHistory();
       } else {
-        toast.error(data.message || "Gagal mencairkan escrow");
+        toast.error(data.message || "Failed to release escrow funds");
       }
     } catch (err: any) {
       console.error(err);
-      toast.error("Terjadi kesalahan jaringan");
+      toast.error("Network communication error");
     } finally {
       setReleasing(false);
     }
@@ -330,41 +330,41 @@ export default function AdminWalletPage() {
             </div>
 
             {/* Smart Contract Escrow & Relayer Gas Health Card */}
-            <div className="card p-6 space-y-5 border-2 border-dark-100">
+            <div className="card p-6 space-y-5 border border-dark-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${
                     relayerInfo?.isGasCritical
-                      ? "bg-red-500/10 text-red-600 animate-pulse"
+                      ? "bg-rose-500/10 border-rose-500/20 text-rose-600"
                       : relayerInfo?.isGasLow
-                      ? "bg-amber-500/10 text-amber-600"
-                      : "bg-emerald-500/10 text-emerald-600"
+                      ? "bg-amber-500/10 border-amber-500/20 text-amber-600"
+                      : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
                   }`}>
-                    <Zap className="w-6 h-6" />
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-dark-900 text-lg">
-                      Smart Contract Escrow & Gas Relayer
+                      Smart Contract Escrow & Relayer Gas Health
                     </h3>
                     <p className="text-xs text-dark-400">
-                      Pemantau bensin (gas fee) auto-release dana ke Guide & Admin
+                      Automated network gas monitoring for tour escrow settlements
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                  <span className={`text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border ${
                     relayerInfo?.isGasCritical
-                      ? "bg-red-500/20 text-red-700 border border-red-500/30"
+                      ? "bg-rose-50 text-rose-700 border-rose-200"
                       : relayerInfo?.isGasLow
-                      ? "bg-amber-500/20 text-amber-700 border border-amber-500/30"
-                      : "bg-emerald-500/20 text-emerald-700 border border-emerald-500/30"
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
                   }`}>
                     {relayerInfo?.isGasCritical
-                      ? "🚨 Gas Kritis / Habis"
+                      ? "Critical: Gas Depleted"
                       : relayerInfo?.isGasLow
-                      ? "⚠️ Gas Menipis"
-                      : "✅ Gas Siap"}
+                      ? "Warning: Low Gas"
+                      : "Healthy: Gas Ready"}
                   </span>
                 </div>
               </div>
@@ -373,9 +373,9 @@ export default function AdminWalletPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-dark-500 font-semibold">Saldo AVAX Relayer (Gas Fee)</p>
+                    <p className="text-xs text-dark-500 font-semibold">Relayer Gas Balance (AVAX)</p>
                     {relayerInfo?.isGasCritical && (
-                      <span className="text-[10px] font-black text-red-600 uppercase">Perlu Top Up!</span>
+                      <span className="text-[10px] font-black text-rose-600 uppercase">Top Up Required</span>
                     )}
                   </div>
                   <p className="font-bold text-2xl font-mono text-dark-900">
@@ -386,27 +386,27 @@ export default function AdminWalletPage() {
                   </p>
                   
                   {/* Quick Top-up Button */}
-                  <div className="pt-2 flex gap-2">
+                  <div className="pt-2">
                     <button
                       type="button"
                       onClick={() => handleTopUpRelayer("0.01")}
-                      className="w-full py-2 px-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                      className="w-full py-2.5 px-3 bg-dark-900 hover:bg-dark-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer"
                     >
-                      <Zap className="w-3.5 h-3.5 text-yellow-300" /> Top Up 0.01 AVAX via MetaMask
+                      <ArrowRightLeft className="w-3.5 h-3.5" /> Fund 0.01 AVAX via MetaMask
                     </button>
                   </div>
                 </div>
 
                 <div className="p-4 bg-dark-50 rounded-2xl border border-dark-100 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-dark-500 font-semibold">USDC Terkunci di Smart Contract Escrow</p>
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">On-Chain</span>
+                    <p className="text-xs text-dark-500 font-semibold">Locked Escrow Vault (USDC)</p>
+                    <span className="text-[10px] font-bold text-dark-600 bg-white border border-dark-200 px-2 py-0.5 rounded-full">On-Chain</span>
                   </div>
                   <p className="font-bold text-2xl font-mono text-dark-900">
                     {relayerInfo ? Number(relayerInfo.escrowUsdcBalance).toFixed(2) : "0.00"} USDC
                   </p>
                   <p className="text-[11px] text-dark-400 font-mono truncate">
-                    Kontrak: {relayerInfo ? formatAddress(relayerInfo.escrowContractAddress) : "..."}
+                    Contract: {relayerInfo ? formatAddress(relayerInfo.escrowContractAddress) : "..."}
                   </p>
 
                   <div className="pt-2">
@@ -414,48 +414,48 @@ export default function AdminWalletPage() {
                       href={getExplorerAddressLink(relayerInfo?.escrowContractAddress || "")}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-2 px-3 bg-white hover:bg-dark-100 text-dark-700 border border-dark-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                      className="w-full py-2.5 px-3 bg-white hover:bg-dark-100 text-dark-700 border border-dark-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" /> Buka Kontrak di Snowtrace
+                      <ExternalLink className="w-3.5 h-3.5" /> View Escrow on Snowtrace
                     </a>
                   </div>
                 </div>
               </div>
 
               {/* Manual On-Chain Release Trigger Tool */}
-              <div className="p-4 bg-indigo-50/50 border border-indigo-200/80 rounded-2xl space-y-3">
+              <div className="p-4 bg-dark-50 rounded-2xl border border-dark-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-600" />
-                    Picu Release Escrow On-Chain Manual
+                  <h4 className="text-xs font-bold text-dark-900 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-dark-700" />
+                    Direct On-Chain Settlement Tool
                   </h4>
-                  <span className="text-[10px] text-indigo-600 font-medium">Darurat / Jika Auto-Release Gagal</span>
+                  <span className="text-[10px] text-dark-500 font-medium">Emergency Manual Execution</span>
                 </div>
-                <p className="text-[11px] text-indigo-800 leading-relaxed">
-                  Jika transaksi escrow nyangkut di smart contract karena gas habis sebelumnya, masukkan Booking ID di bawah dan klik release untuk langsung mencairkan 90% ke Guide dan 10% ke Admin:
+                <p className="text-[11px] text-dark-500 leading-relaxed">
+                  If an escrow transaction was halted due to gas depletion, enter the Booking ID below to trigger direct settlement (90% to Tour Guide, 10% to Admin Treasury):
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    placeholder="Masukkan Booking ID..."
+                    placeholder="Enter Booking ID (e.g. cmutsca370001tdx9zl3rti7t)..."
                     value={manualBookingId}
                     onChange={(e) => setManualBookingId(e.target.value)}
-                    className="flex-grow p-2.5 px-3 bg-white border border-indigo-200 rounded-xl text-xs font-mono font-semibold text-dark-900 outline-none focus:border-indigo-500"
+                    className="flex-grow p-2.5 px-3 bg-white border border-dark-200 rounded-xl text-xs font-mono font-semibold text-dark-900 outline-none focus:border-dark-400"
                   />
                   <button
                     type="button"
                     onClick={handleManualRelease}
                     disabled={releasing}
-                    className="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-sm"
+                    className="py-2.5 px-4 bg-dark-900 hover:bg-dark-800 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-sm"
                   >
                     {releasing ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sedang Release...
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Executing Settlement...
                       </>
                     ) : (
                       <>
-                        <Zap className="w-3.5 h-3.5" /> Release Sekarang
+                        <ArrowRightLeft className="w-3.5 h-3.5" /> Execute Settlement
                       </>
                     )}
                   </button>

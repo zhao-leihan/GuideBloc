@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertTriangle, Copy, RefreshCw, Send, CheckCircle2, ExternalLink, Zap } from "lucide-react";
+import { AlertTriangle, Copy, RefreshCw, ArrowUpRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { ethers } from "ethers";
 
@@ -38,7 +38,6 @@ export default function AdminGasRelayerAlert() {
 
   useEffect(() => {
     fetchStatus();
-    // Poll every 30 seconds while on admin pages
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -49,12 +48,12 @@ export default function AdminGasRelayerAlert() {
 
   const copyAddress = () => {
     navigator.clipboard.writeText(status.relayerAddress);
-    toast.success("Alamat wallet relayer berhasil disalin!");
+    toast.success("Relayer address copied to clipboard");
   };
 
   const handleTopUpMetaMask = async (amountAvax: string = "0.01") => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
-      toast.error("MetaMask tidak terdeteksi di browser!");
+      toast.error("MetaMask extension not detected in browser");
       return;
     }
 
@@ -63,22 +62,22 @@ export default function AdminGasRelayerAlert() {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
 
-      const loadId = toast.loading(`Buka MetaMask untuk mengirim ${amountAvax} AVAX gas fee...`);
+      const loadId = toast.loading(`Please confirm ${amountAvax} AVAX transfer in MetaMask...`);
 
       const tx = await signer.sendTransaction({
         to: status.relayerAddress,
         value: ethers.parseEther(amountAvax),
       });
 
-      toast.loading("Menunggu konfirmasi di blockchain Avalanche...", { id: loadId });
+      toast.loading("Awaiting block confirmation on Avalanche...", { id: loadId });
       await tx.wait(1);
 
       toast.dismiss(loadId);
-      toast.success(`Berhasil top-up ${amountAvax} AVAX ke relayer!`);
+      toast.success(`Successfully funded ${amountAvax} AVAX to relayer`);
       fetchStatus();
     } catch (err: any) {
-      console.error("Top-up gas error:", err);
-      toast.error(err.reason || err.message || "Gagal mengirim AVAX dari MetaMask");
+      console.error("Gas top-up error:", err);
+      toast.error(err.reason || err.message || "Failed to send AVAX from MetaMask");
     } finally {
       setTopUpLoading(false);
     }
@@ -87,21 +86,15 @@ export default function AdminGasRelayerAlert() {
   const isCritical = status.isGasCritical;
 
   return (
-    <div
-      className={`p-4 sm:p-5 rounded-2xl border shadow-lg transition-all animate-in slide-in-from-top-3 duration-300 ${
-        isCritical
-          ? "bg-red-500/10 border-red-500/40 text-red-950"
-          : "bg-amber-500/10 border-amber-500/40 text-amber-950"
-      }`}
-    >
+    <div className="p-5 rounded-2xl bg-dark-900 border border-dark-800 text-white shadow-xl animate-in slide-in-from-top-3 duration-300">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left Side: Alert Message */}
         <div className="flex items-start gap-3.5">
           <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+            className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 border ${
               isCritical
-                ? "bg-red-500 text-white animate-pulse"
-                : "bg-amber-500 text-white"
+                ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-400"
             }`}
           >
             <AlertTriangle className="w-5 h-5" />
@@ -109,43 +102,43 @@ export default function AdminGasRelayerAlert() {
 
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-bold text-sm tracking-tight">
+              <h4 className="font-bold text-sm tracking-tight text-white">
                 {isCritical
-                  ? "🚨 GAS FEE RELAYER HABIS (Auto-Release Escrow Terhenti!)"
-                  : "⚠️ PERINGATAN: Saldo Gas Relayer Menipis"}
+                  ? "Relayer Gas Depleted — Escrow Auto-Release Paused"
+                  : "Low Relayer Gas Reserve Warning"}
               </h4>
               <span
-                className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
                   isCritical
-                    ? "bg-red-600 text-white"
-                    : "bg-amber-600 text-white"
+                    ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
                 }`}
               >
-                {isCritical ? "Kritis: < 0.002 AVAX" : "Warning: < 0.01 AVAX"}
+                {isCritical ? "Critical: < 0.002 AVAX" : "Warning: < 0.01 AVAX"}
               </span>
             </div>
 
-            <p className="text-xs text-dark-700 leading-relaxed font-medium">
-              Sisa saldo gas relayer saat ini:{" "}
-              <strong className="font-mono text-dark-950 font-black">
+            <p className="text-xs text-dark-300 leading-relaxed">
+              Current relayer gas reserve:{" "}
+              <strong className="font-mono text-white font-bold">
                 {Number(status.relayerAvaxBalance).toFixed(6)} AVAX
               </strong>
-              . Dana smart contract (
-              <strong className="font-mono">{status.escrowUsdcBalance} USDC</strong>
-              ) tidak bisa dicairkan otomatis ke Guide & Admin sebelum relayer memiliki saldo gas fee.
+              . Smart contract funds (
+              <strong className="font-mono text-white">{status.escrowUsdcBalance} USDC</strong>
+              ) cannot be auto-disbursed to guides and treasury until the relayer is funded.
             </p>
 
             {/* Wallet Address Display */}
             <div className="flex items-center gap-2 pt-1">
-              <span className="text-[11px] text-dark-500 font-semibold">Wallet Relayer:</span>
-              <code className="text-[11px] font-mono bg-white/80 border border-dark-200 px-2 py-0.5 rounded-lg text-dark-800">
+              <span className="text-[11px] text-dark-400 font-semibold">Relayer Address:</span>
+              <code className="text-[11px] font-mono bg-dark-950 border border-dark-800 px-2 py-0.5 rounded-lg text-dark-200">
                 {status.relayerAddress.slice(0, 10)}...{status.relayerAddress.slice(-8)}
               </code>
               <button
                 type="button"
                 onClick={copyAddress}
-                className="p-1 hover:bg-white rounded-md text-dark-600 transition-colors cursor-pointer"
-                title="Salin alamat lengkap"
+                className="p-1 hover:bg-dark-800 rounded-md text-dark-400 hover:text-white transition-colors cursor-pointer"
+                title="Copy address"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -159,9 +152,9 @@ export default function AdminGasRelayerAlert() {
             type="button"
             onClick={() => handleTopUpMetaMask("0.01")}
             disabled={topUpLoading}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-primary hover:bg-primary-dark text-white flex items-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white hover:bg-dark-100 text-dark-950 flex items-center gap-1.5 shadow-sm hover:scale-[1.02] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
           >
-            <Zap className="w-3.5 h-3.5 text-yellow-300" />
+            <ArrowUpRight className="w-3.5 h-3.5" />
             Top Up 0.01 AVAX via MetaMask
           </button>
 
@@ -169,8 +162,8 @@ export default function AdminGasRelayerAlert() {
             type="button"
             onClick={fetchStatus}
             disabled={loading}
-            className="p-2 bg-white hover:bg-dark-50 border border-dark-200 rounded-xl text-dark-600 transition-all cursor-pointer"
-            title="Cek ulang saldo"
+            className="p-2.5 bg-dark-800 hover:bg-dark-700 border border-dark-700 rounded-xl text-dark-300 hover:text-white transition-all cursor-pointer"
+            title="Refresh balance check"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
