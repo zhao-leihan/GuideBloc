@@ -56,6 +56,17 @@ export async function POST(req: Request) {
       fs.writeFileSync(envPath, content, "utf-8");
     }
 
+    // Update lib/crypto/networkConfig.ts
+    const configPath = path.resolve("lib/crypto/networkConfig.ts");
+    if (fs.existsSync(configPath)) {
+      let configContent = fs.readFileSync(configPath, "utf-8");
+      configContent = configContent.replace(
+        /escrowContractAddress:\s*"0x[a-fA-F0-9]{40}"/,
+        `escrowContractAddress: "${contractAddress}"`
+      );
+      fs.writeFileSync(configPath, configContent, "utf-8");
+    }
+
     const envKey = "NEXT_PUBLIC_ESCROW_ADDRESS";
     process.env[envKey] = contractAddress;
 

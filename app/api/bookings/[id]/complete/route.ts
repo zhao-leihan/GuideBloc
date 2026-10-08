@@ -55,7 +55,9 @@ export async function GET(
     const guideAmount = booking.guide_price ?? (booking.totalPriceUSD - (booking.platform_fee ?? booking.totalPriceUSD * 0.1));
     const commissionAmount = booking.platform_fee ?? (booking.totalPriceUSD - guideAmount);
     const guideWallet = booking.guideWalletSnapshot || booking.gig.guide.walletAddress || "unknown";
-    let releaseHash = booking.txHash || null;
+    let releaseHash: string | null = null;
+    let onChainFailed = false;
+    let onChainErrorMsg = "";
 
     if (process.env.RELAYER_PRIVATE_KEY || process.env.DEPLOYER_PRIVATE_KEY) {
       try {
@@ -65,16 +67,19 @@ export async function GET(
           releaseHash = relayerResult.txHash;
         }
       } catch (onChainErr: any) {
-        console.warn("[QR Complete] Gasless on-chain release notice:", onChainErr.message);
+        console.error("[QR Complete] On-chain release error:", onChainErr.message);
+        onChainFailed = true;
+        onChainErrorMsg = onChainErr.message;
       }
     }
 
-    // Invalidate token + mark COMPLETED in a transaction
+    // Invalidate token + mark status in a transaction
     await prisma.$transaction([
       prisma.booking.update({
         where: { id: booking.id },
         data: {
           status: "COMPLETED",
+          txHash: releaseHash || booking.txHash,
           completionToken: null,         // one-time: invalidate immediately
           completionTokenExpiresAt: null,
         },
@@ -82,7 +87,7 @@ export async function GET(
       prisma.escrowPayout.upsert({
         where: { bookingId: booking.id },
         update: {
-          status: "COMPLETED",
+          status: onChainFailed ? "PENDING" : "COMPLETED",
           releaseHash,
         },
         create: {
@@ -92,14 +97,14 @@ export async function GET(
           guideAmountUSD: guideAmount,
           commissionAmountUSD: commissionAmount,
           releaseHash,
-          status: "COMPLETED",
+          status: onChainFailed ? "PENDING" : "COMPLETED",
         },
       }),
       prisma.platformRevenue.create({
         data: {
           source: "BOOKING_COMMISSION",
           amountUSDT: commissionAmount,
-          txHash: releaseHash,
+          txHash: releaseHash || booking.txHash,
           referenceId: booking.id,
         },
       }),
@@ -108,7 +113,8 @@ export async function GET(
           bookingId: booking.id,
           txHash: releaseHash,
           source: "QR_HANDSHAKE",
-          status: "SUCCESS",
+          status: onChainFailed ? "PENDING_RELAYER_GAS" : "SUCCESS",
+          errorMessage: onChainFailed ? onChainErrorMsg : null,
           rawPayload: { token: token.slice(0, 8) + "..." },
         },
       }),

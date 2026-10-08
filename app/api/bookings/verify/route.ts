@@ -76,13 +76,17 @@ export async function POST(req: Request) {
       const proofPhoto = body.proofPhoto || booking.proofPhoto || null;
 
       // If no client txHash provided, execute on-chain release via gasless relayer
+      let onChainFailed = false;
+      let onChainErrorMsg = "";
       if (!releaseHash || releaseHash.startsWith("0xAUTO_")) {
         try {
           const relayerResult = await executeGaslessRelease(booking.id);
           releaseHash = relayerResult.txHash;
         } catch (onChainErr: any) {
-          console.warn("Sponsored on-chain release notice:", onChainErr.message);
-          releaseHash = releaseHash || booking.txHash || null;
+          console.error("[Verify Tour] On-chain release failed:", onChainErr.message);
+          onChainFailed = true;
+          onChainErrorMsg = onChainErr.message;
+          releaseHash = null; // Do not fake with deposit hash
         }
       }
 
@@ -111,7 +115,7 @@ export async function POST(req: Request) {
             guideAmountUSD: guideAmount,
             commissionAmountUSD: commissionAmount,
             releaseHash,
-            status: "COMPLETED",
+            status: onChainFailed ? "PENDING" : "COMPLETED",
           },
         }),
         prisma.platformRevenue.create({
@@ -120,6 +124,15 @@ export async function POST(req: Request) {
             amountUSDT: commissionAmount,
             txHash: releaseHash || booking.txHash,
             referenceId: booking.id,
+          },
+        }),
+        prisma.paymentAuditLog.create({
+          data: {
+            bookingId: booking.id,
+            txHash: releaseHash,
+            source: "MUTUAL_VERIFY",
+            status: onChainFailed ? "PENDING_RELAYER_GAS" : "SUCCESS",
+            errorMessage: onChainFailed ? onChainErrorMsg : null,
           },
         }),
       ]);

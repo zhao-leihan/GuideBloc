@@ -26,7 +26,7 @@ export const NETWORKS = {
     nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
     
     // Fuji Smart Contract Addresses
-    escrowContractAddress: "0xCd934aEBb3f0774a02121fc8AD0741D5073C23F2",
+    escrowContractAddress: "0x94AC43858B9f4595f12bB56A5BB8dB3f3EB0521D",
     usdcTokenAddress: "0x2874C7e0C9B27029455f2a46D2332acE7C749DA9",
     usdtTokenAddress: "0x2874C7e0C9B27029455f2a46D2332acE7C749DA9",
     treasuryAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",
@@ -47,7 +47,7 @@ export const NETWORKS = {
     nativeCurrency: { name: "AVAX", symbol: "AVAX", decimals: 18 },
     
     // Mainnet Smart Contract & Token Addresses
-    escrowContractAddress: "0x2D4eC9380218C252F9468078b35F90B559331d19", // Mainnet Escrow V2
+    escrowContractAddress: "0x94AC43858B9f4595f12bB56A5BB8dB3f3EB0521D", // Official GuideBlocEscrowV2 (Avalanche Mainnet)
     usdcTokenAddress: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", // Official Circle Native USDC (Avalanche)
     usdtTokenAddress: "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7", // Official Tether USDT (Avalanche)
     treasuryAddress: "0x079D9c349741C27565ee04e31E4174F640F512aE",

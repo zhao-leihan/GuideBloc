@@ -47,6 +47,24 @@ export async function GET() {
     const isGasCritical = relayerAvaxNum < 0.002; // Cannot afford a single release
     const isGasLow = relayerAvaxNum < 0.01;      // Low reserve warning
 
+    // If relayer has sufficient gas and there are funds in escrow, auto-reconcile in background
+    let autoReleasedCount = 0;
+    if (relayerAvaxNum >= 0.0008 && parseFloat(escrowUsdcBalance) > 0) {
+      try {
+        const { syncPendingEscrowReleases } = await import("@/lib/crypto/escrowSync");
+        const syncResult = await syncPendingEscrowReleases();
+        if (syncResult?.releasedCount > 0) {
+          autoReleasedCount = syncResult.releasedCount;
+          // Re-fetch updated escrow balance
+          const usdcContract = new ethers.Contract(cfg.usdcTokenAddress, ERC20_ABI, provider);
+          const escrowBalWei = await usdcContract.balanceOf(cfg.escrowContractAddress);
+          escrowUsdcBalance = ethers.formatUnits(escrowBalWei, 6);
+        }
+      } catch (syncErr: any) {
+        console.warn("[RelayerStatus] Background escrow auto-sync notice:", syncErr.message);
+      }
+    }
+
     return NextResponse.json({
       relayerAddress,
       relayerAvaxBalance,

@@ -34,6 +34,14 @@ export async function GET(req: Request) {
       },
     });
 
+    // Run general on-chain reconciliation first
+    try {
+      const { syncPendingEscrowReleases } = await import("@/lib/crypto/escrowSync");
+      await syncPendingEscrowReleases();
+    } catch (e: any) {
+      console.warn("[Cron] On-chain escrow sync note:", e.message);
+    }
+
     if (eligibleBookings.length === 0) {
       return NextResponse.json({
         success: true,
